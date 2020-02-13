@@ -2,6 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+
 class Distribution:
 
     def __init__(self, seed=None):
@@ -31,7 +32,7 @@ class TestDistribution(Distribution):
         return self.random.randint(0, 3)
 
     def draw_x(self, z):
-        x0 = max(0, 2**z - self.random.randint(-1, 2))
+        x0 = max(0, 2 ** z - self.random.randint(-1, 2))
         x1 = self.random.randint(0, 2)
         return [x0, x1]
 
@@ -51,7 +52,7 @@ class TestDistribution(Distribution):
         if a == 0:
             y = self.random.normal(z)
         elif a == 1:
-            y = self.random.uniform()*x[1]
+            y = self.random.uniform() * x[1]
         elif a == 2:
             y = self.random.normal(z - 1)
         return y
@@ -59,14 +60,19 @@ class TestDistribution(Distribution):
 
 class SimpleDistribution(Distribution):
     n_treatments = 4
+    Pzx = np.array([[0.5, 0.35, 0.15], [0.45, 0.25, 0.3]])
+    Px = np.array([1 / 3, 2 / 3])
+    Pz = np.array([0.467, 0.283, 0.25])
+
+    Pxz = (Pzx.T * Px)
+    Pxz = Pxz.T / Pz
 
     def draw_z(self):
-        return self.random.randint(0, 3)
+        return self.random.choice([0, 1, 2], p=self.Pz)
 
     def draw_x(self, z):
-        x0 = round(min(max(self.random.normal(z/2), 0), 1))
-        x1 = self.random.randint(0, 3)
-        return [x0, x1]
+
+        return self.random.choice(2, p=self.Pxz.T[z]/sum(self.Pxz.T[z]))
 
     def draw_a(self, h, x):
         possible_a = range(0, 4)
@@ -79,19 +85,11 @@ class SimpleDistribution(Distribution):
         return draw_a[0]
 
     def draw_y(self, a, h, x, z):
-        if a == 0:
-            result = self.random.normal(0.8) - x[0]*self.random.uniform(0, 0.45) + x[1]*self.random.uniform(0, 0.45)
-        elif a == 1:
-            result = self.random.normal(0.6) - x[0] * self.random.uniform(0, 0.45) \
-                     + x[1] * self.random.uniform(0, 0.45) + z*self.random.uniform(0, 0.45)
-        elif a == 2:
-            result = self.random.normal(0.6) + z*self.random.uniform(0, 0.75)
-        elif a == 3:
-            result = self.random.normal(0.6) + x[0]*self.random.uniform(0, 1.2) \
-                     - x[1]*self.random.uniform(0, 0.5) - z*self.random.uniform(0, 0.45)
-        else:
-            return False
-        return round(min(max(result, 0), 2))
+        ys = [[[0, 0], [0, 1], [1, 2]],
+              [[0, 0], [2, 2], [0, 0]],
+              [[2, 2], [1, 0], [0, 0]],
+              [[1, 1], [1, 1], [1, 1]]]
+        return ys[a][z][x]
 
 
 def plot_y():
@@ -111,3 +109,6 @@ def plot_y():
         X0, X1 = np.meshgrid([0, 1], [0, 1, 2])
         surf = ax.plot_wireframe(X0, X1, freq[z].T)
         plt.show()
+
+
+SimpleDistribution()

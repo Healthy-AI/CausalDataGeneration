@@ -30,10 +30,10 @@ regressors = []
 
 for i in range(4):
     lin = linear_model.LinearRegression()
-    model = lin.fit(x[t_array[i]], y[t_array[i]])
+    model = lin.fit(x[t_array[i]].reshape(-1, 1), y[t_array[i]])
     regressors.append(lin)
 
-print(regressors[0].predict([[0, 1]]))
-print(regressors[1].predict([[0, 1]]))
-print(regressors[2].predict([[0, 1]]))
-print(regressors[3].predict([[0, 1]]))
+print(regressors[0].predict([[0]]))
+print(regressors[1].predict([[0]]))
+print(regressors[2].predict([[0]]))
+print(regressors[3].predict([[0]]))
