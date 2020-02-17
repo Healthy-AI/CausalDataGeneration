@@ -1,7 +1,3 @@
-from distributions import SimpleDistribution
-import numpy as np
-
-
 def generate_data(generator, n_samples):
     data = {'z': [], 'x': [], 'h': []}
 
