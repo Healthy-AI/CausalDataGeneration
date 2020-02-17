@@ -1,7 +1,8 @@
 from sklearn import linear_model
-from data_generator import *
-from distributions import SimpleDistribution
+from DataGenerator.distributions import *
+from DataGenerator.data_generator import *
 import numpy as np
+import json
 
 
 data = generate_data(SimpleDistribution(), 100)
@@ -34,7 +35,7 @@ for i in range(4):
     model = lin.fit(x[t_array[i]].reshape(-1, 1), y[t_array[i]])
     regressors.append(lin)
 
-print(regressors[0].predict([[0]]))
-print(regressors[1].predict([[0]]))
-print(regressors[2].predict([[0]]))
-print(regressors[3].predict([[0]]))
+print(regressors[0].predict([[1]]))
+print(regressors[1].predict([[1]]))
+print(regressors[2].predict([[1]]))
+print(regressors[3].predict([[1]]))
