@@ -68,7 +68,7 @@ class SimpleDistribution(Distribution):
     Pxz = Pxz.T / Pz
 
     def draw_z(self):
-        return self.random.choice([0, 1, 2], p=self.Pz)
+        return int(self.random.choice([0, 1, 2], p=self.Pz))
 
     def draw_x(self, z):
 

@@ -1,6 +1,7 @@
 from distributions import SimpleDistribution
 import numpy as np
 import json
+import itertools
 
 
 def generate_data(generator, n_samples):
@@ -49,3 +50,23 @@ def read_json(name):
 def convert(o):
     if isinstance(o, np.int64):
         return int(o)
+
+
+def split_patients(data):
+    x = data['x']
+    h = data['h']
+    z = data['z']
+    new_x = []
+    new_h = []
+    new_z = []
+    for i, history in enumerate(h):
+        for j in range(1, len(history)+1):
+            histories = list(itertools.combinations(history, j))
+            for subhistories in histories:
+                new_h.append(subhistories)
+                new_x.append(x[i])
+                new_z.append(z[i])
+    data['x'] = new_x
+    data['h'] = new_h
+    data['z'] = new_z
+    return data
