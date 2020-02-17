@@ -1,5 +1,6 @@
 from distributions import SimpleDistribution
 import numpy as np
+import json
 
 
 def generate_data(generator, n_samples):
@@ -32,3 +33,19 @@ def trim_data(data, threshold):
                 break
 
     return trimmed_data
+
+
+def write_json(data, name):
+    with open(name + '.json', 'w') as f:
+        json.dump(data, f, default=convert)
+
+
+def read_json(name):
+    with open(name + '.json') as f:
+        data = json.load(f)
+    return data
+
+
+def convert(o):
+    if isinstance(o, np.int64):
+        return int(o)

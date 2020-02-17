@@ -1,12 +1,13 @@
 from sklearn import linear_model
-from data_generator import generate_data
-from data_generator import trim_data
+from data_generator import *
 from distributions import SimpleDistribution
 import numpy as np
 
-data = generate_data(SimpleDistribution(), 100)
-data = trim_data(data, 2)
 
+#data = generate_data(SimpleDistribution(), 100)
+#data = trim_data(data, 2)
+
+data = read_json("simple")
 x = []
 t = []
 y = []
