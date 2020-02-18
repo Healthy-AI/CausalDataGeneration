@@ -27,3 +27,42 @@ def learn(history):
 
 def transform_data():
     pass
+
+
+def convert_to_sars(data, n_actions):
+    x = data['x']
+    h = data['h']
+    all_sars = []
+    for i, patient in enumerate(x):
+        actions = [-1] * n_actions
+        outcomes = [-1] * n_actions
+        for treatment in h[i]:
+            action, outcome = treatment
+            actions[action] = outcome
+            #print(treatment)
+            #print(outcome)
+            outcomes[action] = outcome
+
+        for j in range(len(h[i])):
+            if h[i][j] != -1:
+                temp_actions = actions.copy()
+                new_action = h[i][j][0]
+                temp_actions[new_action] = -1
+                s = [patient, temp_actions]
+                a = new_action + 1
+                r = reward(h[i])
+                new_actions = temp_actions.copy()
+                new_actions[new_action] = 1
+                s_prime = [patient, new_actions]
+                sars = (s, a, r, s_prime)
+                print(sars)
+                all_sars.append(sars)
+
+
+def reward(history):
+    maxy = max(list(h[1] for h in history))
+    if maxy > 0:
+        r = maxy - 0.5 * len(history)
+    else:
+        r = -np.Inf
+    return r

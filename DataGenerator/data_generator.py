@@ -3,6 +3,7 @@ import numpy as np
 import json
 import itertools
 
+
 def generate_data(generator, n_samples):
     data = {'z': [], 'x': [], 'h': []}
 
@@ -69,3 +70,6 @@ def split_patients(data):
     data['h'] = new_h
     data['z'] = new_z
     return data
+
+
+
