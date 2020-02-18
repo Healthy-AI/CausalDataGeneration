@@ -35,6 +35,7 @@ def learn(history):
 
     return q_table
 
+
 def convert_to_sars(data, n_actions):
     x = data['x']
     h = data['h']
