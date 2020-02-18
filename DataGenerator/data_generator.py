@@ -3,6 +3,7 @@ import numpy as np
 import json
 import itertools
 
+
 def generate_data(generator, n_samples):
     data = {'z': [], 'x': [], 'h': []}
 

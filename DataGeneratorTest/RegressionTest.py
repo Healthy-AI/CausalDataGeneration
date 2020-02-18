@@ -2,7 +2,6 @@ from sklearn import linear_model
 from DataGenerator.distributions import *
 from DataGenerator.data_generator import *
 import numpy as np
-import json
 
 
 data = generate_data(SimpleDistribution(), 100)

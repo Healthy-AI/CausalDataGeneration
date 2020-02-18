@@ -71,7 +71,6 @@ class SimpleDistribution(Distribution):
         return int(self.random.choice([0, 1, 2], p=self.Pz))
 
     def draw_x(self, z):
-
         return self.random.choice(2, p=self.Pxz.T[z]/sum(self.Pxz.T[z]))
 
     def draw_a(self, h, x):
@@ -109,6 +108,3 @@ def plot_y():
         X0, X1 = np.meshgrid([0, 1], [0, 1, 2])
         surf = ax.plot_wireframe(X0, X1, freq[z].T)
         plt.show()
-
-
-SimpleDistribution()
