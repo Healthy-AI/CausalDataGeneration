@@ -4,7 +4,7 @@ from DataGenerator.data_generator import *
 n_actions = 4
 n_results = 3
 n_x = 2
-learning_rate = 0.1
+learning_rate = 0.01
 discount_factor = 1
 
 
@@ -26,7 +26,7 @@ def learn(history):
                         if q_table[x][y_0][y_1][y_2][y_3][-1] < 1:
                             q_table[x][y_0][y_1][y_2][y_3][-1] = -np.infty
 
-    for _ in range(100000):
+    for k in range(1000000):
         state, action, reward, next_state = history[np.random.randint(0, len(history))]
 
         q_table[to_index(state) + (action,)] = q_table[to_index(state) + (action,)] + learning_rate \
@@ -72,6 +72,10 @@ def reward(history):
 
 
 data = read_json("..\DataGeneratorTest\skewed_split")
+print(np.count_nonzero(np.array(data['z'])==0)/len(data['z']))
+print(np.count_nonzero(np.array(data['z'])==1)/len(data['z']))
+print(np.count_nonzero(np.array(data['z'])==2)/len(data['z']))
+
 data = convert_to_sars(data, n_actions)
 q = learn(data)
 print(q[1, -1, -1, -1, -1])

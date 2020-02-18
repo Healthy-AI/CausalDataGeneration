@@ -108,22 +108,3 @@ class SkewedDistribution(SimpleDistribution):
         else:
             self.random.shuffle(possible_a)
             return possible_a[0]
-
-
-def plot_y():
-    di = SimpleDistribution()
-    a = 3
-    freq = np.zeros((3, 2, 3))
-    for z in range(3):
-        for x0 in range(2):
-            for x1 in range(3):
-                values = []
-                for k in range(300):
-                    values.append(di.draw_y(a, None, [x0, x1], z))
-                freq[z][x0][x1] = np.mean(values)
-        fig = plt.figure()
-        ax = fig.gca(projection='3d')
-        ax.set_zlim((0, 2))
-        X0, X1 = np.meshgrid([0, 1], [0, 1, 2])
-        surf = ax.plot_wireframe(X0, X1, freq[z].T)
-        plt.show()
