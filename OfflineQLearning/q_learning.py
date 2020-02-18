@@ -39,8 +39,6 @@ def convert_to_sars(data, n_actions):
         for treatment in h[i]:
             action, outcome = treatment
             actions[action] = outcome
-            #print(treatment)
-            #print(outcome)
             outcomes[action] = outcome
 
         for j in range(len(h[i])):
@@ -55,8 +53,8 @@ def convert_to_sars(data, n_actions):
                 new_actions[new_action] = 1
                 s_prime = [patient, new_actions]
                 sars = (s, a, r, s_prime)
-                print(sars)
                 all_sars.append(sars)
+    return all_sars
 
 
 def reward(history):
