@@ -1,7 +1,8 @@
-from DataGenerator import distributions
-import numpy as np
-import json
 import itertools
+import json
+from DataGenerator.distributions import *
+
+import numpy as np
 
 
 def generate_data(generator, n_samples):
@@ -66,10 +67,8 @@ def split_patients(data):
                 new_h.append(subhistories)
                 new_x.append(x[i])
                 new_z.append(z[i])
+                print(len(subhistories))
     data['x'] = new_x
     data['h'] = new_h
     data['z'] = new_z
     return data
-
-
-
