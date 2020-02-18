@@ -15,7 +15,7 @@ def generate_data(generator, n_samples):
         h = []
 
         for t in range(generator.n_treatments):
-            a_t = generator.draw_a(h, x)
+            a_t = generator.draw_a(h, x, z)
             y_t = generator.draw_y(a_t, h, x, z)
             h.append([a_t, y_t])
         data['z'].append(z)
@@ -67,8 +67,14 @@ def split_patients(data):
                 new_h.append(subhistories)
                 new_x.append(x[i])
                 new_z.append(z[i])
-                print(len(subhistories))
     data['x'] = new_x
     data['h'] = new_h
     data['z'] = new_z
     return data
+
+'''
+data = generate_data(SkewedDistribution(), 100)
+data = trim_data(data, 2)
+data = split_patients(data)
+write_json(data, "..\DataGeneratorTest\skewed_split")
+'''

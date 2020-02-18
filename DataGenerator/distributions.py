@@ -15,7 +15,7 @@ class Distribution:
     def draw_x(self, z):
         return False
 
-    def draw_a(self, h, x):
+    def draw_a(self, h, x, z):
         return False
 
     def draw_y(self, a, h, x, z):
@@ -36,7 +36,7 @@ class TestDistribution(Distribution):
         x1 = self.random.randint(0, 2)
         return [x0, x1]
 
-    def draw_a(self, h, x):
+    def draw_a(self, h, x, z):
         possible_a = range(0, 3)
         if len(h) > 0:
             used_a = [x[0] for x in h]
@@ -73,7 +73,7 @@ class SimpleDistribution(Distribution):
     def draw_x(self, z):
         return self.random.choice(2, p=self.Pxz.T[z]/sum(self.Pxz.T[z]))
 
-    def draw_a(self, h, x):
+    def draw_a(self, h, x, z):
         possible_a = range(0, 4)
         if len(h) > 0:
             used_a = [x[0] for x in h]
@@ -89,6 +89,25 @@ class SimpleDistribution(Distribution):
               [[2, 2], [1, 0], [0, 0]],
               [[1, 1], [1, 1], [1, 1]]]
         return ys[a][z][x]
+
+
+class SkewedDistribution(SimpleDistribution):
+
+    def __init__(self):
+        super().__init__()
+
+    def draw_a(self, h, x, z):
+        possible_a = list(range(0, 4))
+        if len(h) > 0:
+            used_a = [x[0] for x in h]
+        else:
+            used_a = []
+        possible_a = [a for a in possible_a if a not in used_a]
+        if z == 2 and 3 not in used_a:
+            return 3
+        else:
+            self.random.shuffle(possible_a)
+            return possible_a[0]
 
 
 def plot_y():

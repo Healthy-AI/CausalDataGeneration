@@ -71,6 +71,7 @@ def reward(history):
     return r
 
 
-data = read_json("..\DataGeneratorTest\simple_split")
+data = read_json("..\DataGeneratorTest\skewed_split")
 data = convert_to_sars(data, n_actions)
 q = learn(data)
+print(q[1, -1, -1, -1, -1])
