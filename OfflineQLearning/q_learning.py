@@ -24,7 +24,7 @@ class QLearner:
                 if q_table[self.to_index([x, y_t, -1])] < 1:
                     q_table[self.to_index([x, y_t, -1])] = -np.infty
 
-        for k in range(100000):
+        for k in range(50000):
             state, action, reward, next_state = history[np.random.randint(0, len(history))]
 
             q_table[self.to_index(state) + (action,)] = q_table[self.to_index(state) + (action,)] + self.learning_rate \
@@ -60,10 +60,10 @@ def convert_to_sars(data, n_actions):
 
 
 n_actions = 3
-counts = np.zeros((3))
-ql = QLearner(1, 2, n_actions)
+counts = np.zeros(3)
+ql = QLearner(1, 2, n_actions, learning_rate=0.01)
 for i in range(50):
-    data = generate_data(FredrikDistribution(), 300)
+    data = generate_data(FredrikDistribution(), 500)
     data = trim_data(data, 1)
     data = split_patients(data)
     data = convert_to_sars(data, n_actions)
