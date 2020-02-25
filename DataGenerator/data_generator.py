@@ -72,9 +72,8 @@ def split_patients(data):
     data['z'] = new_z
     return data
 
-'''
-data = generate_data(SkewedDistribution(), 100)
+
+data = generate_data(SimpleDistribution(), 300)
 data = trim_data(data, 2)
 data = split_patients(data)
-write_json(data, "..\DataGeneratorTest\skewed_split")
-'''
+write_json(data, "..\DataGeneratorTest\skewed_split_x")

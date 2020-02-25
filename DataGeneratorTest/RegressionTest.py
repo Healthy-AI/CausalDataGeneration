@@ -1,8 +1,6 @@
 from sklearn import linear_model
 from DataGenerator.distributions import *
 from DataGenerator.data_generator import *
-from OfflineQLearning.q_learning import *
-
 
 data = generate_data(SimpleDistribution(), 100)
 data = trim_data(data, 2)

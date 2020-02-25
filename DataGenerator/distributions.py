@@ -22,42 +22,6 @@ class Distribution:
         return False
 
 
-class TestDistribution(Distribution):
-    n_treatments = 3
-
-    def __init__(self):
-        super().__init__()
-
-    def draw_z(self):
-        return self.random.randint(0, 3)
-
-    def draw_x(self, z):
-        x0 = max(0, 2 ** z - self.random.randint(-1, 2))
-        x1 = self.random.randint(0, 2)
-        return [x0, x1]
-
-    def draw_a(self, h, x, z):
-        possible_a = range(0, 3)
-        if len(h) > 0:
-            used_a = [x[0] for x in h]
-        else:
-            used_a = []
-        draw_a = [x for x in possible_a if x not in used_a]
-        self.random.shuffle(draw_a)
-        return draw_a[0]
-
-    def draw_y(self, a, h, x, z):
-        assert 0 <= a < self.n_treatments
-        y = 0
-        if a == 0:
-            y = self.random.normal(z)
-        elif a == 1:
-            y = self.random.uniform() * x[1]
-        elif a == 2:
-            y = self.random.normal(z - 1)
-        return y
-
-
 class SimpleDistribution(Distribution):
     n_treatments = 4
     Pzx = np.array([[0.5, 0.35, 0.15], [0.45, 0.25, 0.3]])
@@ -103,8 +67,24 @@ class SkewedDistribution(SimpleDistribution):
         else:
             used_a = []
         possible_a = [a for a in possible_a if a not in used_a]
-        if z == 2 and 3 not in used_a:
+        if x == 1 and 3 not in used_a and self.random.random() < 0.5:
             return 3
         else:
             self.random.shuffle(possible_a)
             return possible_a[0]
+
+
+class FredrikDistribution(Distribution):
+    def draw_z(self):
+        return self.random.multinomial(4, (0.45, 0.20, 0.20, 0.15))
+
+    def draw_x(self, z):
+        return [0]
+
+    def draw_a(self, h, x, z):
+        weights = np.array([0.65, 0.6, 0.4])
+        return self.random.multinomial(3, weights/sum(weights))
+
+    def draw_y(self, a, h, x, z):
+        results = [[1, 0, 1, 0], [1, 0, 0, 1], [0, 1, 1, 0]]
+        return results[a][z]

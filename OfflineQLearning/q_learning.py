@@ -1,4 +1,3 @@
-import numpy as np
 from DataGenerator.data_generator import *
 
 n_actions = 4
@@ -26,7 +25,7 @@ def learn(history):
                         if q_table[x][y_0][y_1][y_2][y_3][-1] < 1:
                             q_table[x][y_0][y_1][y_2][y_3][-1] = -np.infty
 
-    for k in range(1000000):
+    for k in range(100000):
         state, action, reward, next_state = history[np.random.randint(0, len(history))]
 
         q_table[to_index(state) + (action,)] = q_table[to_index(state) + (action,)] + learning_rate \
@@ -47,35 +46,27 @@ def convert_to_sars(data, n_actions):
             actions[action] = outcome
 
         for j in range(len(h[i])):
-            if h[i][j] != -1:
-                temp_actions = actions.copy()
-                new_action = h[i][j][0]
-                temp_actions[new_action] = -1
-                s = [patient, temp_actions]
-                a = new_action
-                r = -0.40
-                new_actions = temp_actions.copy()
-                new_actions[new_action] = h[i][j][1]
-                s_prime = [patient, new_actions]
-                sars = (s, a, r, s_prime)
-                all_sars.append(sars)
+            temp_actions = actions.copy()
+            new_action = h[i][j][0]
+            temp_actions[new_action] = -1
+            s = [patient, temp_actions]
+            a = new_action
+            r = -0.7
+            new_actions = temp_actions.copy()
+            new_actions[new_action] = h[i][j][1]
+            s_prime = [patient, new_actions]
+            sars = (s, a, r, s_prime)
+            all_sars.append(sars)
     return all_sars
 
 
-def reward(history):
-    maxy = max(list(h[1] for h in history))
-    if maxy > 0:
-        r = maxy - 0.5 * len(history)
-    else:
-        r = -np.Inf
-    return r
-
-
-data = read_json("..\DataGeneratorTest\skewed_split")
-print(np.count_nonzero(np.array(data['z'])==0)/len(data['z']))
-print(np.count_nonzero(np.array(data['z'])==1)/len(data['z']))
-print(np.count_nonzero(np.array(data['z'])==2)/len(data['z']))
-
-data = convert_to_sars(data, n_actions)
-q = learn(data)
-print(q[1, -1, -1, -1, -1])
+counts = np.zeros((4))
+for i in range(50):
+    data = generate_data(SimpleDistribution(), 1000)
+    data = trim_data(data, 2)
+    data = split_patients(data)
+    data = convert_to_sars(data, n_actions)
+    q = learn(data)
+    counts[np.argmax(q[1, -1, -1, -1, -1])] += 1
+    print(q[1, -1, -1, -1, -1])
+print(counts)
