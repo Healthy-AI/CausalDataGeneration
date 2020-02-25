@@ -61,19 +61,18 @@ def split_patients(data):
     new_h = []
     new_z = []
     for i, history in enumerate(h):
-        for j in range(1, len(history)+1):
-            histories = list(itertools.combinations(history, j))
-            for subhistories in histories:
-                new_h.append(subhistories)
-                new_x.append(x[i])
-                new_z.append(z[i])
+        for j in range(0, len(history)):
+            new_x.append(x[i])
+            new_z.append(z[i])
+            new_h.append(h[i][0:len(h[i])-j])
+
     data['x'] = new_x
     data['h'] = new_h
     data['z'] = new_z
     return data
 
 
-data = generate_data(SimpleDistribution(), 300)
-data = trim_data(data, 2)
+data = generate_data(FredrikDistribution(), 300)
+data = trim_data(data, 1)
 data = split_patients(data)
 write_json(data, "..\DataGeneratorTest\skewed_split_x")

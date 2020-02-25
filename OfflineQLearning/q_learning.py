@@ -1,38 +1,37 @@
 from DataGenerator.data_generator import *
 
-n_actions = 4
-n_results = 3
-n_x = 2
-learning_rate = 0.01
-discount_factor = 1
 
+class QLearner:
+    def __init__(self, n_x, n_y, n_a, learning_rate=0.01, discount_factor=1):
+        self.n_x = n_x
+        self.n_y = n_y
+        self.n_a = n_a
+        self.learning_rate = learning_rate
+        self.discount_factor = discount_factor
 
-def to_index(state):
-    return state[0], state[1][0], state[1][1], state[1][2], state[1][3]
+    def to_index(self, state):
+        return tuple(np.hstack(state))
 
+    def learn(self, history):
+        # Q-table indexed with x, y_0, y_1, y_2, y_3 and a
+        q_table = np.zeros((self.n_x,) + (self.n_y + 1,) * self.n_a + (self.n_a + 1,))
 
-def learn(history):
-    # Q-table indexed with x, y_0, y_1, y_2, y_3 and a
-    q_table = np.zeros((n_x,) + (n_results + 1,) * n_actions + (n_actions + 1,))
+        # Initialize all final states with the rewards for picking that state
+        for x in range(len(q_table)):
+            for y, _ in np.ndenumerate(q_table[x]):
+                y_t = [-1 if e == self.n_y else e for e in y[0:self.n_a]]
+                q_table[self.to_index([x, y_t, -1])] = max(y_t)
+                if q_table[self.to_index([x, y_t, -1])] < 1:
+                    q_table[self.to_index([x, y_t, -1])] = -np.infty
 
-    # Initialize all final states with the rewards for picking that state
-    for x in range(len(q_table)):
-        for y_0 in range(-1, len(q_table[x]) - 1):
-            for y_1 in range(-1, len(q_table[x][y_0]) - 1):
-                for y_2 in range(-1, len(q_table[x][y_0][y_1]) - 1):
-                    for y_3 in range(-1, len(q_table[x][y_0][y_1][y_2]) - 1):
-                        q_table[x][y_0][y_1][y_2][y_3][-1] = max(max(y_0, y_1), max(y_2, y_3))
-                        if q_table[x][y_0][y_1][y_2][y_3][-1] < 1:
-                            q_table[x][y_0][y_1][y_2][y_3][-1] = -np.infty
+        for k in range(100000):
+            state, action, reward, next_state = history[np.random.randint(0, len(history))]
 
-    for k in range(100000):
-        state, action, reward, next_state = history[np.random.randint(0, len(history))]
+            q_table[self.to_index(state) + (action,)] = q_table[self.to_index(state) + (action,)] + self.learning_rate \
+                                            * (reward + self.discount_factor * max(q_table[self.to_index(next_state)])
+                                               - q_table[self.to_index(state) + (action,)])
 
-        q_table[to_index(state) + (action,)] = q_table[to_index(state) + (action,)] + learning_rate \
-                                               * (reward + discount_factor * max(q_table[to_index(next_state)])
-                                                  - q_table[to_index(state) + (action,)])
-
-    return q_table
+        return q_table
 
 
 def convert_to_sars(data, n_actions):
@@ -60,13 +59,15 @@ def convert_to_sars(data, n_actions):
     return all_sars
 
 
-counts = np.zeros((4))
+n_actions = 3
+counts = np.zeros((3))
+ql = QLearner(1, 2, n_actions)
 for i in range(50):
-    data = generate_data(SimpleDistribution(), 1000)
-    data = trim_data(data, 2)
+    data = generate_data(FredrikDistribution(), 300)
+    data = trim_data(data, 1)
     data = split_patients(data)
     data = convert_to_sars(data, n_actions)
-    q = learn(data)
-    counts[np.argmax(q[1, -1, -1, -1, -1])] += 1
-    print(q[1, -1, -1, -1, -1])
+    q = ql.learn(data)
+    counts[np.argmax(q[0, -1, -1, -1])] += 1
+    print(q[0, -1, -1, -1])
 print(counts)

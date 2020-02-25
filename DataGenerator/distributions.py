@@ -75,15 +75,23 @@ class SkewedDistribution(SimpleDistribution):
 
 
 class FredrikDistribution(Distribution):
+    n_treatments = 3
+    treatment_weights = np.array([0.65, 0.6, 0.4])
+
     def draw_z(self):
-        return self.random.multinomial(4, (0.45, 0.20, 0.20, 0.15))
+        return self.random.choice(4, p=[0.45, 0.20, 0.20, 0.15])
 
     def draw_x(self, z):
         return [0]
 
     def draw_a(self, h, x, z):
-        weights = np.array([0.65, 0.6, 0.4])
-        return self.random.multinomial(3, weights/sum(weights))
+        weights = self.treatment_weights.copy()
+        if len(h) > 0:
+            used_a = [u[0] for u in h]
+            for u in used_a:
+                weights[u] = 0
+
+        return self.random.choice(3, p=weights/sum(weights))
 
     def draw_y(self, a, h, x, z):
         results = [[1, 0, 1, 0], [1, 0, 0, 1], [0, 1, 1, 0]]
