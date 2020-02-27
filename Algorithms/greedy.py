@@ -34,8 +34,10 @@ class Greedy:
             index[2*i+1] = h[1]
         index[-1] = action
         return tuple(index)
-    # First index is first treatment, second index is second treatment, third index is intervention
-    # E.g. [0, -1, 1] means that we tried treatment 0 and are now intervening with treatment 1.
+    # First index is first treatment, second index is outcome of first treatment
+    # Third index is second treatment, fourth index is outcome of second treatment
+    # E.g. probabilities[0, 0, 1, 0, 2] means that we tried treatment 0 and 1 and got zero on both
+    # and are now intervening with treatment 2, returned is predicted outcome of intervention.
 
 
 n_actions = 3
@@ -43,5 +45,5 @@ greedyAlgorithm = Greedy(1, 2, n_actions)
 data = generate_data(FredrikDistribution(), 1000)
 data = split_patients(data)
 greedyAlgorithm.find_probabilities(data)
-print(greedyAlgorithm.probabilities[2, 0, 1, 0, 0])
-print(greedyAlgorithm.probabilities[0, 0, 1, 0, 2])
+#print(greedyAlgorithm.probabilities[2, 0, 1, 0, 0])
+#print(greedyAlgorithm.probabilities[0, 0, 1, 0, 2])
