@@ -7,13 +7,13 @@ class Greedy:
         self.n_x = n_x
         self.n_y = n_y
         self.n_a = n_a
-        self.probabilities = np.zeros((n_a+1, n_a+1, n_a))
+        self.probabilities = np.zeros((n_a+1, 2, n_a+1, 2, n_a))
 
     def find_probabilities(self, data):
         h = data['h']
-
-        treatments_effective = np.zeros((self.n_a+1, self.n_a+1, self.n_a))
-        treatments_total = np.zeros((self.n_a+1, self.n_a+1, self.n_a))
+        size = (self.n_a+1, 2, self.n_a+1, 2, self.n_a)
+        treatments_effective = np.zeros(size)
+        treatments_total = np.zeros(size)
 
         for history in h:
             intervention = history.pop(-1)
@@ -28,9 +28,10 @@ class Greedy:
         self.probabilities = np.divide(treatments_effective, treatments_total)
 
     def _find_index_in_history(self, history, action):
-        index = [-1]*self.n_a
+        index = [-1]*(self.n_a+2)
         for i, h in enumerate(history):
-            index[i] = h[0]
+            index[2*i] = h[0]
+            index[2*i+1] = h[1]
         index[-1] = action
         return tuple(index)
     # First index is first treatment, second index is second treatment, third index is intervention
@@ -42,4 +43,5 @@ greedyAlgorithm = Greedy(1, 2, n_actions)
 data = generate_data(FredrikDistribution(), 1000)
 data = split_patients(data)
 greedyAlgorithm.find_probabilities(data)
-print(greedyAlgorithm.probabilities[2, -1])
+print(greedyAlgorithm.probabilities[2, 0, 1, 0, 0])
+print(greedyAlgorithm.probabilities[0, 0, 1, 0, 2])
