@@ -16,8 +16,10 @@ def generate_data(generator, n_samples):
 
         for t in range(generator.n_treatments):
             a_t = generator.draw_a(h, x, z)
-            y_t = generator.draw_y(a_t, h, x, z)
+            y_t, done = generator.draw_y(a_t, h, x, z)
             h.append([a_t, y_t])
+            if done:
+                break
         data['z'].append(z)
         data['x'].append(x)
         data['h'].append(h)

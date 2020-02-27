@@ -77,22 +77,38 @@ class SkewedDistribution(SimpleDistribution):
 class FredrikDistribution(Distribution):
     n_treatments = 3
     treatment_weights = np.array([0.65, 0.6, 0.4])
+    results_array = np.array([[1, 0, 1, 0], [1, 0, 0, 1], [0, 1, 1, 0]])
+    z_weights = np.array([0.45, 0.20, 0.20, 0.15])
 
     def draw_z(self):
-        return self.random.choice(4, p=[0.45, 0.20, 0.20, 0.15])
+        return self.random.choice(4, p=self.z_weights)
 
     def draw_x(self, z):
         return [0]
 
     def draw_a(self, h, x, z):
-        weights = self.treatment_weights.copy()
+        weights = np.sum(self.z_weights * self.results_array, 1)
         if len(h) > 0:
+            treatment_found = np.max(h, 0)[1]
             used_a = [u[0] for u in h]
-            for u in used_a:
-                weights[u] = 0
+            if treatment_found:
+                weights = np.array([1, 1, 1])
+                for u in used_a:
+                    weights[u] = 0
+            else:
+                a_weights = self.results_array.copy()
+                for u in used_a:
+                    a_weights = a_weights - a_weights[u]
+                    a_weights = np.maximum(a_weights, 0)
+                a_weights = self.z_weights * a_weights
+                weights = np.sum(a_weights, 1)
 
         return self.random.choice(3, p=weights/sum(weights))
 
     def draw_y(self, a, h, x, z):
-        results = [[1, 0, 1, 0], [1, 0, 0, 1], [0, 1, 1, 0]]
-        return results[a][z]
+        result = self.results_array[a][z]
+        if len(h) > 0:
+            best_result = np.max(h, 0)[1]
+            if max(result, best_result) == 1 and self.random.random() < 0.85:
+                return result, True
+        return result, False
