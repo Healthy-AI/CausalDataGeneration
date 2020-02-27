@@ -15,3 +15,4 @@ cons = (
 z0 = [0.45, 0.25, 0.3]
 res = optimize.minimize(f, z0, constraints=cons)
 print(res)
+
