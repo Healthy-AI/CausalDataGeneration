@@ -20,7 +20,7 @@ class Greedy:
             action, effectiveness = intervention
             index = self._find_index_in_history(history, action)
             treatments_effective[index] += effectiveness
-            treatments_total[index] += 1
+            treatments_total[index] += self.n_x
 
         no_history_found = (treatments_total == 0).astype(int)
         treatments_total += no_history_found  # to avoid division by zero
