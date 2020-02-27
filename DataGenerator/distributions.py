@@ -112,3 +112,40 @@ class FredrikDistribution(Distribution):
             if max(result, best_result) == 1 and self.random.random() < 0.85:
                 return result, True
         return result, False
+
+
+class NewDistribution(Distribution):
+    n_treatments = 3
+    pz = np.array([0.3, 0.16, 0.16, 0.13, 0.19, 0.04, 0.02])
+    results_array = np.array([[2, 2, 1, 1, 1, 1, 0], [2, 1, 0, 2, 1, 1, 2], [1, 0, 2, 0, 1, 2, 0]])
+
+    def draw_z(self):
+        return self.random.choice(7, p=self.pz)
+
+    def draw_x(self, z):
+        return [0]
+
+    def draw_a(self, h, x, z):
+        ev = np.sum(self.pz * self.results_array, 1)
+        if len(h) > 0:
+            used_a = [u[0] for u in h]
+            max_y = np.max(h, 0)[1]
+            if max_y == 0:
+                ev[0] *= 2
+            elif max_y == 1:
+                ev[2] *= 2
+            elif max_y == 2:
+                ev[1] *= 2
+            for u in used_a:
+                ev[u] = 0
+
+        return self.random.choice(3, p=ev/sum(ev))
+
+    def draw_y(self, a, h, x, z):
+        y = self.results_array[a][z]
+        max_y = 0
+        if len(h) > 0:
+            max_y = np.max(h, 0)[1]
+        if (max_y == 2 or y == 2) and self.random.random() < 0.85:
+            return y, True
+        return y, False
