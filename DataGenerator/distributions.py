@@ -116,7 +116,7 @@ class FredrikDistribution(Distribution):
 
 class NewDistribution(Distribution):
     n_treatments = 3
-    pz = np.array([0.3, 0.16, 0.16, 0.13, 0.19, 0.04, 0.02])
+    pz = np.array([0.3, 0.15, 0.35, 0.14, 0.04, 0.01, 0.01])
     results_array = np.array([[2, 2, 1, 1, 1, 1, 0], [2, 1, 0, 2, 1, 1, 2], [1, 0, 2, 0, 1, 2, 0]])
 
     def draw_z(self):

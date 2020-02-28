@@ -50,7 +50,7 @@ def convert_to_sars(data, n_actions):
             temp_actions[new_action] = -1
             s = [patient, temp_actions]
             a = new_action
-            r = -0.7
+            r = -0.3
             new_actions = temp_actions.copy()
             new_actions[new_action] = h[i][j][1]
             s_prime = [patient, new_actions]
@@ -61,9 +61,9 @@ def convert_to_sars(data, n_actions):
 
 n_actions = 3
 counts = np.zeros(3)
-ql = QLearner(1, 2, n_actions, learning_rate=0.01)
+ql = QLearner(1, 3, n_actions, learning_rate=0.01)
 for i in range(50):
-    data = generate_data(NewDistribution(), 1500)
+    data = generate_data(NewDistribution(), 3000)
     data = split_patients(data)
     data = convert_to_sars(data, n_actions)
     q = ql.learn(data)
