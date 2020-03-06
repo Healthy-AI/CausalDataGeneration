@@ -12,16 +12,6 @@ class ConstrainedQlearner(QLearner):
         q_table = np.zeros((self.n_x,) + (self.n_y + 1,) * self.n_a + (self.n_a + 1,))
 
         # Initialize all final states with the rewards for picking that state
-        '''
-        for i in range(self.n_x):
-            for j in range(-1, self.n_y + 1):
-                for k in range(-1, self.n_y + 1):
-                    for l in range(-1, self.n_y + 1):
-                        r = get_reward(stop_action, [[0, j], [1, k], [2, l]])
-                        print(r)
-                        q_table[i, j, k, l, stop_action] = r
-        print(q_table)
-        '''
         for x in range(len(q_table)):
             for y, _ in np.ndenumerate(q_table[x]):
                 y_t = [-1 if e == self.n_y else e for e in y[0:self.n_a]]
@@ -32,18 +22,41 @@ class ConstrainedQlearner(QLearner):
             state, action, reward, next_state = history[np.random.randint(0, len(history))]
 
             if q_table[self.to_index(state) + (action,)] != -np.infty:
-                q_table[self.to_index(state) + (action,)] += self.learning_rate \
-                    * (reward + self.discount_factor * np.max(q_table[self.to_index(next_state)])
-                       - q_table[self.to_index(state) + (action,)])
+                q_table[self.to_index(state) + (action,)] += self.learning_rate * (reward + self.discount_factor *
+                    np.max(q_table[self.to_index(next_state)]) - q_table[self.to_index(state) + (action,)])
 
         return q_table
+
+
+def get_patient_statistics(data):
+    histories = data['h']
+    dim = []
+    for i in range(n_actions):
+        dim.append(2)
+    for i in range(2):
+        dim.append(n_outcomes)
+
+    patient_statistics = np.zeros(dim, dtype=int)
+    for history in histories:
+        index = np.zeros(n_actions+2, dtype=int)
+        for h in history:
+            index[h[0]] = 1
+        for intervention in history:
+            index[-2] = intervention[0]
+            index[-1] = intervention[1]
+            ind = tuple(index)
+            print(patient_statistics.shape, ind, index)
+            print(patient_statistics[ind], ind)
+            patient_statistics[ind] += 1
+
+    return patient_statistics
 
 
 def y_t_to_history(y_t):
     history = []
     for i, entry in enumerate(y_t):
-        history.append([i, entry])
-    #print(y_t, history)
+        if entry != -1:
+            history.append([i, entry])
     return history
 
 
@@ -83,11 +96,11 @@ def get_sars(actions, new_action, patient, history, outcome):
 
 def get_reward(action, history):
     gamma = better_treatment_constraint(history)
-    if action == stop_action and gamma == 0.0:
+    if action == stop_action and gamma == 0:
         return -np.infty
-    elif action == stop_action and gamma == 1.0:
+    elif action == stop_action and gamma == 1:
         return 0
-    elif action < stop_action:
+    elif stop_action > action >= 0:
         return -1
     else:
         import sys
@@ -96,9 +109,11 @@ def get_reward(action, history):
 
 
 def better_treatment_constraint(history, delta=1, epsilon=0):
-    maxoutcome = max(h[0] for h in history)
-    if maxoutcome == max_possible_outcome:
-        return 1
+    maxoutcome = 0
+    if len(history) > 0:
+        maxoutcome = max(h[0] for h in history)
+        if maxoutcome == max_possible_outcome:
+            return 1
 
     similar_patients = []
     for other_patient_history in data_dict['h']:
@@ -118,7 +133,10 @@ def better_treatment_constraint(history, delta=1, epsilon=0):
     no_data_found = (total == 0).astype(int)
     total += no_data_found
     tot = treatments_better/total
-    return max(tot)
+    tot_delta_limit = (tot >= delta).astype(int)
+    return max(tot_delta_limit)
+
+
 
 n_actions = 3
 n_outcomes = 3
@@ -129,17 +147,35 @@ cql = ConstrainedQlearner(1, n_outcomes, n_actions, learning_rate=0.01)
 ql = QLearner(1, n_outcomes, n_actions, learning_rate=0.01)
 
 data = generate_data(NewDistribution(), 3000)
+statistics = get_patient_statistics(data)
+print(statistics)
+print(statistics[0, 0, 0])
+print(statistics[1, 1, 1])
+print(statistics[1, 1, 0])
+print('------')
+
+
+import sys
+sys.exit()
 data_dict = split_patients(data)
 data = convert_to_sars(data_dict, n_actions)
 cq = cql.learn(data)
 q = ql.learn(ordinary_q_learning.convert_to_sars(data_dict, n_actions))
 
-#print(cq)
+print('cq')
+print(cq)
+print('---------')
+
+print('q')
+print(q)
+print('---------')
+
 print(cq[0, -1, -1, -1])
 print(cq[0, 1, -1, -1])
 print(cq[0, 1, 2, -1])
 print(cq[0, 2, -1, -1])
 print('---------')
+
 print(q[0, -1, -1, -1])
 print(q[0, 1, -1, -1])
 print(q[0, 1, 2, -1])
