@@ -14,10 +14,10 @@ def generate_data(generator, n_samples):
 
         h = []
 
-        for t in range(generator.n_treatments):
+        for t in range(generator.n_a):
             a_t = generator.draw_a(h, x, z)
             y_t, done = generator.draw_y(a_t, h, x, z)
-            h.append([a_t, y_t])
+            h.append(np.array([a_t, y_t]))
             if done:
                 break
         data['z'].append(z)
@@ -73,8 +73,8 @@ def split_patients(data):
     data['z'] = new_z
     return data
 
-
-data = generate_data(FredrikDistribution(), 300)
-data = trim_data(data, 1)
-data = split_patients(data)
-write_json(data, "..\DataGeneratorTest\skewed_split_x")
+def print_data_stats(data):
+    results = np.zeros((4, 3))
+    for h in data['h']:
+        if len(h) == 1:
+            results[h[0][0]][h[0][1]] += 1
