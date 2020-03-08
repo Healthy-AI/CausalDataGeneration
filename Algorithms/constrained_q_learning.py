@@ -16,38 +16,83 @@ class ConstrainedQlearner(QLearner):
             for y, _ in np.ndenumerate(q_table[x]):
                 y_t = [-1 if e == self.n_y else e for e in y[0:self.n_a]]
                 q_table[self.to_index([x, y_t, -1])] = get_reward(stop_action, y_t_to_history(y_t))
-        print(q_table)
 
         for k in range(150000):
             state, action, reward, next_state = history[np.random.randint(0, len(history))]
 
             if q_table[self.to_index(state) + (action,)] != -np.infty:
+                h = tuple(state[1])
+
                 q_table[self.to_index(state) + (action,)] += self.learning_rate * (reward + self.discount_factor *
-                    np.max(q_table[self.to_index(next_state)]) - q_table[self.to_index(state) + (action,)])
+                    #np.max(q_table[self.to_index(next_state)]) - q_table[self.to_index(state) + (action,)])
+                    np.sum(statistics[h], 1)[action]/np.sum(np.sum(statistics[h], 1)) *
+                                                                                   np.max(q_table[self.to_index(next_state)]))
 
         return q_table
+
+
+def get_patient_statistics2(data):
+    histories = data['h']
+    patient_data = {}
+    for history in histories:
+        treatment, outcome = history.pop(-1)
+        entry = np.zeros((n_actions, n_outcomes), dtype=int)
+        entry[treatment, outcome] = 1
+        hash_string = hash_history(history)
+        try:
+            patient_data[hash_string] += entry
+        except KeyError:
+            patient_data[hash_string] = entry
+    return patient_data
+
+
+def hash_history(history):
+    flat_list = [item for intervention in history for item in intervention]
+    strings = [str(integer) for integer in flat_list]
+    hash_string = "".join(strings)
+    return hash_string
+
+
+def get_patient_statistics3(data):
+    histories = data['h']
+    dim = []
+    for i in range(n_actions):
+        dim.append(n_outcomes+1)
+    dim.append(n_actions)
+    dim.append(n_outcomes)
+
+    patient_statistics = np.zeros(dim, dtype=int)
+    for history in histories:
+        treatment, outcome = history.pop(-1)
+        index = np.ones(n_actions, dtype=int)*-1
+        new = np.zeros((n_actions, n_outcomes), dtype=int)
+        for h in history:
+            index[h[0]] = h[1]
+        new[treatment, outcome] = 1
+        ind = tuple(index)
+        patient_statistics[ind] += new
+
+    return patient_statistics
 
 
 def get_patient_statistics(data):
     histories = data['h']
     dim = []
     for i in range(n_actions):
-        dim.append(2)
-    for i in range(2):
-        dim.append(n_outcomes)
+        dim.append(n_outcomes+1)
+    dim.append(n_actions)
+    dim.append(n_outcomes)
 
     patient_statistics = np.zeros(dim, dtype=int)
     for history in histories:
-        index = np.zeros(n_actions+2, dtype=int)
+        intervention = history.pop(-1)
+        index = np.ones(n_actions+2, dtype=int)*n_outcomes
         for h in history:
-            index[h[0]] = 1
-        for intervention in history:
-            index[-2] = intervention[0]
-            index[-1] = intervention[1]
-            ind = tuple(index)
-            print(patient_statistics.shape, ind, index)
-            print(patient_statistics[ind], ind)
-            patient_statistics[ind] += 1
+            index[h[0]] = h[1]
+        index[-2] = intervention[0]
+        index[-1] = intervention[1]
+        ind = tuple(index)
+        patient_statistics[ind] += 1
 
     return patient_statistics
 
@@ -147,17 +192,20 @@ cql = ConstrainedQlearner(1, n_outcomes, n_actions, learning_rate=0.01)
 ql = QLearner(1, n_outcomes, n_actions, learning_rate=0.01)
 
 data = generate_data(NewDistribution(), 3000)
-statistics = get_patient_statistics(data)
-print(statistics)
-print(statistics[0, 0, 0])
-print(statistics[1, 1, 1])
-print(statistics[1, 1, 0])
-print('------')
+#statistics = get_patient_statistics2(data)
+#for keys, values in statistics.items():
+#    print(keys)
+#    print(values)
 
-
-import sys
-sys.exit()
 data_dict = split_patients(data)
+statistics = get_patient_statistics3(data)
+
+print(statistics[-1, -1, -1])
+print(np.sum(statistics[-1, -1, -1], 1))
+
+print(statistics[2, -1, -1])
+print(statistics[1, 0, -1])
+
 data = convert_to_sars(data_dict, n_actions)
 cq = cql.learn(data)
 q = ql.learn(ordinary_q_learning.convert_to_sars(data_dict, n_actions))
