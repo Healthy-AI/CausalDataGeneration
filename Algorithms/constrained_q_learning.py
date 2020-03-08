@@ -192,19 +192,9 @@ cql = ConstrainedQlearner(1, n_outcomes, n_actions, learning_rate=0.01)
 ql = QLearner(1, n_outcomes, n_actions, learning_rate=0.01)
 
 data = generate_data(NewDistribution(), 3000)
-#statistics = get_patient_statistics2(data)
-#for keys, values in statistics.items():
-#    print(keys)
-#    print(values)
 
 data_dict = split_patients(data)
 statistics = get_patient_statistics3(data)
-
-print(statistics[-1, -1, -1])
-print(np.sum(statistics[-1, -1, -1], 1))
-
-print(statistics[2, -1, -1])
-print(statistics[1, 0, -1])
 
 data = convert_to_sars(data_dict, n_actions)
 cq = cql.learn(data)
