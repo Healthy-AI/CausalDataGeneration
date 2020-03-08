@@ -41,9 +41,9 @@ class Greedy:
 
 
 n_actions = 3
-greedyAlgorithm = Greedy(1, 2, n_actions)
-data = generate_data(FredrikDistribution(), 1000)
+greedyAlgorithm = Greedy(1, 3, n_actions)
+data = generate_data(NewDistribution(), 10000)
 data = split_patients(data)
 greedyAlgorithm.find_probabilities(data)
 #print(greedyAlgorithm.probabilities[2, 0, 1, 0, 0])
-print(greedyAlgorithm.probabilities[0, 0, 1, 0, 2])
+print(greedyAlgorithm.probabilities[1, 1, -1, -1, 0])

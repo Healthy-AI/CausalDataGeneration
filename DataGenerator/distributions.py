@@ -128,7 +128,7 @@ class NewDistribution(Distribution):
         return [0]
 
     def draw_a(self, h, x, z):
-        ev = np.sum(self.pz * self.results_array, 1)
+        ev = np.sum(self.pz * (self.results_array == 2), 1)
         if len(h) > 0:
             used_a = [u[0] for u in h]
             max_y = np.max(h, 0)[1]
