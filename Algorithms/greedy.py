@@ -39,7 +39,7 @@ class Greedy:
     # E.g. probabilities[0, 0, 1, 0, 2] means that we tried treatment 0 and 1 and got zero on both
     # and are now intervening with treatment 2, returned is the predicted outcome of the intervention.
 
-
+'''
 n_actions = 3
 greedyAlgorithm = Greedy(1, 3, n_actions)
 data = generate_data(NewDistribution(), 10000)
@@ -47,3 +47,4 @@ data = split_patients(data)
 greedyAlgorithm.find_probabilities(data)
 #print(greedyAlgorithm.probabilities[2, 0, 1, 0, 0])
 print(greedyAlgorithm.probabilities[1, 1, -1, -1, 0])
+'''
