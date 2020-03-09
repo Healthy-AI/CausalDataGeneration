@@ -16,6 +16,7 @@ class QLearner:
     def learn(self, history):
         # Q-table indexed with x, y_0, y_1, y_2, y_3 and a
         self.q_table = np.zeros((2,) * self.n_x + (self.n_y + 1,) * self.n_a + (self.n_a + 1,))
+        modified = self.q_table.copy()
 
         # Initialize all final states with the rewards for picking that state
         for x in range(len(self.q_table)):
@@ -24,15 +25,19 @@ class QLearner:
                 self.q_table[self.to_index([x, y_t, -1])] = max(y_t)
                 if self.q_table[self.to_index([x, y_t, -1])] < 1:
                     self.q_table[self.to_index([x, y_t, -1])] = -np.infty
+                modified[self.to_index(([x, y_t, -1]))] = True
 
-        for k in range(20000):
+        for k in range(200000):
             state, action, reward, next_state = history[np.random.randint(0, len(history))]
 
             self.q_table[self.to_index(state) + (action,)] = self.q_table[self.to_index(state) + (action,)] \
                                                  + self.learning_rate * (reward + self.discount_factor
                                                  * max(self.q_table[self.to_index(next_state)])
                                                  - self.q_table[self.to_index(state) + (action,)])
+            modified[self.to_index(state) + (action,)] = True
 
+        # Hack to make all unmodified cells a bad action
+        self.q_table += (modified-1) * 1000000.0
         return self.q_table
 
     def evaluate(self, subject):
@@ -44,7 +49,7 @@ class QLearner:
         history = []
         state = np.array([x, y])
         action = np.argmax(self.q_table[self.to_index(state)])
-        while action != self.n_a:
+        while action != self.n_a and len(history) < self.n_a:
             y[action] = y_fac[action]
             history.append([action, y[action]])
             state = np.array([x, y])
@@ -68,7 +73,7 @@ def convert_to_sars(data, n_actions):
             temp_actions[new_action] = -1
             s = np.array([patient, temp_actions])
             a = new_action
-            r = -0.1
+            r = -0.001
             new_actions = temp_actions.copy()
             new_actions[new_action] = h[i][j][1]
             s_prime = np.array([patient, new_actions])
@@ -78,18 +83,18 @@ def convert_to_sars(data, n_actions):
 
 
 n_x = 1
-n_z = 2
-n_a = 4
+n_z = 4
+n_a = 5
 n_y = 3
 ql = QLearner(n_x, n_y, n_a, learning_rate=0.02)
 for i in range(50):
     dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=0)
-    data = generate_data(dist, 5000)
+    data = generate_data(dist, 15000)
     data = split_patients(data)
     data = convert_to_sars(data, n_a)
     q = ql.learn(data)
     test_data = generate_test_data(dist, 100)
     for j in range(100):
         print(ql.evaluate(test_data[j]))
-    print(q[0, -1, -1, -1, -1])
-    print(q[1, -1, -1, -1, -1])
+    print(q[0, -1, -1, -1, -1, -1])
+    print(q[1, -1, -1, -1, -1, -1])

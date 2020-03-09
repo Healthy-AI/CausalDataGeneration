@@ -34,8 +34,8 @@ class DiscreteDistribution(Distribution):
         self.x_weight = outcome_sensitivity_x_z*self.n_z/self.n_x
 
         self.Pz = np.array(self.random.random(self.n_z))
-        self.Px = np.array(self.random.normal(0, 1, (self.n_x, self.n_z)))
-        self.Px = (self.Px.T / np.sum(np.abs(self.Px), 1)).T * 0.5
+        self.Px = np.array(self.random.random((self.n_x, self.n_z)))
+        self.Px = (self.Px.T / np.sum(self.Px, 1)).T
         self.Pa = np.array(self.random.normal(0, 1, (self.n_x + self.n_a, self.n_a)))
         self.Py = np.array(self.random.normal(0, 1, (self.n_a, self.n_x + self.n_z, self.steps_y)))
         for coeffs in self.Py:
@@ -51,7 +51,7 @@ class DiscreteDistribution(Distribution):
     # Design challenge: if we want equal parts x_0 = 1 and x_0 = 0, how to do that?
     def draw_x(self, z):
         weights_z = self.Px * z
-        weights_x = np.sum(weights_z, 1) + 0.5
+        weights_x = np.maximum(np.minimum(np.sum(weights_z, 1), 0.95), 0.05)
         x = np.zeros(self.n_x)
         for i in range(self.n_x):
             x[i] = self.random.binomial(1, p=weights_x[i])
@@ -89,61 +89,9 @@ class DiscreteDistribution(Distribution):
         probs = probs / den
         y = self.random.choice(self.steps_y, p=probs)
         done = False
-        if y >= self.steps_y and self.random < 0.9:
+        if y >= self.steps_y and self.random.random() < 0.9:
             done = True
         return y, done
-
-
-class SimpleDistribution(Distribution):
-    n_a = 4
-    Pzx = np.array([[0.5, 0.35, 0.15], [0.45, 0.25, 0.3]])
-    Px = np.array([1 / 3, 2 / 3])
-    Pz = np.array([0.467, 0.283, 0.25])
-
-    Pxz = (Pzx.T * Px)
-    Pxz = Pxz.T / Pz
-
-    def draw_z(self):
-        return int(self.random.choice([0, 1, 2], p=self.Pz))
-
-    def draw_x(self, z):
-        return self.random.choice(2, p=self.Pxz.T[z]/sum(self.Pxz.T[z]))
-
-    def draw_a(self, h, x, z):
-        possible_a = range(0, 4)
-        if len(h) > 0:
-            used_a = [x[0] for x in h]
-        else:
-            used_a = []
-        draw_a = [x for x in possible_a if x not in used_a]
-        self.random.shuffle(draw_a)
-        return draw_a[0]
-
-    def draw_y(self, a, h, x, z):
-        ys = [[[0, 0], [0, 1], [1, 2]],
-              [[0, 0], [2, 2], [0, 0]],
-              [[2, 2], [1, 0], [0, 0]],
-              [[1, 1], [1, 1], [1, 1]]]
-        return ys[a][z][x]
-
-
-class SkewedDistribution(SimpleDistribution):
-
-    def __init__(self):
-        super().__init__()
-
-    def draw_a(self, h, x, z):
-        possible_a = list(range(0, 4))
-        if len(h) > 0:
-            used_a = [x[0] for x in h]
-        else:
-            used_a = []
-        possible_a = [a for a in possible_a if a not in used_a]
-        if x == 1 and 3 not in used_a and self.random.random() < 0.5:
-            return 3
-        else:
-            self.random.shuffle(possible_a)
-            return possible_a[0]
 
 
 class FredrikDistribution(Distribution):
