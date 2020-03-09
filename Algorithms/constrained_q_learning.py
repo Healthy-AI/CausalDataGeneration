@@ -182,11 +182,12 @@ def better_treatment_constraint(history, delta=1, epsilon=0):
     return max(tot_delta_limit)
 
 
-
 n_actions = 3
 n_outcomes = 3
 max_possible_outcome = 2
 stop_action = 3
+'''
+
 #counts = np.zeros(3)
 cql = ConstrainedQlearner(1, n_outcomes, n_actions, learning_rate=0.01)
 ql = QLearner(1, n_outcomes, n_actions, learning_rate=0.01)
@@ -212,12 +213,17 @@ print(cq[0, -1, -1, -1])
 print(cq[0, 1, -1, -1])
 print(cq[0, 1, 2, -1])
 print(cq[0, 2, -1, -1])
+print(cq[0, 1, 1, -1])
+print(cq[0, -1, 1, 1])
 print('---------')
 
 print(q[0, -1, -1, -1])
 print(q[0, 1, -1, -1])
 print(q[0, 1, 2, -1])
 print(q[0, 2, -1, -1])
+print(q[0, 1, 1, -1])
+print(q[0, -1, 1, 1])
 #counts[np.argmax(q[0, -1, -1, -1])] += 1
 #print(q[0, -1, -1, -1])
 #print(counts)
+'''

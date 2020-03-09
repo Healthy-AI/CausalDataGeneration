@@ -8,6 +8,7 @@ class QLearner:
         self.n_a = n_a
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
+        self.q_table = None
 
     def to_index(self, state):
         return tuple(np.hstack(state))
@@ -31,6 +32,7 @@ class QLearner:
                                             * (reward + self.discount_factor * max(q_table[self.to_index(next_state)])
                                                - q_table[self.to_index(state) + (action,)])
 
+        self.q_table = q_table
         return q_table
 
 
@@ -58,7 +60,7 @@ def convert_to_sars(data, n_actions):
             all_sars.append(sars)
     return all_sars
 
-
+'''
 n_actions = 3
 counts = np.zeros(3)
 ql = QLearner(1, 3, n_actions, learning_rate=0.01)
@@ -70,3 +72,4 @@ for i in range(50):
     counts[np.argmax(q[0, -1, -1, -1])] += 1
     print(q[0, -1, -1, -1])
 print(counts)
+'''
