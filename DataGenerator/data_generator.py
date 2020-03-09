@@ -14,10 +14,10 @@ def generate_data(generator, n_samples):
 
         h = []
 
-        for t in range(generator.n_treatments):
+        for t in range(generator.n_a):
             a_t = generator.draw_a(h, x, z)
             y_t, done = generator.draw_y(a_t, h, x, z)
-            h.append([a_t, y_t])
+            h.append(np.array([a_t, y_t]))
             if done:
                 break
         data['z'].append(z)
@@ -25,6 +25,24 @@ def generate_data(generator, n_samples):
         data['h'].append(h)
 
     return data
+
+
+# Generates counterfactual data with all results for all treatments
+def generate_test_data(generator, n_samples):
+    data = []
+    for i in range(n_samples):
+        z = generator.draw_z()
+        x = generator.draw_x(z)
+        subject = []
+        subject.append(x)
+        subject.append(np.zeros(generator.n_a))
+        h = []
+        for a in range(generator.n_a):
+            y, _ = generator.draw_y(a, h, x, z)
+            subject[1][a] = y
+            h.append(np.array([a, y]))
+        data.append(np.array(subject))
+    return np.array(data)
 
 
 def trim_data(data, threshold):
@@ -72,9 +90,3 @@ def split_patients(data):
     data['h'] = new_h
     data['z'] = new_z
     return data
-
-
-data = generate_data(FredrikDistribution(), 300)
-data = trim_data(data, 1)
-data = split_patients(data)
-write_json(data, "..\DataGeneratorTest\skewed_split_x")
