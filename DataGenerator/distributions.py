@@ -93,6 +93,7 @@ class DiscreteDistribution(Distribution):
             done = True
         return y, done
 
+
 class SimpleDistribution(Distribution):
     n_a = 4
     Pzx = np.array([[0.5, 0.35, 0.15], [0.45, 0.25, 0.3]])

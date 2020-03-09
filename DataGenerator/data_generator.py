@@ -27,6 +27,24 @@ def generate_data(generator, n_samples):
     return data
 
 
+# Generates counterfactual data with all results for all treatments
+def generate_test_data(generator, n_samples):
+    data = []
+    for i in range(n_samples):
+        z = generator.draw_z()
+        x = generator.draw_x(z)
+        subject = []
+        subject.append(x)
+        subject.append(np.zeros(generator.n_a))
+        h = []
+        for a in range(generator.n_a):
+            y, _ = generator.draw_y(a, h, x, z)
+            subject[1][a] = y
+            h.append(np.array([a, y]))
+        data.append(np.array(subject))
+    return np.array(data)
+
+
 def trim_data(data, threshold):
     trimmed_data = data.copy()
     for i in range(len(trimmed_data['z'])):
@@ -72,9 +90,3 @@ def split_patients(data):
     data['h'] = new_h
     data['z'] = new_z
     return data
-
-def print_data_stats(data):
-    results = np.zeros((4, 3))
-    for h in data['h']:
-        if len(h) == 1:
-            results[h[0][0]][h[0][1]] += 1
