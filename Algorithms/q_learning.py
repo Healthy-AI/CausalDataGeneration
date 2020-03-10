@@ -1,5 +1,5 @@
 from DataGenerator.data_generator import *
-
+from DataGenerator.data_visualizer import *
 
 class QLearner:
     def __init__(self, n_x, n_y, n_a, learning_rate=0.01, discount_factor=1):
@@ -44,7 +44,7 @@ class QLearner:
         if self.q_table is None:
             print("Run learn first!")
             return
-        x, y_fac = subject
+        z, x, y_fac = subject
         y = np.array([-1] * self.n_a)
         history = []
         state = np.array([x, y])
@@ -73,7 +73,7 @@ def convert_to_sars(data, n_actions):
             temp_actions[new_action] = -1
             s = np.array([patient, temp_actions])
             a = new_action
-            r = -0.001
+            r = -0.1
             new_actions = temp_actions.copy()
             new_actions[new_action] = h[i][j][1]
             s_prime = np.array([patient, new_actions])
@@ -83,18 +83,22 @@ def convert_to_sars(data, n_actions):
 
 
 n_x = 1
-n_z = 4
+n_z = 3
 n_a = 5
 n_y = 3
-ql = QLearner(n_x, n_y, n_a, learning_rate=0.02)
-for i in range(50):
+ql = QLearner(n_x, n_y, n_a, learning_rate=0.01)
+for i in range(1):
     dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=0)
     data = generate_data(dist, 15000)
+    DV = DataVisualizer(n_z, n_x, n_a, n_y)
+    DV.plot_x(data)
+    DV.print_y(data, np.array([0]))
+    DV.print_y(data, np.array([1]))
     data = split_patients(data)
     data = convert_to_sars(data, n_a)
     q = ql.learn(data)
     test_data = generate_test_data(dist, 100)
     for j in range(100):
-        print(ql.evaluate(test_data[j]))
+        print(test_data[j][0], test_data[j][1], ql.evaluate(test_data[j]))
     print(q[0, -1, -1, -1, -1, -1])
     print(q[1, -1, -1, -1, -1, -1])

@@ -24,7 +24,7 @@ class Distribution:
 
 # Creates a random distribution with binary discrete covariates and moderators
 class DiscreteDistribution(Distribution):
-    def __init__(self, n_z, n_x, n_a, steps_y, outcome_sensitivity_x_z=2, seed=None):
+    def __init__(self, n_z, n_x, n_a, steps_y, outcome_sensitivity_x_z=1, seed=None):
         Distribution.__init__(self, seed)
 
         self.n_z = n_z

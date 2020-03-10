@@ -34,12 +34,13 @@ def generate_test_data(generator, n_samples):
         z = generator.draw_z()
         x = generator.draw_x(z)
         subject = []
+        subject.append(z)
         subject.append(x)
         subject.append(np.zeros(generator.n_a))
         h = []
         for a in range(generator.n_a):
             y, _ = generator.draw_y(a, h, x, z)
-            subject[1][a] = y
+            subject[2][a] = y
             h.append(np.array([a, y]))
         data.append(np.array(subject))
     return np.array(data)
