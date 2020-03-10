@@ -11,40 +11,7 @@ class ConstrainedQlearner(QLearner):
         self.q_table_done = self.q_table.copy()
 
     def learn(self):
-        history = self.sars_data
-        # Initialize all final states with the rewards for picking that state
         for x in range(len(self.q_table)):
-            for y, _ in np.ndenumerate(self.q_table[x]):
-                y_t = [-1 if e == self.n_y else e for e in y[0:self.n_a]]
-                self.q_table[self.to_index([x, y_t, -1])] = self.get_reward(self.stop_action, y_t_to_history(y_t))
-
-        for x in range(self.n_x):
-            for i in range(-1, self.n_y-1):
-                for j in range(-1, self.n_y-1):
-                    for k in range(-1, self.n_y-1):
-                        #res =
-                        for action in range(0, self.n_a-1):
-                            for y in range(0, self.n_y-1):
-                                history = [i, j, k]
-                                state = [x, history]
-                                reward = self.get_reward(action, [[0, i], [1, j], [2, k]])
-                                next_state = state.copy()
-                                next_state[action] = y
-                                if self.q_table[self.to_index(state) + (action,)] != -np.infty:
-                                    h = tuple(state[1])
-                                    prob = self.statistics[h][action]/np.sum(self.statistics[h][action])
-
-                                    self.q_table[self.to_index(state) + (action,)] = \
-                                        reward + self.statistics[h]/np.sum(self.statistics[h], axis=1) + \
-                                        np.max(self.q_table[self.to_index(next_state)], 1)
-
-    def fill_table(self):
-        for x in range(len(self.q_table)):
-            for y, _ in np.ndenumerate(self.q_table[x]):
-                y_t = [-1 if e == self.n_y else e for e in y[0:self.n_a]]
-                self.q_table[self.to_index([x, y_t, -1])] = self.get_reward(self.stop_action, y_t_to_history(y_t))
-                self.q_table_done[self.to_index([x, y_t, -1])] = 1
-
             possible_histories = list(itertools.product(range(-1, self.n_a), repeat=self.n_y))
             for history in possible_histories:
                 for action in range(self.n_a):
@@ -109,7 +76,7 @@ class ConstrainedQlearner(QLearner):
 
         similar_patients = []
         for other_patient_history in self.data['h']:
-            if np.array_equal(np.sort(history), np.sort(other_patient_history)): # TODO fix comparison
+            if np.array_equal(np.sort(history), np.sort(other_patient_history)):
                 t = [[h[0], (h[1] > maxoutcome + epsilon)] for h in other_patient_history]
                 similar_patients.append(t)
         treatments_better = np.zeros(self.n_a, dtype=int)
@@ -246,44 +213,3 @@ def y_t_to_history(y_t):
     return history
 
 
-'''
-
-#counts = np.zeros(3)
-cql = ConstrainedQlearner(1, n_outcomes, n_actions, learning_rate=0.01)
-ql = QLearner(1, n_outcomes, n_actions, learning_rate=0.01)
-
-data = generate_data(NewDistribution(), 3000)
-
-data_dict = split_patients(data)
-statistics = get_patient_statistics3(data)
-
-data = convert_to_sars(data_dict, n_actions)
-cq = cql.learn(data)
-q = ql.learn(ordinary_q_learning.convert_to_sars(data_dict, n_actions))
-
-print('cq')
-print(cq)
-print('---------')
-
-print('q')
-print(q)
-print('---------')
-
-print(cq[0, -1, -1, -1])
-print(cq[0, 1, -1, -1])
-print(cq[0, 1, 2, -1])
-print(cq[0, 2, -1, -1])
-print(cq[0, 1, 1, -1])
-print(cq[0, -1, 1, 1])
-print('---------')
-
-print(q[0, -1, -1, -1])
-print(q[0, 1, -1, -1])
-print(q[0, 1, 2, -1])
-print(q[0, 2, -1, -1])
-print(q[0, 1, 1, -1])
-print(q[0, -1, 1, 1])
-#counts[np.argmax(q[0, -1, -1, -1])] += 1
-#print(q[0, -1, -1, -1])
-#print(counts)
-'''
