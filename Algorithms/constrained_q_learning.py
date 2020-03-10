@@ -23,7 +23,7 @@ class ConstrainedQlearner(QLearner):
     def q_function(self, history, action, x):
         # if action is stop action, calculate the reward
         if action == self.stop_action:
-            fake_history = y_t_to_history(history)
+            fake_history = state_to_history(history)
             index = self.to_index([x, history, action])
             if self.q_table_done[index] == 1:
                 reward = self.q_table[index]
@@ -63,7 +63,7 @@ class ConstrainedQlearner(QLearner):
             max_future_q = np.max(future_qs)
             # For each outcome, add the probability times maximal future Q
             future_reward = np.add(future_reward, np.multiply(prob, max_future_q))
-        fake_history = y_t_to_history(history)
+        fake_history = state_to_history(history)
         q = self.get_reward(action, fake_history) + future_reward
         return q
 
@@ -205,7 +205,9 @@ def get_patient_statistics3(data):
     return patient_statistics
 '''
 
-def y_t_to_history(y_t):
+
+def state_to_history(y_t):
+    # Creates history from [0, 1, 2] to [[0, 0], [1, 1], [2, 2]]
     history = []
     for i, entry in enumerate(y_t):
         if entry != -1:
