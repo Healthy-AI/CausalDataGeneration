@@ -27,7 +27,6 @@ class QLearner:
 
         for k in range(150000):
             state, action, reward, next_state = history[np.random.randint(0, len(history))]
-
             q_table[self.to_index(state) + (action,)] = q_table[self.to_index(state) + (action,)] + self.learning_rate \
                                             * (reward + self.discount_factor * max(q_table[self.to_index(next_state)])
                                                - q_table[self.to_index(state) + (action,)])
