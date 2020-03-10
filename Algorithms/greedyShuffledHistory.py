@@ -46,7 +46,7 @@ class GreedyShuffled:
             prob_of_finding_better = np.max(prob_better_vec)
             if prob_of_finding_better > delta:
                 new_treatment = np.argmax(prob_better_vec)
-                outcome = patient['y'][new_treatment] #TODO: fix actual outcome
+                outcome = patient[1][new_treatment]
                 tested_treatments[new_treatment] = outcome
             else:
                 stop = True
