@@ -13,70 +13,65 @@ class ConstrainedQlearner(QLearner):
     def learn(self):
         for x in range(len(self.q_table)):
             possible_histories = list(itertools.product(range(-1, self.n_a), repeat=self.n_y))
-            for history in possible_histories:
-                for action in range(self.n_a+1):
-                    q = self.q_function(history, action, x)
-                    index = self.to_index([x, history, action])
-                    self.q_table[index] = q
-                    self.q_table_done[index] = 1
+            print(possible_histories)
+            for history in reversed(possible_histories):
+                q = self.q_function(history, x)
 
-    def q_function(self, history, action, x):
-        # if action is stop action, calculate the reward
-        if action == self.stop_action:
-            index = self.to_index([x, history, action])
-            if self.q_table_done[index] == 1:
-                reward = self.q_table[index]
-            else:
-                reward = self.get_reward(self.stop_action, history)
-                self.q_table[index] = reward
-                self.q_table_done[index] = 1
-            return reward
-        if history[action] != -1 and -1 in history:
-            index = self.to_index([x, history, action])
-            reward = -np.infty
-            self.q_table[index] = reward
-            self.q_table_done[index] = 1
-            return reward
-        # else, calculate the sum of the reward for each outcome times its probability
+    def q_function(self, history, x):
         future_reward = 0
-        tot = np.sum(self.statistics[tuple(history)][action], axis=None)
-        no_history_found = (tot == 0).astype(int)
-        tot += no_history_found
-        for outcome in range(self.n_y):
-            prob = self.statistics[tuple(history)][action][outcome] / tot
-            future_qs = []
-            if prob > 0:
-                future_history = list(history)
-                future_history[action] = outcome
-                # Look in history and find which actions there are left
-                #allowed_actions = self.get_allowed_actions(future_history)
-                # Among allowed actions, find the one with the greatest reward
-                for new_action in range(self.n_a+1):
-                    index = self.to_index([x, future_history, new_action])
-                    if self.q_table_done[index] == 1:
-                        future_q = self.q_table[index]
-                    else:
-                        future_q = self.q_function(tuple(future_history), new_action, x)
-                        self.q_table[index] = future_q
-                        self.q_table_done[index] = 1
-                    future_qs.append(future_q)
-                max_future_q = np.max(future_qs)
-            else:
-                max_future_q = 0
-            # For each outcome, add the probability times maximal future Q
-
-            future_reward = np.add(future_reward, np.multiply(prob, max_future_q))
-        r = self.get_reward(action, history)
-        q = r + future_reward
-        return q
-
-    def get_allowed_actions(self, history):
+        # Look in history and find which actions there are left
         allowed_actions = []
         for i, entry in enumerate(history[:self.n_a]):
             if entry == -1:
                 allowed_actions.append(i)
         allowed_actions.append(self.stop_action)
-        return allowed_actions
+
+        for action in allowed_actions:
+            # if action is stop action, calculate the reward
+            if action == self.stop_action:
+                fake_history = state_to_history(history)
+                index = self.to_index([x, history, action])
+                if self.q_table_done[index] == 1:
+                    reward = self.q_table[index]
+                else:
+                    reward = self.get_reward(self.stop_action, fake_history)
+                    self.q_table[index] = reward
+                    self.q_table_done[index] = 1
+                return reward
+
+            # else, calculate the sum of the reward for each outcome times its probability
+
+            tot = np.sum(self.statistics[tuple(history)][action])
+            no_history_found = (tot == 0).astype(int)
+            tot += no_history_found
+
+            future_qs = []
+            for outcome in range(self.n_y):
+                future_history = list(history)
+                future_history[action] = outcome
+
+                index = self.to_index([x, future_history, new_action])
+                if self.q_table_done[index] == 1:
+                    future_q = self.q_table[index]
+                else:
+                    future_q = self.q_function(future_history, x)
+                    self.q_table[index] = future_q
+                    self.q_table_done[index] = 1
+                future_qs.append(future_q)
+
+
+            # Among allowed actions, find the one with the greatest reward
+
+            max_future_q = np.max(future_qs)
+            prob = self.statistics[tuple(history)][action][outcome] / tot
+            if np.max(self.statistics[tuple(history)][action]) == 0:
+                prob = 1 / self.n_a
+
+            # For each outcome, add the probability times maximal future Q
+            future_reward = np.add(future_reward, np.multiply(prob, max_future_q))
+            fake_history = state_to_history(history)
+            q = self.get_reward(action, fake_history) + future_reward
+            return q
 
     def better_treatment_constraint(self, history, delta=1, epsilon=0):
         maxoutcome = 0
@@ -98,32 +93,6 @@ class ConstrainedQlearner(QLearner):
                     treatments_better[intervention[0]] += 1
                 if intervention[1] == False:
                     treatments_worse[intervention[0]] += 1
-        total = treatments_better + treatments_worse
-        no_data_found = (total == 0).astype(int)
-        total += no_data_found
-        tot = treatments_better / total
-        tot_delta_limit = (tot >= delta).astype(int)
-        return max(tot_delta_limit)
-
-    def better_treatment_constraint2(self, history, delta=1, epsilon=0):
-        maxoutcome = max(history)
-        if maxoutcome == self.max_possible_outcome:
-            return 1
-
-        similar_patients = []
-        for other_patient_history in self.data['h']:
-            other_patient_state = self.history_to_state(other_patient_history)
-            if history == other_patient_state:
-                t = [h > maxoutcome + epsilon for h in other_patient_state]
-                similar_patients.append(t)
-        treatments_better = np.zeros(self.n_a, dtype=int)
-        treatments_worse = np.zeros(self.n_a, dtype=int)
-        for patient in similar_patients:
-            for treatment, outcome in enumerate(patient):
-                if outcome == True:
-                    treatments_better[treatment] += 1
-                if outcome == False:
-                    treatments_worse[treatment] += 1
         total = treatments_better + treatments_worse
         no_data_found = (total == 0).astype(int)
         total += no_data_found
@@ -153,7 +122,7 @@ class ConstrainedQlearner(QLearner):
         return patient_statistics
 
     def get_reward(self, action, history):
-        gamma = self.better_treatment_constraint2(history)
+        gamma = self.better_treatment_constraint(history)
         if action == self.stop_action and gamma == 0:
             return -np.infty
         elif action == self.stop_action and gamma == 1:
@@ -171,14 +140,12 @@ class ConstrainedQlearner(QLearner):
         temp_actions[new_action] = -1
         s = [patient, temp_actions]
         a = new_action
-        r = self.get_reward(a, self.history_to_state(history))
+        r = self.get_reward(a, history)
         new_actions = temp_actions.copy()
         new_actions[new_action] = outcome
         s_prime = [patient, new_actions]
         sars = (s, a, r, s_prime)
         return sars
-
-
 
     def convert_to_sars(self):
         x = self.data['x']
@@ -199,12 +166,6 @@ class ConstrainedQlearner(QLearner):
 
         return all_sars
 
-    def history_to_state(self, history):
-        state = [-1] * self.n_a
-        for intervention in history:
-            treatment, outcome = intervention
-            state[treatment] = outcome
-        return state
 '''
 def get_patient_statistics2(data):
     histories = data['h']
@@ -219,11 +180,15 @@ def get_patient_statistics2(data):
         except KeyError:
             patient_data[hash_string] = entry
     return patient_data
+
+
 def hash_history(history):
     flat_list = [item for intervention in history for item in intervention]
     strings = [str(integer) for integer in flat_list]
     hash_string = "".join(strings)
     return hash_string
+
+
 def get_patient_statistics3(data):
     histories = data['h']
     dim = []
@@ -231,6 +196,7 @@ def get_patient_statistics3(data):
         dim.append(n_outcomes+1)
     dim.append(n_actions)
     dim.append(n_outcomes)
+
     patient_statistics = np.zeros(dim, dtype=int)
     for history in histories:
         intervention = history.pop(-1)
@@ -241,17 +207,17 @@ def get_patient_statistics3(data):
         index[-1] = intervention[1]
         ind = tuple(index)
         patient_statistics[ind] += 1
+
     return patient_statistics
 '''
 
 
-def state_to_history(state):
+def state_to_history(y_t):
     # Creates history from [0, 1, 2] to [[0, 0], [1, 1], [2, 2]]
     history = []
-    for i, entry in enumerate(state):
+    for i, entry in enumerate(y_t):
         if entry != -1:
             history.append([i, entry])
     return history
-
 
 
