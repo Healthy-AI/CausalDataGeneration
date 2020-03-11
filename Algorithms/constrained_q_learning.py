@@ -7,12 +7,13 @@ class ConstrainedQlearner(QLearner):
         super().__init__(n_x, n_a, n_y, data, learning_rate, discount_factor)
         self.statistics = self.get_patient_statistics()
         # Q-table indexed with x, y_0, y_1, y_2, y_3 and a
-        self.q_table = np.zeros((self.n_x,) + (self.n_y + 1,) * self.n_a + (self.n_a + 1,))
+        self.q_table = np.zeros((2,) * self.n_x + (self.n_y + 1,) * self.n_a + (self.n_a + 1,))
+        #self.q_table = np.zeros((self.n_x,) + (self.n_y + 1,) * self.n_a + (self.n_a + 1,))
         self.q_table_done = self.q_table.copy()
 
     def learn(self):
         for x in range(len(self.q_table)):
-            possible_histories = list(itertools.product(range(-1, self.n_a), repeat=self.n_y))
+            possible_histories = list(itertools.product(range(-1, self.n_y), repeat=self.n_a))
             for history in possible_histories:
                 for action in range(self.n_a+1):
                     q = self.q_function(history, action, x)
@@ -178,8 +179,6 @@ class ConstrainedQlearner(QLearner):
         sars = (s, a, r, s_prime)
         return sars
 
-
-
     def convert_to_sars(self):
         x = self.data['x']
         h = self.data['h']
@@ -205,44 +204,6 @@ class ConstrainedQlearner(QLearner):
             treatment, outcome = intervention
             state[treatment] = outcome
         return state
-'''
-def get_patient_statistics2(data):
-    histories = data['h']
-    patient_data = {}
-    for history in histories:
-        treatment, outcome = history.pop(-1)
-        entry = np.zeros((n_actions, n_outcomes), dtype=int)
-        entry[treatment, outcome] = 1
-        hash_string = hash_history(history)
-        try:
-            patient_data[hash_string] += entry
-        except KeyError:
-            patient_data[hash_string] = entry
-    return patient_data
-def hash_history(history):
-    flat_list = [item for intervention in history for item in intervention]
-    strings = [str(integer) for integer in flat_list]
-    hash_string = "".join(strings)
-    return hash_string
-def get_patient_statistics3(data):
-    histories = data['h']
-    dim = []
-    for i in range(n_actions):
-        dim.append(n_outcomes+1)
-    dim.append(n_actions)
-    dim.append(n_outcomes)
-    patient_statistics = np.zeros(dim, dtype=int)
-    for history in histories:
-        intervention = history.pop(-1)
-        index = np.ones(n_actions+2, dtype=int)*n_outcomes
-        for h in history:
-            index[h[0]] = h[1]
-        index[-2] = intervention[0]
-        index[-1] = intervention[1]
-        ind = tuple(index)
-        patient_statistics[ind] += 1
-    return patient_statistics
-'''
 
 
 def state_to_history(state):

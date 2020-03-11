@@ -1,4 +1,3 @@
-from Algorithms.constrained_q_learning2 import ConstrainedQlearner
 from Algorithms.q_learning import QLearner
 from Algorithms.greedyShuffledHistory import GreedyShuffled
 from DataGenerator.distributions import *
@@ -15,8 +14,8 @@ n_z = 6
 n_x = 1
 n_a = 7
 n_y = 3
-n_algorithms = 2
-training_episodes = 500000
+n_algorithms = 3
+training_episodes = 50000
 n_training_samples = 2000
 n_test_samples = 2000
 delta = 0.1
@@ -26,18 +25,17 @@ epsilon = 0
 treatment_slack = 0     # Eg, how close to max must we be to be considered "good enough"
 plot_colors = ['k', 'r', 'b', 'g']
 plot_markers = ['', '--', ':']
-plot_labels = ['QL', 'G']
+plot_labels = ['QL', 'G', 'CQL']
 main_start = time.time()
 
 # Generate the data
 dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed)
-# dist = NewDistribution(seed=seed)
+#dist = NewDistribution(seed=seed)
 start = time.time()
 print("Generating {} training samples...".format(n_training_samples))
 training_data = generate_data(dist, n_training_samples)
-print('training_data', training_data['h'])
 split_training_data = split_patients(training_data.copy())
-
+split_training_data2 = split_patients(training_data.copy())
 print("Generating training samples took {:.3f} seconds".format(time.time()-start))
 start = time.time()
 print("Generating {} test samples...".format(n_test_samples))
@@ -51,14 +49,14 @@ G = greedy.GreedyShuffled(n_x, n_y, n_a)
 print("\tTraining Greedy...")
 G.find_probabilities(training_data)
 print("\tTraining the Greedy algorithm took {:.3f} seconds".format(time.time()-start))
-'''
+
 start = time.time()
 print("Initializing Constrained Q-learning...")
-CQL = cql.ConstrainedQlearner(n_x, n_y, n_a, split_training_data, learning_rate=0.01, discount_factor=1)
+CQL = cql.ConstrainedQlearner(n_x, n_a, n_y, split_training_data2, learning_rate=0.01, discount_factor=1)
 print("\tTraining Constrained Q-learning...")
 CQL.learn()
 print("\tTraining the Constrained Q-learning algorithm took {:.3f} seconds".format(time.time()-start))
-'''
+
 start = time.time()
 print("Initializing Q-learning...")
 QL = ql.QLearner(n_x, n_a, n_y, split_training_data, reward=-delta, learning_time=training_episodes, learning_rate=0.01, discount_factor=1)
@@ -110,6 +108,7 @@ mean_treatment_effects /= n_test_samples
 x = np.arange(0, n_a+1)
 axs1 = plt.subplot(121)
 for i_plot in range(n_algorithms):
+    print(i_plot, len(mean_treatment_effects), len(plot_colors), )
     plt.plot(x, mean_treatment_effects[i_plot], plot_colors[i_plot] + plot_markers[0], label=plot_labels[i_plot])
     plt.plot(x, max_mean_treatment_effects[i_plot], plot_colors[i_plot] + plot_markers[1])
     plt.fill_between(x, mean_treatment_effects[i_plot], max_mean_treatment_effects[i_plot], color=plot_colors[i_plot], alpha=0.1)
