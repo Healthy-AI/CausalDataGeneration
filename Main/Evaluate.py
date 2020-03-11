@@ -1,4 +1,4 @@
-from Algorithms.constrained_q_learning import ConstrainedQlearner
+from Algorithms.constrained_q_learning2 import ConstrainedQlearner
 from Algorithms.q_learning import QLearner
 from Algorithms.greedyShuffledHistory import GreedyShuffled
 from DataGenerator.distributions import *
