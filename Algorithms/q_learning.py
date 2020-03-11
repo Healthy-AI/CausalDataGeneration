@@ -28,7 +28,7 @@ class QLearner:
         history = self.sars_data
 
         # Initialize all final states with the rewards for picking that state
-        for x, _ in np.ndenumerate([[0, 1]]*self.n_x):
+        for x, _ in np.ndenumerate(np.zeros((2,)*self.n_x)):
             for y, _ in np.ndenumerate(self.q_table[x]):
                 y_t = [-1 if e == self.n_y else e for e in y[0:self.n_a]]
                 self.q_table[self.to_index([x, y_t, -1])] = max(y_t)
@@ -71,8 +71,8 @@ class QLearner:
                 # TODO choose the treatment with highest mean effect for this x?
                 print("Choosing action arbitrarily")
                 for a in action_candidates:
-                    if y[action_candidates[a]] == -1:
-                        action = action_candidates[a]
+                    if y[a] == -1:
+                        action = a
                         break
         return history
 

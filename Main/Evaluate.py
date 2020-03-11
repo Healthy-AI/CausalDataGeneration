@@ -11,20 +11,19 @@ import time
 
 # Training values
 seed = 0
-n_z = 4
+n_z = 6
 n_x = 1
-n_a = 3
+n_a = 7
 n_y = 3
 n_algorithms = 2
-training_episodes = 200000
-n_training_samples = 10000
-n_test_samples = 1000
+training_episodes = 500000
+n_training_samples = 2000
+n_test_samples = 2000
 delta = 0.1
 epsilon = 0
 
 # Plot values
 treatment_slack = 0     # Eg, how close to max must we be to be considered "good enough"
-show_plots = True
 plot_colors = ['k', 'r', 'b', 'g']
 plot_markers = ['', '--', ':']
 plot_labels = ['QL', 'G']
