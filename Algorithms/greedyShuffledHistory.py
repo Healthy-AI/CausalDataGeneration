@@ -6,8 +6,7 @@ class GreedyShuffled:
         self.n_x = n_x
         self.n_y = n_y
         self.n_a = n_a
-        self.size = tuple([n_y]*n_a + [n_a, n_y])
-        self.probabilities = np.zeros(self.size)
+        self.probabilities = None
 
     def find_probabilities(self, data):
         histories = data['h']
@@ -27,28 +26,36 @@ class GreedyShuffled:
             new[treatment, outcome] = 1
             ind = tuple(index)
             patient_statistics[ind] += new
-        patient_statistics = np.sum(patient_statistics, 3)
         self.probabilities = patient_statistics
 
         return patient_statistics
 
     def evaluate(self, patient, delta, eps):
         best_outcome = 0
+        covariates = patient[1]
+        counterfactual_outcomes = patient[2]
         tested_treatments = [-1]*self.n_a
         stop = False
+        history = []
         while not stop:
-            prob_matrix = self.probabilities[tested_treatments]
-            tot = np.sum(prob_matrix, axis=None)
+            prob_matrix = self.probabilities[tuple(tested_treatments)]
+            tot = np.sum(prob_matrix, axis=1)
+            tot[tot == 0] = 1
             prob_vec = np.zeros(self.n_a)
-            for i in range(best_outcome+1, self.n_y-1):
+            ev_vec = np.zeros(self.n_a)
+            for i in range(best_outcome+1+eps, self.n_y):
                 prob_vec += prob_matrix[:, i]
-            prob_better_vec = prob_vec / tot
+                ev_vec += prob_matrix[:, i] * i
+            prob_better_vec = np.divide(prob_vec, tot)
+            ev_vec = np.divide(ev_vec, tot)
             prob_of_finding_better = np.max(prob_better_vec)
             if prob_of_finding_better > delta:
-                new_treatment = np.argmax(prob_better_vec)
-                outcome = patient[1][new_treatment]
+                new_treatment = np.argmax(ev_vec)
+                outcome = int(counterfactual_outcomes[new_treatment])
+                if outcome > best_outcome:
+                    best_outcome = outcome
                 tested_treatments[new_treatment] = outcome
+                history.append([new_treatment, outcome])
             else:
                 stop = True
-
-        return tested_treatments
+        return history

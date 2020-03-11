@@ -10,23 +10,28 @@ import time
 
 # Training values
 seed = 0
-n_z = 3
+n_z = 4
 n_x = 1
-n_a = 5
+n_a = 3
 n_y = 3
-n_algorithms = 1
+n_algorithms = 2
+training_episodes = 200000
 n_training_samples = 10000
 n_test_samples = 1000
+delta = 0.1
+epsilon = 0
 
 # Plot values
 treatment_slack = 0     # Eg, how close to max must we be to be considered "good enough"
 show_plots = True
 plot_colors = ['k', 'r', 'b', 'g']
 plot_markers = ['', '--', ':']
+plot_labels = ['QL', 'G']
 main_start = time.time()
 
 # Generate the data
 dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed)
+# dist = NewDistribution(seed=seed)
 start = time.time()
 print("Generating {} training samples...".format(n_training_samples))
 training_data = generate_data(dist, n_training_samples)
@@ -39,13 +44,12 @@ print("Generating test samples took {:.3f} seconds".format(time.time()-start))
 
 
 # Initialize and train the algorithms
-# TODO Init Greedy
-# start = time.time()
-# print("Initializing Greedy...")
-# G = greedy.GreedyShuffled(n_x, n_y, n_a)
-# print("\tTraining Greedy...")
-# G.find_probabilities(training_data)
-# print("\tTraining the Greedy algorithm took {:.3f} seconds".format(time.time()-start))
+start = time.time()
+print("Initializing Greedy...")
+G = greedy.GreedyShuffled(n_x, n_y, n_a)
+print("\tTraining Greedy...")
+G.find_probabilities(training_data)
+print("\tTraining the Greedy algorithm took {:.3f} seconds".format(time.time()-start))
 # TODO Init Constrained Q Learning
 # start = time.time()
 # print("Initializing Constrained Q-learning...")
@@ -55,17 +59,17 @@ print("Generating test samples took {:.3f} seconds".format(time.time()-start))
 # print("\tTraining the Constrained Q-learning algorithm took {:.3f} seconds".format(time.time()-start))
 start = time.time()
 print("Initializing Q-learning...")
-QL = ql.QLearner(n_x, n_a, n_y, split_training_data, reward=-0.05, learning_time=200000, learning_rate=0.01, discount_factor=1)
+QL = ql.QLearner(n_x, n_a, n_y, split_training_data, reward=-delta, learning_time=training_episodes, learning_rate=0.01, discount_factor=1)
 print("\tTraining Q-learning...")
 QL.learn()
 print("\tTraining the Q-learning algorithm took {:.3f} seconds".format(time.time()-start))
 
 # Evaluate the algorithms
-evaluations = [[]]
+evaluations = [[], []]
 for i in range(n_test_samples):
-    # evaluations[0].append(
     # evaluations[1].append(CQL.evaluate(test_data[i]))
     evaluations[0].append(QL.evaluate(test_data[i]))
+    evaluations[1].append(G.evaluate(test_data[i], delta, epsilon))
 print("Running Evaluate took {:.3f} seconds".format(time.time()-main_start))
 
 
@@ -103,11 +107,11 @@ mean_treatment_effects /= n_test_samples
 x = np.arange(0, n_a+1)
 axs1 = plt.subplot(121)
 for i_plot in range(n_algorithms):
-    plt.plot(x, mean_treatment_effects[i_plot], plot_colors[i_plot] + plot_markers[0])
+    plt.plot(x, mean_treatment_effects[i_plot], plot_colors[i_plot] + plot_markers[0], label=plot_labels[i_plot])
     plt.plot(x, max_mean_treatment_effects[i_plot], plot_colors[i_plot] + plot_markers[1])
     plt.fill_between(x, mean_treatment_effects[i_plot], max_mean_treatment_effects[i_plot], color=plot_colors[i_plot], alpha=0.1)
 plt.grid(True)
-
+plt.legend(loc='lower right')
 
 # Calculate % of population at max - treatment_slack treatment over time
 max_treatments = np.zeros(n_test_samples)
