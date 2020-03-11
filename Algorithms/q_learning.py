@@ -71,8 +71,8 @@ class QLearner:
                 # TODO choose the treatment with highest mean effect for this x?
                 print("Choosing action arbitrarily")
                 for a in action_candidates:
-                    if y[action_candidates[a]] == -1:
-                        action = action_candidates[a]
+                    if y[a] == -1:
+                        action = a
                         break
         return history
 

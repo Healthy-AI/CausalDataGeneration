@@ -89,7 +89,7 @@ class DiscreteDistribution(Distribution):
         probs = probs / den
         y = self.random.choice(self.steps_y, p=probs)
         done = False
-        if y >= self.steps_y and self.random.random() < 0.9:
+        if y >= self.steps_y - 1 and self.random.random() < 0.9:
             done = True
         return y, done
 

@@ -45,11 +45,12 @@ class GreedyShuffled:
             ev_vec = np.zeros(self.n_a)
             for i in range(best_outcome+1+eps, self.n_y):
                 prob_vec += prob_matrix[:, i]
-                ev_vec += prob_matrix[:, i] * i
             prob_better_vec = np.divide(prob_vec, tot)
-            ev_vec = np.divide(ev_vec, tot)
             prob_of_finding_better = np.max(prob_better_vec)
             if prob_of_finding_better > delta:
+                for i in range(0, self.n_y):
+                    ev_vec += prob_matrix[:, i]
+                ev_vec = np.divide(ev_vec, tot)
                 new_treatment = np.argmax(ev_vec)
                 outcome = int(counterfactual_outcomes[new_treatment])
                 if outcome > best_outcome:
