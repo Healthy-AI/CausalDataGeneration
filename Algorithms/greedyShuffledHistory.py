@@ -27,7 +27,6 @@ class GreedyShuffled:
             new[treatment, outcome] = 1
             ind = tuple(index)
             patient_statistics[ind] += new
-        patient_statistics = np.sum(patient_statistics, 3)
         self.probabilities = patient_statistics
 
         return patient_statistics
