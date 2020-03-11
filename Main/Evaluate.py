@@ -73,7 +73,6 @@ for i in range(n_test_samples):
     evaluations[2].append(CQL.evaluate(test_data[i]))
 print("Running Evaluate took {:.3f} seconds".format(time.time()-main_start))
 
-
 print("Showing plots...")
 # Calculate max mean treatment effect over population
 max_mean_treatment_effects = np.zeros((n_algorithms, n_a + 1))
@@ -108,7 +107,6 @@ mean_treatment_effects /= n_test_samples
 x = np.arange(0, n_a+1)
 axs1 = plt.subplot(121)
 for i_plot in range(n_algorithms):
-    print(i_plot, len(mean_treatment_effects), len(plot_colors), )
     plt.plot(x, mean_treatment_effects[i_plot], plot_colors[i_plot] + plot_markers[0], label=plot_labels[i_plot])
     plt.plot(x, max_mean_treatment_effects[i_plot], plot_colors[i_plot] + plot_markers[1])
     plt.fill_between(x, mean_treatment_effects[i_plot], max_mean_treatment_effects[i_plot], color=plot_colors[i_plot], alpha=0.1)

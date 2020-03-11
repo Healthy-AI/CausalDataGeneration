@@ -9,7 +9,6 @@ n_outcomes = 3
 max_possible_outcome = 2
 stop_action = 3
 data = generate_data(DiscreteDistribution(3, 1, n_actions, n_outcomes), 100)
-
 data = split_patients(data)
 
 cql = ConstrainedQlearner(1, n_actions, n_outcomes, data, learning_rate=0.01)
