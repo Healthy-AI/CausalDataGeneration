@@ -7,6 +7,8 @@ class QLearner:
         self.n_x = n_x
         self.n_y = n_y
         self.n_a = n_a
+        self.max_possible_outcome = self.n_y - 1
+        self.stop_action = self.n_a
         self.data = data
         self.step_reward = reward
         self.learning_time = learning_time
@@ -36,6 +38,7 @@ class QLearner:
 
         for k in range(self.learning_time):
             state, action, reward, next_state = history[np.random.randint(0, len(history))]
+
 
             self.q_table[self.to_index(state) + (action,)] = self.q_table[self.to_index(state) + (action,)] \
                                                  + self.learning_rate * (reward + self.discount_factor
@@ -82,6 +85,7 @@ class QLearner:
             for treatment in h[i]:
                 action, outcome = treatment
                 actions[action] = outcome
+
 
             for j in range(len(h[i])):
                 temp_actions = actions.copy()
