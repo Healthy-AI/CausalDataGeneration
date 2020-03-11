@@ -3,7 +3,7 @@ from DataGenerator.data_visualizer import *
 
 
 class QLearner:
-    def __init__(self, n_x, n_a, n_y, data, reward=-0.1, learning_rate=0.01, discount_factor=1):
+    def __init__(self, n_x, n_a, n_y, data, reward=-0.1, learning_time=10000, learning_rate=0.01, discount_factor=1):
         self.n_x = n_x
         self.n_y = n_y
         self.n_a = n_a
@@ -11,6 +11,7 @@ class QLearner:
         self.stop_action = self.n_a
         self.data = data
         self.step_reward = reward
+        self.learning_time = learning_time
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
         self.q_table = None
@@ -35,7 +36,7 @@ class QLearner:
                     self.q_table[self.to_index([x, y_t, -1])] = -np.infty
                 modified[self.to_index(([x, y_t, -1]))] = True
 
-        for k in range(2000):
+        for k in range(self.learning_time):
             state, action, reward, next_state = history[np.random.randint(0, len(history))]
 
 
