@@ -60,4 +60,5 @@ class GreedyShuffled:
                 history.append([new_treatment, outcome])
             else:
                 stop = True
+        print(patient[0], patient[1], patient[2], history)
         return history
