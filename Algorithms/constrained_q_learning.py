@@ -5,6 +5,7 @@ import numpy as np
 class ConstrainedQlearner(QLearner):
     def __init__(self, n_x, n_a, n_y, data, learning_rate=0.01, discount_factor=1):
         self.histories_to_compare = None
+        self.better_treatment_constraint_dict = {}
         super().__init__(n_x, n_a, n_y, data, learning_rate, discount_factor)
         self.statistics = self.get_patient_statistics()
         # Q-table indexed with x, y_0, y_1, y_2, y_3 and a
@@ -46,11 +47,11 @@ class ConstrainedQlearner(QLearner):
             return reward
         # else, calculate the sum of the reward for each outcome times its probability
         future_reward = 0
-        tot = np.sum(self.statistics[tuple(history)][action], axis=None)
+        tot = np.sum(self.statistics[x][tuple(history)][action], axis=None)
         no_history_found = (tot == 0).astype(int)
         tot += no_history_found
         for outcome in range(self.n_y):
-            prob = self.statistics[tuple(history)][action][outcome] / tot
+            prob = self.statistics[x][tuple(history)][action][outcome] / tot
             future_qs = []
             if prob > 0:
                 future_history = list(history)
@@ -86,29 +87,35 @@ class ConstrainedQlearner(QLearner):
         return allowed_actions
 
     def better_treatment_constraint(self, history, delta=1, epsilon=0):
-        maxoutcome = max(history)
-        if maxoutcome == self.max_possible_outcome:
-            return 1
-        histories_to_compare = self.get_histories_to_compare()
+
         try:
-            similar_patients = histories_to_compare[self.hash_state(history)]
+            gamma = self.better_treatment_constraint_dict[self.hash_state(history)]
         except KeyError:
-            similar_patients = []
-        treatments_better = np.zeros(self.n_a, dtype=int)
-        treatments_worse = np.zeros(self.n_a, dtype=int)
-        for patient in similar_patients:
-            for intervention in patient:
-                treatment, outcome = intervention
-                if outcome > maxoutcome + epsilon:
-                    treatments_better[treatment] += 1
-                else:
-                    treatments_worse[treatment] += 1
-        total = treatments_better + treatments_worse
-        no_data_found = (total == 0).astype(int)
-        total += no_data_found
-        tot = treatments_better / total
-        tot_delta_limit = (tot >= delta).astype(int)
-        return max(tot_delta_limit)
+            maxoutcome = max(history)
+            if maxoutcome == self.max_possible_outcome:
+                return 1
+            histories_to_compare = self.get_histories_to_compare()
+            try:
+                similar_patients = histories_to_compare[self.hash_state(history)]
+            except KeyError:
+                similar_patients = []
+            treatments_better = np.zeros(self.n_a, dtype=int)
+            treatments_worse = np.zeros(self.n_a, dtype=int)
+            for patient in similar_patients:
+                for intervention in patient:
+                    treatment, outcome = intervention
+                    if outcome > maxoutcome + epsilon:
+                        treatments_better[treatment] += 1
+                    else:
+                        treatments_worse[treatment] += 1
+            total = treatments_better + treatments_worse
+            no_data_found = (total == 0).astype(int)
+            total += no_data_found
+            tot = treatments_better / total
+            tot_delta_limit = (tot >= delta).astype(int)
+            gamma = max(tot_delta_limit)
+            self.better_treatment_constraint_dict[self.hash_state(history)] = gamma
+        return gamma
 
     def history_to_compare_dict(self, histories):
         state_dict = {}
@@ -131,14 +138,17 @@ class ConstrainedQlearner(QLearner):
 
     def get_patient_statistics(self):
         histories = self.data['h']
+        x_s = self.data['x']
         dim = []
+        dim.append(self.n_x+1)
         for i in range(self.n_a):
             dim.append(self.n_y + 1)
         dim.append(self.n_a)
         dim.append(self.n_y)
 
         patient_statistics = np.zeros(dim, dtype=int)
-        for history in histories:
+        for i, history in enumerate(histories):
+            x = x_s[i]
             treatment, outcome = history[-1]
             history = history[:-1]
             index = np.ones(self.n_a, dtype=int) * -1
@@ -146,7 +156,7 @@ class ConstrainedQlearner(QLearner):
             for h in history:
                 index[h[0]] = h[1]
             new[treatment, outcome] = 1
-            ind = tuple(index)
+            ind = tuple(x) + tuple(index)
             patient_statistics[ind] += new
 
         return patient_statistics

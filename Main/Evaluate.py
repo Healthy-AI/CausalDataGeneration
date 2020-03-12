@@ -9,7 +9,7 @@ import Algorithms.q_learning as ql
 import time
 
 # Training values
-seed = 100
+seed = 12345
 n_z = 6
 n_x = 1
 n_a = 7
