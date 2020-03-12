@@ -18,7 +18,8 @@ class GreedyShuffled:
 
         patient_statistics = np.zeros(dim, dtype=int)
         for history in histories:
-            treatment, outcome = history.pop(-1)
+            treatment, outcome = history[-1]
+            history = history[:-1]
             index = np.ones(self.n_a, dtype=int) * -1
             new = np.zeros((self.n_a, self.n_y), dtype=int)
             for h in history:

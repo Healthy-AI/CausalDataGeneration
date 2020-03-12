@@ -1,8 +1,8 @@
-from Algorithms.constrained_q_learning2 import ConstrainedQlearner
 from Algorithms.q_learning import QLearner
 from Algorithms.greedyShuffledHistory import GreedyShuffled
 from DataGenerator.distributions import *
 import Algorithms.greedyShuffledHistory as greedy
+import Algorithms.constrained_q_learning as cql
 import matplotlib.pyplot as plt
 from DataGenerator.data_generator import *
 import Algorithms.q_learning as ql
@@ -14,8 +14,8 @@ n_z = 6
 n_x = 1
 n_a = 7
 n_y = 3
-n_algorithms = 2
-training_episodes = 500000
+n_algorithms = 3
+training_episodes = 50000
 n_training_samples = 20000
 n_test_samples = 2000
 delta = 0.1
@@ -25,22 +25,22 @@ epsilon = 0
 treatment_slack = 0     # Eg, how close to max must we be to be considered "good enough"
 plot_colors = ['k', 'r', 'b', 'g']
 plot_markers = ['', '--', ':']
-plot_labels = ['QL', 'G']
+plot_labels = ['QL', 'G', 'CQL']
 main_start = time.time()
 
 # Generate the data
 dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed)
-# dist = NewDistribution(seed=seed)
+#dist = NewDistribution(seed=seed)
 start = time.time()
 print("Generating {} training samples...".format(n_training_samples))
 training_data = generate_data(dist, n_training_samples)
-split_training_data = split_patients(training_data)
+split_training_data = split_patients(training_data.copy())
+split_training_data2 = split_patients(training_data.copy())
 print("Generating training samples took {:.3f} seconds".format(time.time()-start))
 start = time.time()
 print("Generating {} test samples...".format(n_test_samples))
 test_data = generate_test_data(dist, n_test_samples)
 print("Generating test samples took {:.3f} seconds".format(time.time()-start))
-
 
 # Initialize and train the algorithms
 start = time.time()
@@ -49,13 +49,14 @@ G = greedy.GreedyShuffled(n_x, n_y, n_a)
 print("\tTraining Greedy...")
 G.find_probabilities(training_data)
 print("\tTraining the Greedy algorithm took {:.3f} seconds".format(time.time()-start))
-# TODO Init Constrained Q Learning
-# start = time.time()
-# print("Initializing Constrained Q-learning...")
-# CQL = cql.ConstrainedQlearner(n_x, n_y, n_a, split_training_data, learning_rate=0.01, discount_factor=1)
-# print("\tTraining Constrained Q-learning...")
-# CQL.learn()
-# print("\tTraining the Constrained Q-learning algorithm took {:.3f} seconds".format(time.time()-start))
+
+start = time.time()
+print("Initializing Constrained Q-learning...")
+CQL = cql.ConstrainedQlearner(n_x, n_a, n_y, split_training_data2, learning_rate=0.01, discount_factor=1)
+print("\tTraining Constrained Q-learning...")
+CQL.learn()
+print("\tTraining the Constrained Q-learning algorithm took {:.3f} seconds".format(time.time()-start))
+
 start = time.time()
 print("Initializing Q-learning...")
 QL = ql.QLearner(n_x, n_a, n_y, split_training_data, reward=-delta, learning_time=training_episodes, learning_rate=0.01, discount_factor=1)
@@ -64,13 +65,13 @@ QL.learn()
 print("\tTraining the Q-learning algorithm took {:.3f} seconds".format(time.time()-start))
 
 # Evaluate the algorithms
-evaluations = [[], []]
+evaluations = [[], [], []]
 for i in range(n_test_samples):
     # evaluations[1].append(CQL.evaluate(test_data[i]))
     evaluations[0].append(QL.evaluate(test_data[i]))
     evaluations[1].append(G.evaluate(test_data[i], delta, epsilon))
+    evaluations[2].append(CQL.evaluate(test_data[i]))
 print("Running Evaluate took {:.3f} seconds".format(time.time()-main_start))
-
 
 print("Showing plots...")
 # Calculate max mean treatment effect over population
