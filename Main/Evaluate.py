@@ -9,14 +9,14 @@ import Algorithms.q_learning as ql
 import time
 
 # Training values
-seed = 0
+seed = 12345
 n_z = 6
 n_x = 1
 n_a = 7
 n_y = 3
 n_algorithms = 3
 training_episodes = 50000
-n_training_samples = 2000
+n_training_samples = 20000
 n_test_samples = 2000
 delta = 0.1
 epsilon = 0
