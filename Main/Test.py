@@ -11,9 +11,6 @@ n_y = 3
 dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed)
 n_test_samples = 2000
 test_data = generate_test_data(dist, n_test_samples)
-print(test_data)
-
-average_max_treatment_effect = 0
 
 n_actions = 3
 n_outcomes = 3
