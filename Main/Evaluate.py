@@ -51,7 +51,7 @@ print("\tTraining the Greedy algorithm took {:.3f} seconds".format(time.time()-s
 
 start = time.time()
 print("Initializing Constrained Q-learning...")
-CQL = cql.ConstrainedQlearner(n_x, n_a, n_y, split_training_data, learning_rate=0.01, discount_factor=1)
+CQL = cql.ConstrainedQlearner(n_x, n_a, n_y, split_training_data)
 print("\tTraining Constrained Q-learning...")
 CQL.learn()
 print("\tTraining the Constrained Q-learning algorithm took {:.3f} seconds".format(time.time()-start))

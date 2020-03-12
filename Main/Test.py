@@ -20,9 +20,10 @@ stop_action = 3
 data = generate_data(DiscreteDistribution(3, n_x, n_actions, n_outcomes), 100)
 data = split_patients(data)
 
-cql = ConstrainedQlearner(1, n_actions, n_outcomes, data, learning_rate=0.01)
+cql = ConstrainedQlearner(1, n_actions, n_outcomes, data)
 cql.learn()
 cq = cql.q_table
+#print(cq)
 print('''print(cq[0, -1, -1, -1])
 print(cq[0, 0, -1, -1]),
 print(cq[0, -1, -1, 2]),
