@@ -15,8 +15,8 @@ n_x = 1
 n_a = 7
 n_y = 3
 n_algorithms = 3
-training_episodes = 5000
-n_training_samples = 2000
+training_episodes = 50000
+n_training_samples = 20000
 n_test_samples = 200
 delta = 0.1
 epsilon = 0
@@ -47,7 +47,7 @@ start = time.time()
 print("Initializing Greedy...")
 G = greedy.GreedyShuffled(n_x, n_y, n_a)
 print("\tTraining Greedy...")
-G.find_probabilities(training_data)
+G.find_probabilities(split_training_data)
 print("\tTraining the Greedy algorithm took {:.3f} seconds".format(time.time()-start))
 
 start = time.time()
