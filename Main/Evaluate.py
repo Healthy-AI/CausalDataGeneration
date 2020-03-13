@@ -1,5 +1,6 @@
 from Algorithms.q_learning import QLearner
 from Algorithms.greedyShuffledHistory import GreedyShuffled
+from Algorithms.greedyShuffledHistoryV2 import GreedyShuffled2
 from Algorithms.constrained_q_learning import ConstrainedQlearner
 from DataGenerator.data_generator import *
 import time
@@ -11,8 +12,8 @@ n_x = 1
 n_a = 7
 n_y = 3
 training_episodes = 50000
-n_training_samples = 2000
-n_test_samples = 200
+n_training_samples = 20000
+n_test_samples = 2000
 delta = 0.1
 epsilon = 0
 
@@ -39,10 +40,12 @@ print("Generating test samples took {:.3f} seconds".format(time.time()-start))
 print("Initializing algorithms")
 algorithms = [
     GreedyShuffled(n_x, n_y, n_a, split_training_data, delta, epsilon),
+    GreedyShuffled2(n_x, n_y, n_a, split_training_data, delta, epsilon),
     ConstrainedQlearner(n_x, n_a, n_y, split_training_data, delta=delta),
     QLearner(n_x, n_a, n_y, split_training_data, reward=-delta, learning_time=training_episodes,
              learning_rate=0.01, discount_factor=1)
 ]
+
 n_algorithms = len(algorithms)
 
 for alg in algorithms:
@@ -53,43 +56,43 @@ for alg in algorithms:
     print("\tTraining the %s algorithm took {:.3f} seconds".format(time.time()-start) % alg.name)
 
 # Evaluate the algorithms
-evaluations = []
+evaluations = {}
 for alg in algorithms:
     alg_evals = []
     for i in range(n_test_samples):
         alg_evals.append(alg.evaluate(test_data[i]))
-    evaluations.append(alg_evals)
+    evaluations[alg.name] = alg_evals
 print("Running Evaluate took {:.3f} seconds".format(time.time()-main_start))
 
 print("Showing plots...")
 # Calculate max mean treatment effect over population
 max_mean_treatment_effects = np.zeros((n_algorithms, n_a + 1))
-for i_alg in range(n_algorithms):
+for i, alg in enumerate(algorithms):
     for i_sample in range(n_test_samples):
-        treatments = evaluations[i_alg][i_sample]
+        treatments = evaluations[alg.name][i_sample]
         best_found = 0
-        for i_treatment in range(len(max_mean_treatment_effects[i_alg])):
+        for i_treatment in range(len(max_mean_treatment_effects[i])):
             if i_treatment < len(treatments):
                 effect = treatments[i_treatment][1]
                 if effect > best_found:
                     best_found = effect
-            max_mean_treatment_effects[i_alg][i_treatment] += best_found
+            max_mean_treatment_effects[i][i_treatment] += best_found
 max_mean_treatment_effects /= n_test_samples
 
 # Calculate mean treatment effect over population
 mean_treatment_effects = np.zeros((n_algorithms, n_a + 1))      # Overshoot by 1 to get all max values at last step
-for i_alg in range(n_algorithms):
+for i, alg in enumerate(algorithms):
     for i_sample in range(n_test_samples):
-        treatments = evaluations[i_alg][i_sample]
+        treatments = evaluations[alg.name][i_sample]
         best_found = 0
-        for i_treatment in range(len(mean_treatment_effects[i_alg])):
+        for i_treatment in range(len(mean_treatment_effects[i])):
             if i_treatment >= len(treatments):
                 effect = best_found
             else:
                 effect = treatments[i_treatment][1]
             if effect > best_found:
                 best_found = effect
-            mean_treatment_effects[i_alg][i_treatment] += effect
+            mean_treatment_effects[i][i_treatment] += effect
 mean_treatment_effects /= n_test_samples
 
 
@@ -111,16 +114,16 @@ max_treatments = np.zeros(n_test_samples)
 for i_sample in range(n_test_samples):
     max_treatments[i_sample] = max(test_data[i_sample][2])
 at_max = np.zeros((n_algorithms, n_a + 1))
-for i_alg in range(n_algorithms):
+for i, alg in enumerate(algorithms):
     for i_sample in range(n_test_samples):
-        treatments = evaluations[i_alg][i_sample]
+        treatments = evaluations[alg.name][i_sample]
         found_max = 0
-        for i_treatment in range(len(at_max[i_alg])):
+        for i_treatment in range(len(at_max[i])):
             if i_treatment >= len(treatments):
-                at_max[i_alg][i_treatment] += found_max
+                at_max[i][i_treatment] += found_max
             else:
                 if max_treatments[i_sample] <= treatments[i_treatment][1] + treatment_slack:
-                    at_max[i_alg][i_treatment] += 1
+                    at_max[i][i_treatment] += 1
                     found_max = 1
 at_max /= n_test_samples
 # Plot mean treatment effect over population
