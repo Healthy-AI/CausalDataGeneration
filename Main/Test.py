@@ -2,6 +2,8 @@ from Algorithms.constrained_q_learning import ConstrainedQlearner
 from Algorithms.greedyShuffledHistory import GreedyShuffled
 from DataGenerator.data_generator import *
 from Algorithms.q_learning import QLearner
+from Algorithms.greedyShuffledHistoryV2 import GreedyShuffled2
+import sys
 
 seed = 12345
 n_z = 6
@@ -19,6 +21,14 @@ max_possible_outcome = 2
 stop_action = 3
 data = generate_data(DiscreteDistribution(3, n_x, n_actions, n_outcomes), 100)
 data = split_patients(data)
+greedy2 = GreedyShuffled2(n_x, n_outcomes, n_actions)
+greedy2.find_probabilities(data)
+r = []
+for patient in test_data:
+    res = greedy2.evaluate(patient, 0.1, 0)
+    r.append(res)
+print(r)
+sys.exit()
 
 cql = ConstrainedQlearner(1, n_actions, n_outcomes, data)
 cql.learn()
