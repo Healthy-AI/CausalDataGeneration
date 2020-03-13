@@ -22,7 +22,7 @@ stop_action = 3
 data = generate_data(DiscreteDistribution(3, n_x, n_actions, n_outcomes), 100)
 data = split_patients(data)
 greedy2 = GreedyShuffled2(n_x, n_outcomes, n_actions)
-greedy2.find_probabilities(data)
+greedy2.learn(data)
 r = []
 for patient in test_data:
     res = greedy2.evaluate(patient, 0.1, 0)
