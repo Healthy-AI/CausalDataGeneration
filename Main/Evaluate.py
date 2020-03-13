@@ -1,11 +1,7 @@
 from Algorithms.q_learning import QLearner
 from Algorithms.greedyShuffledHistory import GreedyShuffled
-from DataGenerator.distributions import *
-import Algorithms.greedyShuffledHistory as greedy
-import Algorithms.constrained_q_learning as cql
-import matplotlib.pyplot as plt
+from Algorithms.constrained_q_learning import ConstrainedQlearner
 from DataGenerator.data_generator import *
-import Algorithms.q_learning as ql
 import time
 
 # Training values
@@ -14,10 +10,9 @@ n_z = 6
 n_x = 1
 n_a = 7
 n_y = 3
-n_algorithms = 3
 training_episodes = 50000
-n_training_samples = 20000
-n_test_samples = 2000
+n_training_samples = 2000
+n_test_samples = 200
 delta = 0.1
 epsilon = 0
 
@@ -25,12 +20,12 @@ epsilon = 0
 treatment_slack = 0     # Eg, how close to max must we be to be considered "good enough"
 plot_colors = ['k', 'r', 'b', 'g']
 plot_markers = ['', '--', ':']
-plot_labels = ['QL', 'G', 'CQL']
 main_start = time.time()
 
 # Generate the data
 dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed)
 #dist = NewDistribution(seed=seed)
+
 start = time.time()
 print("Generating {} training samples...".format(n_training_samples))
 training_data = generate_data(dist, n_training_samples)
@@ -41,35 +36,29 @@ print("Generating {} test samples...".format(n_test_samples))
 test_data = generate_test_data(dist, n_test_samples)
 print("Generating test samples took {:.3f} seconds".format(time.time()-start))
 
-# Initialize and train the algorithms
-start = time.time()
-print("Initializing Greedy...")
-G = greedy.GreedyShuffled(n_x, n_y, n_a)
-print("\tTraining Greedy...")
-G.find_probabilities(split_training_data)
-print("\tTraining the Greedy algorithm took {:.3f} seconds".format(time.time()-start))
+print("Initializing algorithms")
+algorithms = [
+    GreedyShuffled(n_x, n_y, n_a, split_training_data, delta, epsilon),
+    ConstrainedQlearner(n_x, n_a, n_y, split_training_data, delta=delta),
+    QLearner(n_x, n_a, n_y, split_training_data, reward=-delta, learning_time=training_episodes,
+             learning_rate=0.01, discount_factor=1)
+]
+n_algorithms = len(algorithms)
 
-start = time.time()
-print("Initializing Constrained Q-learning...")
-CQL = cql.ConstrainedQlearner(n_x, n_a, n_y, split_training_data, delta=delta, )
-print("\tTraining Constrained Q-learning...")
-CQL.learn()
-print("\tTraining the Constrained Q-learning algorithm took {:.3f} seconds".format(time.time()-start))
-
-start = time.time()
-print("Initializing Q-learning...")
-QL = ql.QLearner(n_x, n_a, n_y, split_training_data, reward=-delta, learning_time=training_episodes, learning_rate=0.01, discount_factor=1)
-print("\tTraining Q-learning...")
-QL.learn()
-print("\tTraining the Q-learning algorithm took {:.3f} seconds".format(time.time()-start))
+for alg in algorithms:
+    # Train the algorithms
+    start = time.time()
+    print("\tTraining %s..." % alg.name)
+    alg.learn()
+    print("\tTraining the %s algorithm took {:.3f} seconds".format(time.time()-start) % alg.name)
 
 # Evaluate the algorithms
-evaluations = [[], [], []]
-for i in range(n_test_samples):
-    # evaluations[1].append(CQL.evaluate(test_data[i]))
-    evaluations[0].append(QL.evaluate(test_data[i]))
-    evaluations[1].append(G.evaluate(test_data[i], delta, epsilon))
-    evaluations[2].append(CQL.evaluate(test_data[i]))
+evaluations = []
+for alg in algorithms:
+    alg_evals = []
+    for i in range(n_test_samples):
+        alg_evals.append(alg.evaluate(test_data[i]))
+    evaluations.append(alg_evals)
 print("Running Evaluate took {:.3f} seconds".format(time.time()-main_start))
 
 print("Showing plots...")
@@ -107,8 +96,8 @@ mean_treatment_effects /= n_test_samples
 # Plot mean treatment effect over population
 x = np.arange(0, n_a+1)
 axs1 = plt.subplot(121)
-for i_plot in range(n_algorithms):
-    plt.plot(x, mean_treatment_effects[i_plot], plot_colors[i_plot] + plot_markers[0], label=plot_labels[i_plot])
+for i_plot, alg in enumerate(algorithms):
+    plt.plot(x, mean_treatment_effects[i_plot], plot_colors[i_plot] + plot_markers[0], label=alg.label)
     plt.plot(x, max_mean_treatment_effects[i_plot], plot_colors[i_plot] + plot_markers[1])
     plt.fill_between(x, mean_treatment_effects[i_plot], max_mean_treatment_effects[i_plot], color=plot_colors[i_plot], alpha=0.1)
 plt.grid(True)
