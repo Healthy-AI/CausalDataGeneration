@@ -17,7 +17,7 @@ n_y = 3
 n_algorithms = 3
 training_episodes = 50000
 n_training_samples = 20000
-n_test_samples = 200
+n_test_samples = 2000
 delta = 0.1
 epsilon = 0
 
@@ -51,7 +51,7 @@ print("\tTraining the Greedy algorithm took {:.3f} seconds".format(time.time()-s
 
 start = time.time()
 print("Initializing Constrained Q-learning...")
-CQL = cql.ConstrainedQlearner(n_x, n_a, n_y, split_training_data)
+CQL = cql.ConstrainedQlearner(n_x, n_a, n_y, split_training_data, delta=delta, )
 print("\tTraining Constrained Q-learning...")
 CQL.learn()
 print("\tTraining the Constrained Q-learning algorithm took {:.3f} seconds".format(time.time()-start))
