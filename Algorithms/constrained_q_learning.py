@@ -14,6 +14,8 @@ class ConstrainedQlearner(QLearner):
         self.q_table_done = self.q_table.copy().astype(int)
         self.delta = delta
         self.epsilon = epsilon
+        self.name = 'Constrained Q-learning'
+        self.label = 'CQL'
 
     def learn(self):
         for x in range(len(self.q_table)):

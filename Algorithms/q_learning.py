@@ -15,6 +15,8 @@ class QLearner:
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
         self.q_table = None
+        self.name = 'Q-learning'
+        self.label = 'QL'
 
         self.sars_data = self.convert_to_sars()
 

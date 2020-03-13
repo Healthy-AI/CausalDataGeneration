@@ -10,7 +10,7 @@ class GreedyShuffled2:
         self.probabilities = None
         self.data = None
 
-    def find_probabilities(self, data):
+    def learn(self, data):
         self.data = data
         histories = data['h']
         covariates = data['x']
