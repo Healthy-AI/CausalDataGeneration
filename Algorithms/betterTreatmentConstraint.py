@@ -45,11 +45,10 @@ class Constraint:
     def history_to_compare_dict(self, histories):
         state_dict = {}
         for history in histories:
-            temp_histories = list(itertools.combinations(history, len(history)-1))
-            for temp_history in temp_histories:
-                history_hash = hash_history(temp_history, self.n_actions)
-                try:
-                    state_dict[history_hash].append(history)
-                except KeyError:
-                    state_dict[history_hash] = [history]
+            temp_history = history[:-1]
+            history_hash = hash_history(temp_history, self.n_actions)
+            try:
+                state_dict[history_hash].append(history)
+            except KeyError:
+                state_dict[history_hash] = [history]
         return state_dict
