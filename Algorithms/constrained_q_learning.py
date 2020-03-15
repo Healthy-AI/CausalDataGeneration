@@ -38,25 +38,27 @@ class ConstrainedQlearner(QLearner):
                 self.q_table[index] = reward
                 self.q_table_done[index] = 1
             return reward
-        if history[action] != -1 and -1 in history:
+        # if action is already used, set reward to -inf
+        if history[action] != -1:
             index = self.to_index([x, history, action])
             reward = -np.infty
             self.q_table[index] = reward
             self.q_table_done[index] = 1
             return reward
+
         # else, calculate the sum of the reward for each outcome times its probability
         future_reward = 0
-        tot = np.sum(self.statistics[x][tuple(history)][action], axis=None)
+        index = tuple([x]) + tuple(history) + tuple([action])
+        tot = np.sum(self.statistics[index], axis=None)
         no_history_found = (tot == 0).astype(int)
         tot += no_history_found
         for outcome in range(self.n_y):
-            prob = self.statistics[x][tuple(history)][action][outcome] / tot
+            ind = tuple([x]) + tuple(history) + tuple([action]) + tuple([outcome])
+            prob = self.statistics[ind] / tot
             future_qs = []
             if prob > 0:
                 future_history = list(history)
                 future_history[action] = outcome
-                # Look in history and find which actions there are left
-                #allowed_actions = self.get_allowed_actions(future_history)
                 # Among allowed actions, find the one with the greatest reward
                 for new_action in range(self.n_a+1):
                     index = self.to_index([x, future_history, new_action])
@@ -88,21 +90,15 @@ class ConstrainedQlearner(QLearner):
     def get_patient_statistics(self):
         histories = self.data['h']
         x_s = self.data['x']
-        dim = []
-        dim.append(self.n_x+1)
-        for i in range(self.n_a):
-            dim.append(self.n_y + 1)
-        dim.append(self.n_a)
-        dim.append(self.n_y)
 
-        patient_statistics = np.zeros(dim, dtype=int)
+        patient_statistics = np.zeros((2,) * self.n_x + (self.n_y+1,) * self.n_a + (self.n_a,) + (self.n_y,))
         for i, history in enumerate(histories):
             x = x_s[i]
             treatment, outcome = history[-1]
-            history = history[:-1]
+            chopped_history = history[:-1]
             index = np.ones(self.n_a, dtype=int) * -1
             new = np.zeros((self.n_a, self.n_y), dtype=int)
-            for h in history:
+            for h in chopped_history:
                 index[h[0]] = h[1]
             new[treatment, outcome] = 1
             ind = tuple(x) + tuple(index)

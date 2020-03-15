@@ -88,7 +88,6 @@ class QLearner:
                 action, outcome = treatment
                 actions[action] = outcome
 
-
             for j in range(len(h[i])):
                 temp_actions = actions.copy()
                 new_action = h[i][j][0]
@@ -102,25 +101,3 @@ class QLearner:
                 sars = (s, a, r, s_prime)
                 all_sars.append(sars)
         return all_sars
-
-'''
-n_x = 1
-n_z = 3
-n_a = 5
-n_y = 3
-for i in range(1):
-    dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=0)
-    data = generate_data(dist, 15000)
-    DV = DataVisualizer(n_z, n_x, n_a, n_y)
-    DV.plot_x(data)
-    DV.print_y(data, np.array([0]))
-    DV.print_y(data, np.array([1]))
-    data = split_patients(data)
-    ql = QLearner(n_x, n_a, n_y, data, learning_rate=0.01)
-    q = ql.learn()
-    test_data = generate_test_data(dist, 100)
-    for j in range(100):
-        print(test_data[j][0], test_data[j][1], ql.evaluate(test_data[j]))
-    print(q[0, -1, -1, -1, -1, -1])
-    print(q[1, -1, -1, -1, -1, -1])
-'''

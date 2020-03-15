@@ -2,10 +2,10 @@ import numpy as np
 
 
 class GreedyShuffled:
-    def __init__(self, n_x, n_y, n_a, data, delta, eps):
+    def __init__(self, n_x, n_a, n_y, data, delta, eps):
         self.n_x = n_x
-        self.n_y = n_y
         self.n_a = n_a
+        self.n_y = n_y
         self.data = data
         self.probabilities = None
         self.name = 'Greedy'

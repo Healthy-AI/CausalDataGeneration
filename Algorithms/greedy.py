@@ -3,10 +3,10 @@ import numpy as np
 
 
 class Greedy:
-    def __init__(self, n_x, n_y, n_a):
+    def __init__(self, n_x, n_a, n_y):
         self.n_x = n_x
-        self.n_y = n_y
         self.n_a = n_a
+        self.n_y = n_y
         self.size = (n_a+1, n_y, n_a+1, n_y, n_a)
         self.probabilities = np.zeros(self.size)
 
@@ -38,13 +38,3 @@ class Greedy:
     # Third index is second treatment, fourth index is outcome of second treatment
     # E.g. probabilities[0, 0, 1, 0, 2] means that we tried treatment 0 and 1 and got zero on both
     # and are now intervening with treatment 2, returned is the predicted outcome of the intervention.
-
-'''
-n_actions = 3
-greedyAlgorithm = Greedy(1, 3, n_actions)
-data = generate_data(NewDistribution(), 10000)
-data = split_patients(data)
-greedyAlgorithm.find_probabilities(data)
-# print(greedyAlgorithm.probabilities[2, 0, 1, 0, 0])
-print(greedyAlgorithm.probabilities[1, 1, -1, -1, 0])
-'''
