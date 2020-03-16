@@ -11,7 +11,7 @@ import random
 seed = 876
 n_z = 6
 n_x = 1
-n_a = 3
+n_a = 7
 n_y = 3
 training_episodes = 100000
 n_training_samples = 20000
