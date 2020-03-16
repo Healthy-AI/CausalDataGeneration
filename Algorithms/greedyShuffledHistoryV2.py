@@ -10,7 +10,7 @@ class GreedyShuffled2:
         self.n_y = n_y
         self.data = data
         self.probabilities = None
-        self.name = 'ConstraintGreedy'
+        self.name = 'Constrained Greedy'
         self.label = 'CG'
         self.delta = delta
         self.eps = eps
@@ -66,7 +66,7 @@ class GreedyShuffled2:
                 best_outcome = outcome
             y[new_treatment] = outcome
             history.append([new_treatment, outcome])
-            gamma = self.constraint.better_treatment_constraint(history_to_state(history, self.n_a))
+            gamma = self.constraint.better_treatment_constraint(history_to_state(history, self.n_a), x[0])
             if gamma == 1:
                 stop = True
         return history

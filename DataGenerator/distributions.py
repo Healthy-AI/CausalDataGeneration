@@ -142,7 +142,7 @@ class NewDistribution(Distribution):
         super().__init__(seed)
         self.name = 'New'
     n_a = 3
-    pz = np.array([0.3, 0.15, 0.35, 0.14, 0.04, 0.01, 0.01])
+    pz = np.array([0.3, 0.16, 0.35, 0.13, 0.04, 0.01, 0.01])
     results_array = np.array([[2, 2, 1, 1, 1, 1, 0],
                               [2, 1, 0, 2, 1, 1, 2],
                               [1, 0, 2, 0, 1, 2, 0]])
@@ -157,13 +157,6 @@ class NewDistribution(Distribution):
         ev = np.sum(self.pz * (self.results_array == 2), 1)
         if len(h) > 0:
             used_a = [u[0] for u in h]
-            max_y = np.max(h, 0)[1]
-            if max_y == 0:
-                ev[0] *= 2
-            elif max_y == 1:
-                ev[2] *= 2
-            elif max_y == 2:
-                ev[1] *= 2
             for u in used_a:
                 ev[u] = 0
 
@@ -174,6 +167,6 @@ class NewDistribution(Distribution):
         max_y = 0
         if len(h) > 0:
             max_y = np.max(h, 0)[1]
-        if (max_y == 2 or y == 2) and self.random.random() < 0.85:
+        if ((max_y == 2 or y == 2) and self.random.random() < 0.90) or self.random.random() < 0.1:
             return y, True
         return y, False

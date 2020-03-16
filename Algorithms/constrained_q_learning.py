@@ -1,7 +1,7 @@
 from Algorithms.q_learning import *
 from Algorithms.betterTreatmentConstraint import *
 from Algorithms.help_functions import *
-
+import random
 
 class ConstrainedQlearner(QLearner):
     def __init__(self, n_x, n_a, n_y, data, delta=0, epsilon=0):
@@ -18,50 +18,49 @@ class ConstrainedQlearner(QLearner):
         self.label = 'CQL'
 
     def learn(self):
+        possible_histories = list(itertools.product(range(-1, self.n_y), repeat=self.n_a))
         for x in range(len(self.q_table)):
-            possible_histories = list(itertools.product(range(-1, self.n_y), repeat=self.n_a))
             for history in possible_histories:
                 for action in range(self.n_a+1):
                     q = self.q_function(history, action, x)
-                    index = self.to_index([x, history, action])
+                    index = self.to_index([x, history]) + (action,)
                     self.q_table[index] = q
                     self.q_table_done[index] = 1
 
     def q_function(self, history, action, x):
         # if action is stop action, calculate the reward
         if action == self.stop_action:
-            index = self.to_index([x, history, action])
+            index = self.to_index([x, history]) + (action,)
             if self.q_table_done[index] == 1:
                 reward = self.q_table[index]
             else:
-                reward = self.get_reward(self.stop_action, history)
+                reward = self.get_reward(self.stop_action, history, x)
                 self.q_table[index] = reward
                 self.q_table_done[index] = 1
             return reward
         # if action is already used, set reward to -inf
         if history[action] != -1:
-            index = self.to_index([x, history, action])
+            index = self.to_index([x, history]) + (action,)
             reward = -np.infty
             self.q_table[index] = reward
             self.q_table_done[index] = 1
             return reward
-
         # else, calculate the sum of the reward for each outcome times its probability
         future_reward = 0
-        index = tuple([x]) + tuple(history) + tuple([action])
-        tot = np.sum(self.statistics[index], axis=None)
+        stat_index = tuple([x]) + tuple(history) + tuple([action])
+        tot = np.sum(self.statistics[stat_index], axis=None)
         no_history_found = (tot == 0).astype(int)
-        tot += no_history_found
+        divider = tot + no_history_found
         for outcome in range(self.n_y):
-            ind = tuple([x]) + tuple(history) + tuple([action]) + tuple([outcome])
-            prob = self.statistics[ind] / tot
-            future_qs = []
+            stat_ind = tuple([x]) + tuple(history) + tuple([action]) + tuple([outcome])
+            prob = self.statistics[stat_ind] / divider
             if prob > 0:
+                future_qs = []
                 future_history = list(history)
                 future_history[action] = outcome
                 # Among allowed actions, find the one with the greatest reward
                 for new_action in range(self.n_a+1):
-                    index = self.to_index([x, future_history, new_action])
+                    index = self.to_index([x, future_history]) + (new_action,)
                     if self.q_table_done[index] == 1:
                         future_q = self.q_table[index]
                     else:
@@ -73,9 +72,8 @@ class ConstrainedQlearner(QLearner):
             else:
                 max_future_q = 0
             # For each outcome, add the probability times maximal future Q
-
             future_reward = np.add(future_reward, np.multiply(prob, max_future_q))
-        r = self.get_reward(action, history)
+        r = self.get_reward(action, history, x)
         q = r + future_reward
         return q
 
@@ -106,8 +104,8 @@ class ConstrainedQlearner(QLearner):
 
         return patient_statistics
 
-    def get_reward(self, action, history):
-        gamma = self.better_treatment_constraint(history)
+    def get_reward(self, action, history, x):
+        gamma = self.better_treatment_constraint(history, x)
         if action == self.stop_action and gamma == 0:
             return -np.infty
         elif action == self.stop_action and gamma == 1:
@@ -118,40 +116,6 @@ class ConstrainedQlearner(QLearner):
             import sys
             print(gamma, action, history)
             sys.exit()
-
-    def get_sars(self, actions, new_action, patient, history, outcome):
-        temp_actions = actions.copy()
-
-        temp_actions[new_action] = -1
-        s = [patient, temp_actions]
-        a = new_action
-        r = self.get_reward(a, history_to_state(history, self.n_a))
-        new_actions = temp_actions.copy()
-        new_actions[new_action] = outcome
-        s_prime = [patient, new_actions]
-        sars = (s, a, r, s_prime)
-        return sars
-
-    def convert_to_sars(self):
-        x = self.data['x']
-        h = self.data['h']
-        all_sars = []
-        for i, patient in enumerate(x):
-            actions = [-1] * self.n_a
-            history = h[i]
-            for treatment in history:
-                action, outcome = treatment
-                actions[action] = outcome
-
-            for j in range(len(h[i])):
-                new_action = h[i][j][0]
-                new_outcome = h[i][j][1]
-                sars = self.get_sars(actions, new_action, patient, history, new_outcome)
-                all_sars.append(sars)
-
-        return all_sars
-
-
 
 
 

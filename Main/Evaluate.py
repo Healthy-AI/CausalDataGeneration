@@ -11,14 +11,14 @@ import random
 seed = 876
 n_z = 6
 n_x = 1
-n_a = 7
+n_a = 3
 n_y = 3
-training_episodes = 50000
+training_episodes = 100000
 n_training_samples = 20000
-n_test_samples = 20000
+n_test_samples = 2000
 delta = 0
 epsilon = 0
-reward = 0.1
+reward = -0.5
 
 # Plot values
 treatment_slack = 0     # Eg, how close to max must we be to be considered "good enough"
@@ -55,7 +55,8 @@ for key, dataset in datasets.items():
             data = split_patients(data)
         print("Generating samples took {:.3f} seconds".format(time.time()-start))
         dataset['data'] = data
-        dd.io.save(filename, data)
+        if seed is not None:
+            dd.io.save(filename, data)
 
 
 split_training_data = datasets['training']['data']
@@ -65,7 +66,7 @@ algorithms = [
     GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
     GreedyShuffled2(n_x, n_a, n_y, split_training_data, delta, epsilon),
     ConstrainedQlearner(n_x, n_a, n_y, split_training_data, delta=delta, epsilon=epsilon),
-    QLearner(n_x, n_a, n_y, split_training_data, reward=-reward, learning_time=training_episodes,
+    QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes,
              learning_rate=0.01, discount_factor=1)
 ]
 
@@ -91,46 +92,55 @@ print("Running Evaluate took {:.3f} seconds".format(time.time()-main_start))
 print("Showing plots...")
 # Calculate max mean treatment effect over population
 max_mean_treatment_effects = np.zeros((n_algorithms, n_a + 1))
-for i, alg in enumerate(algorithms):
+for i_alg, alg in enumerate(algorithms):
     for i_sample in range(n_test_samples):
         treatments = evaluations[alg.name][i_sample]
         best_found = 0
-        for i_treatment in range(len(max_mean_treatment_effects[i])):
+        for i_treatment in range(len(max_mean_treatment_effects[i_alg])):
             if i_treatment < len(treatments):
                 effect = treatments[i_treatment][1]
                 if effect > best_found:
                     best_found = effect
-            max_mean_treatment_effects[i][i_treatment] += best_found
+            max_mean_treatment_effects[i_alg][i_treatment] += best_found
 max_mean_treatment_effects /= n_test_samples
 
 # Calculate mean treatment effect over population
 mean_treatment_effects = np.zeros((n_algorithms, n_a + 1))      # Overshoot by 1 to get all max values at last step
-for i, alg in enumerate(algorithms):
+mean_num_tests = np.zeros(n_algorithms)
+for i_alg, alg in enumerate(algorithms):
     for i_sample in range(n_test_samples):
         treatments = evaluations[alg.name][i_sample]
+        mean_num_tests[i_alg] += len(treatments)
         best_found = 0
-        for i_treatment in range(len(mean_treatment_effects[i])):
+        for i_treatment in range(len(mean_treatment_effects[i_alg])):
             if i_treatment >= len(treatments):
                 effect = best_found
             else:
                 effect = treatments[i_treatment][1]
             if effect > best_found:
                 best_found = effect
-            mean_treatment_effects[i][i_treatment] += effect
+            mean_treatment_effects[i_alg][i_treatment] += effect
 mean_treatment_effects /= n_test_samples
-
+mean_num_tests /= n_test_samples
 
 # Plot mean treatment effect over population
 x = np.arange(0, n_a+1)
-axs1 = plt.subplot(121)
+x_ticks = list(np.arange(1, n_a+2))
+x_ticks[-1] = 'Done'
+plt.figure()
+plt.title('Treatment effect')
+plt.ylabel('Mean treatment effect')
+plt.xlabel('Number of tried treatments')
 for i_plot, alg in enumerate(algorithms):
     plt.plot(x, mean_treatment_effects[i_plot], plot_colors[i_plot] + plot_markers[0], label=alg.label)
     plt.plot(x, max_mean_treatment_effects[i_plot], plot_colors[i_plot] + plot_markers[1])
     plt.fill_between(x, mean_treatment_effects[i_plot], max_mean_treatment_effects[i_plot], color=plot_colors[i_plot], alpha=0.1)
 plt.grid(True)
+plt.xticks(x, x_ticks)
 average_max_treatment_effect = sum([max(data[-1]) for data in test_data])/len(test_data)
 plt.plot(x, np.ones(len(x))*average_max_treatment_effect, label='MAX_AVG')
 plt.legend(loc='lower right')
+plt.show(block=False)
 
 
 # Calculate % of population at max - treatment_slack treatment over time
@@ -150,9 +160,27 @@ for i, alg in enumerate(algorithms):
                     at_max[i][i_treatment] += 1
                     found_max = 1
 at_max /= n_test_samples
+
 # Plot mean treatment effect over population
-axs3 = plt.subplot(122)
+plt.figure()
+plt.title('Treatment efficiency')
+plt.ylabel('Percentage of population at best possible treatment')
+plt.xlabel('Number of tried treatments')
 for i_plot in range(n_algorithms):
     plt.plot(x, at_max[i_plot], plot_colors[i_plot])
+plt.xticks(x, x_ticks)
 plt.grid(True)
+plt.show(block=False)
+
+# Plot mean number of treatments tried
+plt.figure()
+plt.title('Search time')
+plt.ylabel('Mean number of treatments tried')
+plt.xlabel('Policy')
+x_bars = []
+for i_alg, alg in enumerate(algorithms):
+    x_bars.append(alg.name)
+plt.bar(x_bars, mean_num_tests)
+plt.show(block=False)
+
 plt.show()

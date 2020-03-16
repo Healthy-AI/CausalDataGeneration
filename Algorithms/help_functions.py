@@ -15,12 +15,16 @@ def state_to_history(state):
     return history
 
 
-def hash_history(history, n_actions):
+def hash_history(x, history, n_actions):
     state = history_to_state(history, n_actions)
-    string = hash_state(state)
+    string = hash_state(x, state)
     return string
 
 
-def hash_state(state):
-    string = ''.join(str(x) for x in state)
+def hash_state(x, state):
+    #TODO: fix so that it works with more than one x
+    #xstring = ''.join(str(a) for a in x)
+    xstring = str(x)
+    statestring = ''.join(str(a) for a in state)
+    string = xstring + statestring
     return string
