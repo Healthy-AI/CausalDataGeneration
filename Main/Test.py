@@ -16,24 +16,15 @@ test_data = generate_test_data(dist, n_test_samples)
 
 n_actions = 3
 n_outcomes = 3
-n_x = 1
+n_x = 3
 max_possible_outcome = 2
 stop_action = 3
-data = generate_data(DiscreteDistribution(3, n_x, n_actions, n_outcomes), 100)
+data = generate_data(DiscreteDistribution(3, n_x, n_actions, n_outcomes), 1000)
 data = split_patients(data)
-greedy2 = GreedyShuffled2(n_x, n_outcomes, n_actions, data, 0.1, 0)
-greedy2.learn()
-r = []
-for patient in test_data:
-    res = greedy2.evaluate(patient)
-    r.append(res)
-print(r)
-sys.exit()
-
 cql = ConstrainedQlearner(1, n_actions, n_outcomes, data)
 cql.learn()
 cq = cql.q_table
-#print(cq)
+print(cq)
 print('''print(cq[0, -1, -1, -1])
 print(cq[0, 0, -1, -1]),
 print(cq[0, -1, -1, 2]),

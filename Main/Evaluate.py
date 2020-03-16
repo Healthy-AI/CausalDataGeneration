@@ -4,9 +4,10 @@ from Algorithms.greedyShuffledHistoryV2 import GreedyShuffled2
 from Algorithms.constrained_q_learning import ConstrainedQlearner
 from DataGenerator.data_generator import *
 import time
+import deepdish as dd
 
 # Training values
-seed = 12345
+seed = 9747986
 n_z = 6
 n_x = 1
 n_a = 7
@@ -14,8 +15,9 @@ n_y = 3
 training_episodes = 50000
 n_training_samples = 20000
 n_test_samples = 2000
-delta = 0.1
+delta = 0
 epsilon = 0
+reward = 0.1
 
 # Plot values
 treatment_slack = 0     # Eg, how close to max must we be to be considered "good enough"
@@ -25,25 +27,45 @@ main_start = time.time()
 
 # Generate the data
 dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed)
-#dist = NewDistribution(seed=seed)
+'''
+dist = NewDistribution(seed=seed)
+n_x = 1
+n_a = 3
+n_y = 3
+'''
 
-start = time.time()
-print("Generating {} training samples...".format(n_training_samples))
-training_data = generate_data(dist, n_training_samples)
-split_training_data = split_patients(training_data.copy())
-print("Generating training samples took {:.3f} seconds".format(time.time()-start))
-start = time.time()
-print("Generating {} test samples...".format(n_test_samples))
-test_data = generate_test_data(dist, n_test_samples)
-print("Generating test samples took {:.3f} seconds".format(time.time()-start))
+training = {'name': 'training', 'samples': n_training_samples, 'func': generate_data, 'split': True}
+test = {'name': 'test', 'samples': n_test_samples, 'func': generate_test_data, 'split': False}
+datasets = {'training': training, 'test': test}
 
+for key, dataset in datasets.items():
+    filename = 'Discrete{}{}{}.h5'.format(str(dataset['samples']), dataset['name'], seed)
+    try:
+        data = dd.io.load(filename)
+        dataset['data'] = data
+        print('Found %s data on file' % dataset['name'])
+    except IOError:
+        start = time.time()
+        n_samples = dataset['samples']
+        print("Generating {} {} samples...".format(n_samples, dataset['name']))
+        generate_data_func = dataset['func']
+        data = generate_data_func(dist, n_samples)
+        if dataset['split']:
+            data = split_patients(data)
+        print("Generating samples took {:.3f} seconds".format(time.time()-start))
+        dataset['data'] = data
+        dd.io.save(filename, data)
+
+
+split_training_data = datasets['training']['data']
+test_data = datasets['test']['data']
 print("Initializing algorithms")
 algorithms = [
-    GreedyShuffled(n_x, n_y, n_a, split_training_data, delta, epsilon),
-    GreedyShuffled2(n_x, n_y, n_a, split_training_data, delta, epsilon),
-    ConstrainedQlearner(n_x, n_a, n_y, split_training_data, delta=delta),
-    QLearner(n_x, n_a, n_y, split_training_data, reward=-delta, learning_time=training_episodes,
-             learning_rate=0.01, discount_factor=1),
+    GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
+    GreedyShuffled2(n_x, n_a, n_y, split_training_data, delta, epsilon),
+    ConstrainedQlearner(n_x, n_a, n_y, split_training_data, delta=delta, epsilon=epsilon),
+    QLearner(n_x, n_a, n_y, split_training_data, reward=-reward, learning_time=training_episodes,
+             learning_rate=0.01, discount_factor=1)
 ]
 
 n_algorithms = len(algorithms)
