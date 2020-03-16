@@ -151,13 +151,6 @@ class NewDistribution(Distribution):
         ev = np.sum(self.pz * (self.results_array == 2), 1)
         if len(h) > 0:
             used_a = [u[0] for u in h]
-            max_y = np.max(h, 0)[1]
-            if max_y == 0:
-                ev[0] *= 2
-            elif max_y == 1:
-                ev[2] *= 2
-            elif max_y == 2:
-                ev[1] *= 2
             for u in used_a:
                 ev[u] = 0
 
@@ -168,6 +161,6 @@ class NewDistribution(Distribution):
         max_y = 0
         if len(h) > 0:
             max_y = np.max(h, 0)[1]
-        if (max_y == 2 or y == 2) and self.random.random() < 0.85:
+        if (max_y == 2 or y == 2) and self.random.random() < 0.90:
             return y, True
         return y, False

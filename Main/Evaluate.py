@@ -7,17 +7,17 @@ import time
 import deepdish as dd
 
 # Training values
-seed = 9747986
-n_z = 6
+seed = None
+n_z = 3
 n_x = 1
-n_a = 7
+n_a = 3
 n_y = 3
 training_episodes = 50000
 n_training_samples = 20000
 n_test_samples = 2000
 delta = 0
 epsilon = 0
-reward = 0.1
+reward = -0.1
 
 # Plot values
 treatment_slack = 0     # Eg, how close to max must we be to be considered "good enough"
@@ -27,6 +27,7 @@ main_start = time.time()
 
 # Generate the data
 dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed)
+dist = NewDistribution(seed=seed)
 '''
 dist = NewDistribution(seed=seed)
 n_x = 1
@@ -54,17 +55,18 @@ for key, dataset in datasets.items():
             data = split_patients(data)
         print("Generating samples took {:.3f} seconds".format(time.time()-start))
         dataset['data'] = data
-        dd.io.save(filename, data)
+        if seed is not None:
+            dd.io.save(filename, data)
 
 
 split_training_data = datasets['training']['data']
 test_data = datasets['test']['data']
 print("Initializing algorithms")
 algorithms = [
-    GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
+    #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
     GreedyShuffled2(n_x, n_a, n_y, split_training_data, delta, epsilon),
-    ConstrainedQlearner(n_x, n_a, n_y, split_training_data, delta=delta, epsilon=epsilon),
-    QLearner(n_x, n_a, n_y, split_training_data, reward=-reward, learning_time=training_episodes,
+    #ConstrainedQlearner(n_x, n_a, n_y, split_training_data, delta=delta, epsilon=epsilon),
+    QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes,
              learning_rate=0.01, discount_factor=1)
 ]
 
