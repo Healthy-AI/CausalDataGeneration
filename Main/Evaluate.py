@@ -5,16 +5,17 @@ from Algorithms.constrained_q_learning import ConstrainedQlearner
 from DataGenerator.data_generator import *
 import time
 import deepdish as dd
+import random
 
 # Training values
-seed = 9747986
+seed = 876
 n_z = 6
 n_x = 1
 n_a = 7
 n_y = 3
 training_episodes = 50000
 n_training_samples = 20000
-n_test_samples = 2000
+n_test_samples = 20000
 delta = 0
 epsilon = 0
 reward = 0.1
@@ -39,7 +40,7 @@ test = {'name': 'test', 'samples': n_test_samples, 'func': generate_test_data, '
 datasets = {'training': training, 'test': test}
 
 for key, dataset in datasets.items():
-    filename = 'Discrete{}{}{}.h5'.format(str(dataset['samples']), dataset['name'], seed)
+    filename = '{}{}{}{}.h5'.format(dist.name, str(dataset['samples']), dataset['name'], seed)
     try:
         data = dd.io.load(filename)
         dataset['data'] = data
@@ -81,6 +82,7 @@ for alg in algorithms:
 evaluations = {}
 for alg in algorithms:
     alg_evals = []
+    print("Evaluating {}".format(alg.name))
     for i in range(n_test_samples):
         alg_evals.append(alg.evaluate(test_data[i]))
     evaluations[alg.name] = alg_evals

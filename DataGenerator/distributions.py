@@ -26,7 +26,7 @@ class Distribution:
 class DiscreteDistribution(Distribution):
     def __init__(self, n_z, n_x, n_a, steps_y, outcome_sensitivity_x_z=1, seed=None):
         Distribution.__init__(self, seed)
-
+        self.name = 'Discrete'
         self.n_z = n_z
         self.n_x = n_x
         self.n_a = n_a
@@ -95,6 +95,9 @@ class DiscreteDistribution(Distribution):
 
 
 class FredrikDistribution(Distribution):
+    def __init__(self):
+        super().__init__()
+        self.name = 'Fredrik'
     n_a = 3
     treatment_weights = np.array([0.65, 0.6, 0.4])
     results_array = np.array([[1, 0, 1, 0], [1, 0, 0, 1], [0, 1, 1, 0]])
@@ -135,6 +138,9 @@ class FredrikDistribution(Distribution):
 
 
 class NewDistribution(Distribution):
+    def __init__(self, seed=None):
+        super().__init__(seed)
+        self.name = 'New'
     n_a = 3
     pz = np.array([0.3, 0.15, 0.35, 0.14, 0.04, 0.01, 0.01])
     results_array = np.array([[2, 2, 1, 1, 1, 1, 0],
