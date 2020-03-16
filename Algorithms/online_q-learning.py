@@ -2,7 +2,7 @@ from DataGenerator.data_generator import *
 from DataGenerator.data_visualizer import *
 
 
-class QLearner:
+class OnlineQLearner:
     def __init__(self, n_x, n_a, n_y, distribution, reward=-0.1, learning_time=10000, learning_rate=0.1, discount_factor=1):
         self.n_x = n_x
         self.n_y = n_y
@@ -10,6 +10,7 @@ class QLearner:
         self.stop_action = self.n_a
         self.distribution = distribution
         self.step_reward = reward
+        self.name = "Online Q Learning"
         self.learning_time = learning_time
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor

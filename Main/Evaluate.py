@@ -43,7 +43,7 @@ algorithms = [
     GreedyShuffled2(n_x, n_y, n_a, split_training_data, delta, epsilon),
     ConstrainedQlearner(n_x, n_a, n_y, split_training_data, delta=delta),
     QLearner(n_x, n_a, n_y, split_training_data, reward=-delta, learning_time=training_episodes,
-             learning_rate=0.01, discount_factor=1)
+             learning_rate=0.01, discount_factor=1),
 ]
 
 n_algorithms = len(algorithms)
