@@ -68,11 +68,10 @@ split_training_data = datasets['training']['data']
 test_data = datasets['test']['data']
 print("Initializing algorithms")
 algorithms = [
-    GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
+    #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
     GreedyShuffled2(n_x, n_a, n_y, split_training_data, delta, epsilon),
     ConstrainedQlearner(n_x, n_a, n_y, split_training_data, delta=delta, epsilon=epsilon),
-    QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes,
-             learning_rate=0.01, discount_factor=1)
+    #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1)
 ]
 
 n_algorithms = len(algorithms)
