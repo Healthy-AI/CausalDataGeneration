@@ -8,14 +8,14 @@ import deepdish as dd
 import random
 
 # Training values
-seed = 876
+seed = 9747986
 n_z = 6
 n_x = 1
 n_a = 7
 n_y = 3
 training_episodes = 100000
 n_training_samples = 20000
-n_test_samples = 2000
+n_test_samples = 20000
 delta = 0
 epsilon = 0
 reward = -0.5
@@ -131,14 +131,17 @@ plt.figure()
 plt.title('Treatment effect')
 plt.ylabel('Mean treatment effect')
 plt.xlabel('Number of tried treatments')
+average_max_treatment_effect = sum([max(data[-1]) for data in test_data])/len(test_data)
 for i_plot, alg in enumerate(algorithms):
     plt.plot(x, mean_treatment_effects[i_plot], plot_colors[i_plot] + plot_markers[0], label=alg.label)
     plt.plot(x, max_mean_treatment_effects[i_plot], plot_colors[i_plot] + plot_markers[1])
     plt.fill_between(x, mean_treatment_effects[i_plot], max_mean_treatment_effects[i_plot], color=plot_colors[i_plot], alpha=0.1)
+#    plt.axvline(mean_treatment_effects[i_plot], 0, average_max_treatment_effect, color=plot_colors[i_plot])
+
 plt.grid(True)
 plt.xticks(x, x_ticks)
-average_max_treatment_effect = sum([max(data[-1]) for data in test_data])/len(test_data)
-plt.plot(x, np.ones(len(x))*average_max_treatment_effect, label='MAX_AVG')
+plt.plot(x, np.ones(len(x))*average_max_treatment_effect, label='MAX_POSS_AVG')
+
 plt.legend(loc='lower right')
 plt.show(block=False)
 
@@ -166,7 +169,7 @@ plt.figure()
 plt.title('Treatment efficiency')
 plt.ylabel('Percentage of population at best possible treatment')
 plt.xlabel('Number of tried treatments')
-for i_plot in range(n_algorithms):
+for i_plot, alg in enumerate(algorithms):
     plt.plot(x, at_max[i_plot], plot_colors[i_plot])
 plt.xticks(x, x_ticks)
 plt.grid(True)

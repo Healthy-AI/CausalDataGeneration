@@ -3,6 +3,7 @@ from Algorithms.betterTreatmentConstraint import *
 from Algorithms.help_functions import *
 import random
 
+
 class ConstrainedQlearner(QLearner):
     def __init__(self, n_x, n_a, n_y, data, delta=0, epsilon=0):
         constraint = Constraint(data, n_a, n_y-1, delta, epsilon)

@@ -1,6 +1,6 @@
 from DataGenerator.data_generator import *
 from DataGenerator.data_visualizer import *
-
+from Algorithms.help_functions import *
 
 class QLearner:
     def __init__(self, n_x, n_a, n_y, data, reward=-0.1, learning_time=10000, learning_rate=0.01, discount_factor=1):
@@ -17,7 +17,7 @@ class QLearner:
         self.q_table = None
         self.name = 'Q-learning'
         self.label = 'QL'
-
+        self.statistics = None
         self.sars_data = self.convert_to_sars()
 
     def to_index(self, state):
@@ -69,13 +69,21 @@ class QLearner:
             if len(action_candidates) == 1:
                 action = action_candidates[0]
             else:
-                # TODO implement a better method for choosing when no valid action is available!
-                # TODO choose the treatment with highest mean effect for this x?
-                print("Choosing action arbitrarily")
-                for a in action_candidates:
-                    if y[a] == -1:
-                        action = a
-                        break
+                if self.statistics is not None:
+                    highest_expected_outcome = -1
+                    action = None
+                    for a in action_candidates:
+                        index = tuple([x]) + tuple(history_to_state(history, self.n_a)) + tuple([a])
+                        expected_outcome = np.sum(self.statistics[index])
+                        if expected_outcome > highest_expected_outcome:
+                            highest_expected_outcome = expected_outcome
+                            action = a
+                else:
+                    print("Choosing action arbitrarily")
+                    for a in action_candidates:
+                        if y[a] == -1:
+                            action = a
+                            break
         return history
 
     def convert_to_sars(self):
