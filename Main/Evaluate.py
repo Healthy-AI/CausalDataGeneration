@@ -8,10 +8,10 @@ import deepdish as dd
 import random
 
 # Training values
-seed = 876
+seed = 9001
 n_z = 6
 n_x = 1
-n_a = 3
+n_a = 7
 n_y = 3
 training_episodes = 100000
 n_training_samples = 20000
@@ -63,11 +63,10 @@ split_training_data = datasets['training']['data']
 test_data = datasets['test']['data']
 print("Initializing algorithms")
 algorithms = [
-    GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
+    #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
     GreedyShuffled2(n_x, n_a, n_y, split_training_data, delta, epsilon),
     ConstrainedQlearner(n_x, n_a, n_y, split_training_data, delta=delta, epsilon=epsilon),
-    QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes,
-             learning_rate=0.01, discount_factor=1)
+    #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1)
 ]
 
 n_algorithms = len(algorithms)

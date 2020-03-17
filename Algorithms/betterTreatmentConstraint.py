@@ -28,17 +28,17 @@ class Constraint:
             treatments_better = np.zeros(self.n_actions, dtype=int)
             treatments_worse = np.zeros(self.n_actions, dtype=int)
             for patient in similar_patients:
-                for intervention in patient:
-                    treatment, outcome = intervention
-                    if outcome > maxoutcome + self.epsilon:
-                        treatments_better[treatment] += 1
-                    else:
-                        treatments_worse[treatment] += 1
+                intervention = patient[-1]
+                treatment, outcome = intervention
+                if outcome > maxoutcome + self.epsilon:
+                    treatments_better[treatment] += 1
+                else:
+                    treatments_worse[treatment] += 1
             total = treatments_better + treatments_worse
             no_data_found = (total == 0).astype(int)
             total += no_data_found
-            tot = treatments_better / total
-            tot_delta_limit = (tot > self.delta).astype(int)
+            probability_of_better = treatments_better / total
+            tot_delta_limit = (probability_of_better > self.delta).astype(int)
             gamma = 1-max(tot_delta_limit)
             self.better_treatment_constraint_dict[hash_state(x, outcomes_state)] = gamma
         return gamma
@@ -46,6 +46,7 @@ class Constraint:
     def history_to_compare_dict(self, histories, xs):
         state_dict = {}
         for i, history in enumerate(histories):
+            # TODO does not work for more than 1 x atm
             x = xs[i][0]
             temp_history = history[:-1]
             history_hash = hash_history(x, temp_history, self.n_actions)
