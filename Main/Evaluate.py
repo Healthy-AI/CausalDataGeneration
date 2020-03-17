@@ -6,9 +6,10 @@ from DataGenerator.data_generator import *
 import time
 import deepdish as dd
 import random
+from pathlib import Path
 
 # Training values
-seed = 9747986
+seed = 9001
 n_z = 6
 n_x = 1
 n_a = 7
@@ -40,9 +41,13 @@ test = {'name': 'test', 'samples': n_test_samples, 'func': generate_test_data, '
 datasets = {'training': training, 'test': test}
 
 for key, dataset in datasets.items():
-    filename = '{}{}{}{}.h5'.format(dist.name, str(dataset['samples']), dataset['name'], seed)
+    filename = '{}{}{}{}vars{}{}{}{}.h5'.format(
+        dist.name, str(dataset['samples']), dataset['name'], seed,
+        n_z, n_x, n_a, n_y)
+    filepath = Path('Data', filename)
+
     try:
-        data = dd.io.load(filename)
+        data = dd.io.load(filepath)
         dataset['data'] = data
         print('Found %s data on file' % dataset['name'])
     except IOError:
@@ -56,7 +61,7 @@ for key, dataset in datasets.items():
         print("Generating samples took {:.3f} seconds".format(time.time()-start))
         dataset['data'] = data
         if seed is not None:
-            dd.io.save(filename, data)
+            dd.io.save(filepath, data)
 
 
 split_training_data = datasets['training']['data']
@@ -136,7 +141,7 @@ for i_plot, alg in enumerate(algorithms):
     plt.plot(x, mean_treatment_effects[i_plot], plot_colors[i_plot] + plot_markers[0], label=alg.label)
     plt.plot(x, max_mean_treatment_effects[i_plot], plot_colors[i_plot] + plot_markers[1])
     plt.fill_between(x, mean_treatment_effects[i_plot], max_mean_treatment_effects[i_plot], color=plot_colors[i_plot], alpha=0.1)
-#    plt.axvline(mean_treatment_effects[i_plot], 0, average_max_treatment_effect, color=plot_colors[i_plot])
+    plt.axvline(mean_num_tests[i_plot], 0, average_max_treatment_effect, color=plot_colors[i_plot])
 
 plt.grid(True)
 plt.xticks(x, x_ticks)
