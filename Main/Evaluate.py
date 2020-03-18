@@ -7,17 +7,18 @@ import time
 import deepdish as dd
 import random
 from pathlib import Path
+from Algorithms.online_q_learning import OnlineQLearner
 
 # Training values
-seed = 9001
-n_z = 6
+seed = None
+n_z = 4
 n_x = 1
-n_a = 7
-n_y = 3
+n_a = 5
+n_y = 5
 training_episodes = 100000
 n_training_samples = 20000
 n_test_samples = 20000
-delta = 0
+delta = 0.25
 epsilon = 0
 reward = -0.5
 
@@ -28,7 +29,7 @@ plot_markers = ['', '--', ':']
 main_start = time.time()
 
 # Generate the data
-dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed)
+dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=0.05)
 '''
 dist = NewDistribution(seed=seed)
 n_x = 1
@@ -72,6 +73,7 @@ algorithms = [
     GreedyShuffled2(n_x, n_a, n_y, split_training_data, delta, epsilon),
     ConstrainedQlearner(n_x, n_a, n_y, split_training_data, delta=delta, epsilon=epsilon),
     #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1)
+    #OnlineQLearner(n_x, n_a, n_y, dist, learning_time=training_episodes),
 ]
 
 n_algorithms = len(algorithms)
@@ -187,7 +189,10 @@ plt.xlabel('Policy')
 x_bars = []
 for i_alg, alg in enumerate(algorithms):
     x_bars.append(alg.name)
-plt.bar(x_bars, mean_num_tests)
+rects = plt.bar(x_bars, mean_num_tests)
+for rect in rects:
+    h = rect.get_height()
+    plt.text(rect.get_x() + rect.get_width()/2., 0.90*h, "%f" % h, ha="center", va="bottom")
 plt.show(block=False)
 
 plt.show()

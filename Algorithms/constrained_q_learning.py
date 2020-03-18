@@ -45,7 +45,6 @@ class ConstrainedQlearner(QLearner):
                     stats_index = index + tuple([outcome])
                     probability_of_outcome = self.statistics[stats_index] / number_of_samples
                     if probability_of_outcome > 0:
-                        future_qs = []
                         future_history = list(history)
                         future_history[action] = outcome
                         # Among allowed actions, find the one with the greatest reward
