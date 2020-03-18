@@ -10,7 +10,7 @@ from pathlib import Path
 from Algorithms.online_q_learning import OnlineQLearner
 
 # Training values
-seed = 800
+seed = 8956
 n_z = 4
 n_x = 3
 n_a = 5
@@ -70,7 +70,7 @@ test_data = datasets['test']['data']
 print("Initializing algorithms")
 algorithms = [
     #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
-    GreedyShuffled2(n_x, n_a, n_y, split_training_data, delta, epsilon),
+    GreedyShuffled2(n_x, n_a, n_y, split_training_data, delta=delta, epsilon=epsilon),
     ConstrainedQlearner(n_x, n_a, n_y, split_training_data, delta=delta, epsilon=epsilon),
     QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
     OnlineQLearner(n_x, n_a, n_y, dist, learning_time=training_episodes),
@@ -116,7 +116,6 @@ mean_num_tests = np.zeros(n_algorithms)
 for i_sample in range(n_test_samples):
     for i_alg, alg in enumerate(algorithms):
         treatments = evaluations[alg.name][i_sample]
-        print(treatments)
         mean_num_tests[i_alg] += len(treatments)
         best_found = 0
         for i_treatment in range(len(mean_treatment_effects[i_alg])):
@@ -177,7 +176,7 @@ plt.title('Treatment efficiency')
 plt.ylabel('Percentage of population at best possible treatment')
 plt.xlabel('Number of tried treatments')
 for i_plot, alg in enumerate(algorithms):
-    plt.plot(x, at_max[i_plot], plot_colors[i_plot])
+    plt.plot(x, at_max[i_plot], plot_colors[i_plot], label=alg.label)
 plt.xticks(x, x_ticks)
 plt.grid(True)
 plt.legend(loc='lower right')

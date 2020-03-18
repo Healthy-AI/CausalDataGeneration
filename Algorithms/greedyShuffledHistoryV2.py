@@ -4,7 +4,7 @@ from Algorithms.help_functions import *
 
 
 class GreedyShuffled2:
-    def __init__(self, n_x, n_a, n_y, data, delta, eps):
+    def __init__(self, n_x, n_a, n_y, data, delta, epsilon):
         self.n_x = n_x
         self.n_a = n_a
         self.n_y = n_y
@@ -13,7 +13,7 @@ class GreedyShuffled2:
         self.name = 'Constrained Greedy'
         self.label = 'CG'
         self.delta = delta
-        self.eps = eps
+        self.eps = epsilon
         self.constraint = Constraint(self.data, self.n_a, self.n_y - 1, self.delta, self.eps)
 
     def learn(self):
