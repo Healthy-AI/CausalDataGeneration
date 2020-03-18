@@ -29,7 +29,7 @@ plot_markers = ['', '--', ':']
 main_start = time.time()
 
 # Generate the data
-dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=0.05)
+dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
 '''
 dist = NewDistribution(seed=seed)
 n_x = 1
@@ -113,9 +113,10 @@ max_mean_treatment_effects /= n_test_samples
 # Calculate mean treatment effect over population
 mean_treatment_effects = np.zeros((n_algorithms, n_a + 1))      # Overshoot by 1 to get all max values at last step
 mean_num_tests = np.zeros(n_algorithms)
-for i_alg, alg in enumerate(algorithms):
-    for i_sample in range(n_test_samples):
+for i_sample in range(n_test_samples):
+    for i_alg, alg in enumerate(algorithms):
         treatments = evaluations[alg.name][i_sample]
+        print(treatments)
         mean_num_tests[i_alg] += len(treatments)
         best_found = 0
         for i_treatment in range(len(mean_treatment_effects[i_alg])):
@@ -196,3 +197,6 @@ for rect in rects:
 plt.show(block=False)
 
 plt.show()
+
+while True:
+    pass
