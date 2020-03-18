@@ -36,10 +36,10 @@ class DiscreteDistribution(Distribution):
         self.Pz = np.array(self.random.random(self.n_z))
         self.Px = np.array(self.random.random((self.n_x, self.n_z)))
         self.Px = (self.Px.T / np.sum(self.Px, 1)).T
-        self.Pa = np.array(self.random.normal(0, 1, (self.n_x + self.n_a, self.n_a)))
-        self.Py = np.array(self.random.normal(0, 1, (self.n_a, self.n_x + self.n_z, self.steps_y)))
+        self.Pa = np.array(self.random.normal(0, 1, (1 + self.n_x + self.n_a, self.n_a)))
+        self.Py = np.array(self.random.normal(0, 1, (self.n_a, 1 + self.n_x + self.n_z, self.steps_y)))
         for coeffs in self.Py:
-            coeffs[0:self.n_x] *= self.x_weight
+            coeffs[1:self.n_x+1] *= self.x_weight
 
     # Draw each Z_i according to the probabilities in Pz
     def draw_z(self):
@@ -51,7 +51,7 @@ class DiscreteDistribution(Distribution):
     # Design challenge: if we want equal parts x_0 = 1 and x_0 = 0, how to do that?
     def draw_x(self, z):
         weights_z = self.Px * z
-        weights_x = np.maximum(np.minimum(np.sum(weights_z, 1), 0.95), 0.05)
+        weights_x = np.maximum(np.minimum(np.sum(weights_z, 1), 0.98), 0.02)
         x = np.zeros(self.n_x)
         for i in range(self.n_x):
             x[i] = self.random.binomial(1, p=weights_x[i])
@@ -63,25 +63,25 @@ class DiscreteDistribution(Distribution):
         probs = np.zeros(self.n_a)
         for treatment in h:
             tried_a[treatment[0]] = treatment[1]
-        v = np.concatenate((x-0.5, tried_a))
+        v = np.concatenate(([1], x, tried_a))
         for i in range(self.n_a):
             probs[i] = np.exp(self.Pa.T.dot(v))[i]
         # Decrease the likelihood of testing "similar" treatments,
         # defined as the L2 norm of their x-dependant feature vector
         for treatment in h:
             for a in range(self.n_a):
-                    probs[a] *= self.calc_a_closeness(treatment[0], a, x)
+                probs[a] *= self.calc_a_closeness(treatment[0], a, x)
         den = np.sum(probs)
         probs = probs / den
         return self.random.choice(self.n_a, p=probs)
 
     def calc_a_closeness(self, a0, a1, x):
-        cc = np.exp(self.Py[a0][0:self.n_x].T.dot(x-0.5)) / sum(np.exp(self.Py[a0][0:self.n_x].T.dot(x-0.5)))
-        dd = np.exp(self.Py[a1][0:self.n_x].T.dot(x-0.5)) / sum(np.exp(self.Py[a1][0:self.n_x].T.dot(x-0.5)))
+        cc = np.exp(self.Py[a0][0:self.n_x+1].T.dot(np.concatenate(([1], x)))) / sum(np.exp(self.Py[a0][0:self.n_x+1].T.dot(np.concatenate(([1], x)))))
+        dd = np.exp(self.Py[a1][0:self.n_x+1].T.dot(np.concatenate(([1], x)))) / sum(np.exp(self.Py[a1][0:self.n_x+1].T.dot(np.concatenate(([1], x)))))
         return np.linalg.norm(cc - dd)
 
     def draw_y(self, a, h, x, z):
-        v = np.concatenate((x-0.5, z-0.5))
+        v = np.concatenate(([1], x, z))
         probs = np.zeros(self.steps_y)
         for i in range(self.steps_y):
             probs[i] = np.exp(self.Py[a].T.dot(v)).T[i]
