@@ -23,8 +23,8 @@ def hash_history(x, history, n_actions):
 
 def hash_state(x, state):
     #TODO: fix so that it works with more than one x
-    #xstring = ''.join(str(a) for a in x)
-    xstring = str(x)
+    xstring = ''.join(str(a) for a in x)
+    #xstring = str(x)
     statestring = ''.join(str(a) for a in state)
     string = xstring + statestring
     return string

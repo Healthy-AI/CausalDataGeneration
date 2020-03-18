@@ -73,8 +73,8 @@ class QLearner:
                     highest_expected_outcome = -1
                     action = None
                     for a in action_candidates:
-                        index = tuple([x]) + tuple(history_to_state(history, self.n_a)) + tuple([a])
-                        expected_outcome = np.sum(self.statistics[index])
+                        index = tuple([x]) + tuple(history_to_state(history[:-1], self.n_a)) + tuple([a])
+                        expected_outcome = np.sum(self.statistics[index]*np.arange(0, self.n_y))
                         if expected_outcome > highest_expected_outcome:
                             highest_expected_outcome = expected_outcome
                             action = a

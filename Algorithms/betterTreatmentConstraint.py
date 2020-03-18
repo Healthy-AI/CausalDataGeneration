@@ -1,6 +1,5 @@
 import numpy as np
 from Algorithms.help_functions import *
-import itertools
 
 
 class Constraint:
@@ -24,7 +23,6 @@ class Constraint:
                 similar_patients = self.histories_to_compare[hash_state(x, outcomes_state)]
             except KeyError:
                 similar_patients = []
-
             treatments_better = np.zeros(self.n_actions, dtype=int)
             treatments_worse = np.zeros(self.n_actions, dtype=int)
             for patient in similar_patients:
@@ -43,11 +41,26 @@ class Constraint:
             self.better_treatment_constraint_dict[hash_state(x, outcomes_state)] = gamma
         return gamma
 
-    def history_to_compare_dict(self, histories, xs):
+    def history_to_compare_dict_alt(self, histories, xs):
         state_dict = {}
         for i, history in enumerate(histories):
             # TODO does not work for more than 1 x atm
             x = xs[i][0]
+            for j in range(0, len(history)):
+                temp_history = history[:j]
+                history_hash = hash_history(x, temp_history, self.n_actions)
+                for k in range(1, len(history)-j+1):
+                    h = history[:j+k]
+                    try:
+                        state_dict[history_hash].append(h)
+                    except KeyError:
+                        state_dict[history_hash] = [h]
+        return state_dict
+
+    def history_to_compare_dict(self, histories, xs):
+        state_dict = {}
+        for i, history in enumerate(histories):
+            x = xs[i]
             temp_history = history[:-1]
             history_hash = hash_history(x, temp_history, self.n_actions)
             try:

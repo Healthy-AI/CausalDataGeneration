@@ -10,15 +10,15 @@ from pathlib import Path
 from Algorithms.online_q_learning import OnlineQLearner
 
 # Training values
-seed = None
+seed = 1337
 n_z = 4
 n_x = 1
 n_a = 5
 n_y = 5
 training_episodes = 100000
 n_training_samples = 20000
-n_test_samples = 20000
-delta = 0.25
+n_test_samples = 2000
+delta = 0
 epsilon = 0
 reward = -0.5
 
@@ -71,7 +71,7 @@ print("Initializing algorithms")
 algorithms = [
     #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
     GreedyShuffled2(n_x, n_a, n_y, split_training_data, delta, epsilon),
-    ConstrainedQlearner(n_x, n_a, n_y, split_training_data, delta=delta, epsilon=epsilon),
+    ConstrainedQlearner(n_x, n_a, n_y, split_training_data, delta=delta, epsilon=epsilon)#,
     #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1)
     #OnlineQLearner(n_x, n_a, n_y, dist, learning_time=training_episodes),
 ]
@@ -197,6 +197,3 @@ for rect in rects:
 plt.show(block=False)
 
 plt.show()
-
-while True:
-    pass
