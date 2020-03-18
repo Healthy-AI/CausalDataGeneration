@@ -26,7 +26,7 @@ class GreedyShuffled:
             index = np.hstack((covariate, np.ones(self.n_a, dtype=int) * -1))
             new = np.zeros((self.n_a, self.n_y), dtype=int)
             for h in history:
-                index[h[0] + 1] = h[1]
+                index[h[0] + self.n_x] = h[1]
             new[treatment, outcome] = 1
             ind = tuple(index)
             patient_statistics[ind] += new
