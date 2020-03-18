@@ -19,8 +19,9 @@ class ConstrainedQlearner(QLearner):
         self.label = 'CQL'
 
     def learn(self):
+        possible_x = list(itertools.product(range(0, 2), repeat=self.n_x))
         possible_histories = list(itertools.product(range(-1, self.n_y), repeat=self.n_a))
-        for x in range(len(self.q_table)):
+        for x in possible_x:
             for history in possible_histories:
                 for action in range(self.n_a+1):
                     if not self.q_table_done[self.to_index([x, history, action])]:
