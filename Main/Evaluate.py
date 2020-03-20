@@ -10,15 +10,15 @@ from pathlib import Path
 from Algorithms.online_q_learning import OnlineQLearner
 
 # Training values
-seed = 1337
-n_z = 4
+seed = None
+n_z = 5
 n_x = 1
 n_a = 5
 n_y = 5
 training_episodes = 100000
 n_training_samples = 20000
 n_test_samples = 2000
-delta = 0
+delta = 0.2
 epsilon = 0
 reward = -0.5
 
@@ -30,6 +30,8 @@ main_start = time.time()
 
 # Generate the data
 dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
+dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
+
 '''
 dist = NewDistribution(seed=seed)
 n_x = 1
@@ -116,7 +118,6 @@ mean_num_tests = np.zeros(n_algorithms)
 for i_sample in range(n_test_samples):
     for i_alg, alg in enumerate(algorithms):
         treatments = evaluations[alg.name][i_sample]
-        print(treatments)
         mean_num_tests[i_alg] += len(treatments)
         best_found = 0
         for i_treatment in range(len(mean_treatment_effects[i_alg])):
