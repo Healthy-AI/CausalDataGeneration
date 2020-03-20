@@ -115,7 +115,7 @@ class DiscreteDistributionWithStaticOutcomes(DiscreteDistribution):
 class DiscreteDistributionWithSmoothOutcomes(DiscreteDistribution):
     def __init__(self, n_z, n_x, n_a, steps_y, outcome_sensitivity_x_z=1, seed=None):
         super().__init__(n_z, n_x, n_a, steps_y, outcome_sensitivity_x_z, seed)
-        self.name = "Discrete with smooth outcomes"
+        self.name = "Discrete_with_smooth_outcomes"
 
         self.dists = dict()
 

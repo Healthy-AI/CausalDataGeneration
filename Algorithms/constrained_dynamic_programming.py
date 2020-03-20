@@ -28,8 +28,8 @@ class ConstrainedDynamicProgramming(QLearner):
                         self.populate_q_value(history, action, x)
 
     def populate_q_value(self, history, action, x):
-        index = self.to_index([x, history]) + (action,)
         reward = 0
+        index = self.to_index([x, history]) + (action,)
         future_reward = 0
         # if action is stop action, calculate the reward
         if action == self.stop_action:

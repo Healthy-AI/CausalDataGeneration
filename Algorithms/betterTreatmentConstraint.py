@@ -1,6 +1,6 @@
 import numpy as np
 from Algorithms.help_functions import *
-
+import random
 
 class Constraint:
     def __init__(self, data, n_actions, max_possible_outcome, delta=0, epsilon=0):
@@ -19,10 +19,26 @@ class Constraint:
             maxoutcome = max(outcomes_state)
             if maxoutcome == self.max_possible_outcome:
                 return 1
+            not_tested = np.where(np.array(outcomes_state) == -1)[0]
+            if len(not_tested) == 0:
+                return 1
             try:
                 similar_patients = self.histories_to_compare[hash_state(x, outcomes_state)]
             except KeyError:
                 similar_patients = []
+                '''
+                index = random.choice(not_tested)
+                pseudo_state = outcomes_state
+                pseudo_state = list(pseudo_state)
+                pseudo_state[index] = -1
+                pseudo_state = tuple(pseudo_state)
+                try:
+                    similar_patients = self.histories_to_compare[hash_state(x, pseudo_state)]
+                except KeyError:
+                    similar_patients = []
+                    #similar_patients.append(patients)
+                #similar_patients = [item for sublist in similar_patients for item in sublist]
+                '''
             treatments_better = np.zeros(self.n_actions, dtype=int)
             treatments_worse = np.zeros(self.n_actions, dtype=int)
             for patient in similar_patients:
@@ -44,8 +60,7 @@ class Constraint:
     def history_to_compare_dict_alt(self, histories, xs):
         state_dict = {}
         for i, history in enumerate(histories):
-            # TODO does not work for more than 1 x atm
-            x = xs[i][0]
+            x = xs[i]
             for j in range(0, len(history)):
                 temp_history = history[:j]
                 history_hash = hash_history(x, temp_history, self.n_actions)
