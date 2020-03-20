@@ -18,7 +18,7 @@ n_y = 5
 training_episodes = 100000
 n_training_samples = 20000
 n_test_samples = 2000
-delta = 0
+delta = 0.2
 epsilon = 0
 reward = -0.5
 
@@ -30,6 +30,8 @@ main_start = time.time()
 
 # Generate the data
 dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
+#dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
+
 '''
 dist = NewDistribution(seed=seed)
 n_x = 1

@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.stats
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from sklearn import metrics
@@ -48,7 +49,6 @@ class DiscreteDistribution(Distribution):
             z[i] = self.random.binomial(1, p=self.Pz[i])
         return z
 
-    # Design challenge: if we want equal parts x_0 = 1 and x_0 = 0, how to do that?
     def draw_x(self, z):
         weights_z = self.Px * z
         weights_x = np.maximum(np.minimum(np.sum(weights_z, 1), 0.98), 0.02)
@@ -57,7 +57,6 @@ class DiscreteDistribution(Distribution):
             x[i] = self.random.binomial(1, p=weights_x[i])
         return x.astype(int)
 
-    # Design challenge: how to "avoid" similar treatments if one has already been tried
     def draw_a(self, h, x, z):
         tried_a = np.zeros(self.n_a)
         probs = np.zeros(self.n_a)
@@ -87,6 +86,72 @@ class DiscreteDistribution(Distribution):
             probs[i] = np.exp(self.Py[a].T.dot(v)).T[i]
         den = np.sum(probs)
         probs = probs / den
+        y = self.random.choice(self.steps_y, p=probs)
+        done = False
+        if y >= self.steps_y - 1 and self.random.random() < 0.9:
+            done = True
+        return y, done
+
+
+class DiscreteDistributionWithStaticOutcomes(DiscreteDistribution):
+    def __init__(self, n_z, n_x, n_a, steps_y, outcome_sensitivity_x_z=1, seed=None):
+        super().__init__(n_z, n_x, n_a, steps_y, outcome_sensitivity_x_z, seed)
+        self.name = "Discrete with static outcomes"
+
+    def draw_y(self, a, h, x, z):
+        v = np.concatenate(([1], x, z))
+        probs = np.zeros(self.steps_y)
+        for i in range(self.steps_y):
+            probs[i] = np.exp(self.Py[a].T.dot(v)).T[i]
+        den = np.sum(probs)
+        probs = probs / den
+        y = np.argmax(probs)
+        done = False
+        if y >= self.steps_y - 1 and self.random.random() < 0.9:
+            done = True
+        return y, done
+
+
+class DiscreteDistributionWithSmoothOutcomes(DiscreteDistribution):
+    def __init__(self, n_z, n_x, n_a, steps_y, outcome_sensitivity_x_z=1, seed=None):
+        super().__init__(n_z, n_x, n_a, steps_y, outcome_sensitivity_x_z, seed)
+        self.name = "Discrete with smooth outcomes"
+
+        self.dists = dict()
+
+        self.Py1 = np.array(self.random.normal(0, 1, (self.n_a, 1 + self.n_x + self.n_z)))
+        self.Py2 = np.array(self.random.normal(0, 1, (self.n_a, 1 + self.n_x + self.n_z)))
+        self.Py2[:, 0] = np.abs(self.Py2[:, 0])
+        for coeffs in self.Py1:
+            coeffs[1:self.n_x+1] *= self.x_weight
+        for coeffs in self.Py2:
+            coeffs[1:self.n_x+1] *= self.x_weight
+        self.neg_Py1 = ((self.Py1 < 0)*self.Py1).sum(1)
+        self.pos_Py1 = ((self.Py1 > 0)*self.Py1).sum(1)
+        self.neg_Py2 = ((self.Py2 < 0)*self.Py2).sum(1)
+        self.pos_Py2 = ((self.Py2 > 0)*self.Py2).sum(1)
+
+    def calc_a_closeness(self, a0, a1, x):
+        d1 = self.Py1[a0] - self.Py1[a1]
+        d2 = self.Py2[a0] - self.Py2[a1]
+
+        return np.sum(d1**2) + np.sum(d2**2)
+
+    def draw_y(self, a, h, x, z):
+        v = np.concatenate(([1], x, z))
+        y0 = self.Py1[a].dot(v)
+        y0 = (self.steps_y - 1) * (y0 - self.neg_Py1[a]) / (self.pos_Py1[a] - self.neg_Py1[a])
+        gamma = self.Py2[a].dot(v)
+        gamma = (gamma - self.neg_Py2[a]) / (self.pos_Py2[a] - self.neg_Py2[a])
+        probs = np.zeros(self.steps_y)
+        if tuple(v) in self.dists:
+            dist = self.dists[tuple(v)]
+        else:
+            dist = scipy.stats.cauchy(y0, gamma)
+            self.dists[tuple(v)] = dist
+        for i in range(self.steps_y):
+            probs[i] = dist.pdf(i)
+        probs = probs / sum(probs)
         y = self.random.choice(self.steps_y, p=probs)
         done = False
         if y >= self.steps_y - 1 and self.random.random() < 0.9:
