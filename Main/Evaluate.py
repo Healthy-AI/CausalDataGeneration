@@ -1,7 +1,8 @@
 from Algorithms.q_learning import QLearner
+from Algorithms.q_learning_with_constraint import QLearnerConstrained
 from Algorithms.greedyShuffledHistory import GreedyShuffled
 from Algorithms.greedyShuffledHistoryV2 import GreedyShuffled2
-from Algorithms.constrained_q_learning import ConstrainedQlearner
+from Algorithms.constrained_dynamic_programming import ConstrainedDynamicProgramming
 from DataGenerator.data_generator import *
 import time
 import deepdish as dd
@@ -20,7 +21,7 @@ n_training_samples = 20000
 n_test_samples = 2000
 delta = 0.2
 epsilon = 0
-reward = -0.5
+reward = -0.25
 
 # Plot values
 treatment_slack = 0     # Eg, how close to max must we be to be considered "good enough"
@@ -30,7 +31,7 @@ main_start = time.time()
 
 # Generate the data
 dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-#dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
+dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
 
 '''
 dist = NewDistribution(seed=seed)
@@ -73,9 +74,10 @@ print("Initializing algorithms")
 algorithms = [
     #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
     GreedyShuffled2(n_x, n_a, n_y, split_training_data, delta=delta, epsilon=epsilon),
-    ConstrainedQlearner(n_x, n_a, n_y, split_training_data, delta=delta, epsilon=epsilon),
-    QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
-    OnlineQLearner(n_x, n_a, n_y, dist, learning_time=training_episodes),
+    ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, delta=delta, epsilon=epsilon),
+    #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
+    QLearnerConstrained(n_x, n_a, n_y, split_training_data, delta=delta, epsilon=epsilon, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
+    #OnlineQLearner(n_x, n_a, n_y, dist, learning_time=training_episodes),
 ]
 
 n_algorithms = len(algorithms)

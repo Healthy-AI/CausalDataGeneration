@@ -12,7 +12,7 @@ class Constraint:
         self.epsilon = epsilon
         self.max_possible_outcome = max_possible_outcome
 
-    def better_treatment_constraint(self, outcomes_state, x):
+    def no_better_treatment_exist(self, outcomes_state, x):
         try:
             gamma = self.better_treatment_constraint_dict[hash_state(x, outcomes_state)]
         except KeyError:

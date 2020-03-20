@@ -1,4 +1,4 @@
-from Algorithms.constrained_q_learning import ConstrainedQlearner
+from Algorithms.constrained_dynamic_programming import ConstrainedDynamicProgramming
 from Algorithms.greedyShuffledHistory import GreedyShuffled
 from DataGenerator.data_generator import *
 from Algorithms.q_learning import QLearner
@@ -21,7 +21,7 @@ max_possible_outcome = 2
 stop_action = 3
 data = generate_data(DiscreteDistribution(3, n_x, n_actions, n_outcomes), 1000)
 data = split_patients(data)
-cql = ConstrainedQlearner(1, n_actions, n_outcomes, data)
+cql = ConstrainedDynamicProgramming(1, n_actions, n_outcomes, data)
 cql.learn()
 cq = cql.q_table
 print(cq)

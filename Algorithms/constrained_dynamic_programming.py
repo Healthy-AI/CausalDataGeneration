@@ -4,10 +4,10 @@ from Algorithms.help_functions import *
 import random
 
 
-class ConstrainedQlearner(QLearner):
+class ConstrainedDynamicProgramming(QLearner):
     def __init__(self, n_x, n_a, n_y, data, delta=0, epsilon=0):
         constraint = Constraint(data, n_a, n_y-1, delta, epsilon)
-        self.better_treatment_constraint = constraint.better_treatment_constraint
+        self.better_treatment_constraint = constraint.no_better_treatment_exist
         super().__init__(n_x, n_a, n_y, data)
         self.statistics = self.get_patient_statistics()
         # Q-table indexed with x, y_0, y_1, y_2, y_3 and a
@@ -15,8 +15,8 @@ class ConstrainedQlearner(QLearner):
         self.q_table_done = self.q_table.copy().astype(bool)
         self.delta = delta
         self.epsilon = epsilon
-        self.name = 'Constrained Q-learning'
-        self.label = 'CQL'
+        self.name = 'Constrained Dynamic Programming'
+        self.label = 'CDP'
 
     def learn(self):
         possible_x = list(itertools.product(range(0, 2), repeat=self.n_x))
