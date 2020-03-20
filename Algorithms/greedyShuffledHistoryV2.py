@@ -4,7 +4,7 @@ from Algorithms.help_functions import *
 
 
 class GreedyShuffled2:
-    def __init__(self, n_x, n_a, n_y, data, delta, eps):
+    def __init__(self, n_x, n_a, n_y, data, delta, epsilon):
         self.n_x = n_x
         self.n_a = n_a
         self.n_y = n_y
@@ -13,7 +13,7 @@ class GreedyShuffled2:
         self.name = 'Constrained Greedy'
         self.label = 'CG'
         self.delta = delta
-        self.eps = eps
+        self.eps = epsilon
         self.constraint = Constraint(self.data, self.n_a, self.n_y - 1, self.delta, self.eps)
 
     def learn(self):
@@ -29,7 +29,7 @@ class GreedyShuffled2:
             index = np.hstack((covariate, np.ones(self.n_a, dtype=int) * -1))
             new = np.zeros((self.n_a, self.n_y), dtype=int)
             for h in history:
-                index[h[0] + 1] = h[1]
+                index[h[0] + self.n_x] = h[1]
             new[treatment, outcome] = 1
             ind = tuple(index)
             patient_statistics[ind] += new

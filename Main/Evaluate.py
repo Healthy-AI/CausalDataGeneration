@@ -10,9 +10,9 @@ from pathlib import Path
 from Algorithms.online_q_learning import OnlineQLearner
 
 # Training values
-seed = None
-n_z = 5
-n_x = 1
+seed = 8956
+n_z = 4
+n_x = 3
 n_a = 5
 n_y = 5
 training_episodes = 100000
@@ -24,13 +24,13 @@ reward = -0.5
 
 # Plot values
 treatment_slack = 0     # Eg, how close to max must we be to be considered "good enough"
-plot_colors = ['k', 'r', 'b', 'g']
+plot_colors = ['k', 'r', 'b', 'g', 'm', 'c', 'y']
 plot_markers = ['', '--', ':']
 main_start = time.time()
 
 # Generate the data
 dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
+#dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
 
 '''
 dist = NewDistribution(seed=seed)
@@ -72,10 +72,10 @@ test_data = datasets['test']['data']
 print("Initializing algorithms")
 algorithms = [
     #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
-    GreedyShuffled2(n_x, n_a, n_y, split_training_data, delta, epsilon),
-    ConstrainedQlearner(n_x, n_a, n_y, split_training_data, delta=delta, epsilon=epsilon)#,
-    #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1)
-    #OnlineQLearner(n_x, n_a, n_y, dist, learning_time=training_episodes),
+    GreedyShuffled2(n_x, n_a, n_y, split_training_data, delta=delta, epsilon=epsilon),
+    ConstrainedQlearner(n_x, n_a, n_y, split_training_data, delta=delta, epsilon=epsilon),
+    QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
+    OnlineQLearner(n_x, n_a, n_y, dist, learning_time=training_episodes),
 ]
 
 n_algorithms = len(algorithms)
@@ -178,9 +178,10 @@ plt.title('Treatment efficiency')
 plt.ylabel('Percentage of population at best possible treatment')
 plt.xlabel('Number of tried treatments')
 for i_plot, alg in enumerate(algorithms):
-    plt.plot(x, at_max[i_plot], plot_colors[i_plot])
+    plt.plot(x, at_max[i_plot], plot_colors[i_plot], label=alg.label)
 plt.xticks(x, x_ticks)
 plt.grid(True)
+plt.legend(loc='lower right')
 plt.show(block=False)
 
 # Plot mean number of treatments tried
