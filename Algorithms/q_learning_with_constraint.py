@@ -37,7 +37,7 @@ class QLearnerConstrained:
             for y, _ in np.ndenumerate(self.q_table[x]):
                 y_t = [-1 if e == self.n_y else e for e in y[0:self.n_a]]
                 if self.constraint.no_better_treatment_exist(y_t, x):
-                    self.q_table[self.to_index([x, y_t, -1])] = max(y_t)
+                    self.q_table[self.to_index([x, y_t, -1])] = 0
                 else:
                     self.q_table[self.to_index([x, y_t, -1])] = -np.inf
                 modified[self.to_index(([x, y_t, -1]))] = True
