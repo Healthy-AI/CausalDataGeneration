@@ -32,7 +32,8 @@ if __name__ == '__main__':
 
     # Generate the data
     #dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
+    #dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
+    dist = TestSimilarTreatements(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
 
     '''
     dist = NewDistribution(seed=seed)
