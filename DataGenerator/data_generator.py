@@ -1,25 +1,34 @@
 import itertools
 import json
+from multiprocessing.pool import Pool
 from DataGenerator.distributions import *
-
 import numpy as np
+
+
+def generate_sample(generator):
+    z = generator.draw_z()
+    x = generator.draw_x(z)
+
+    h = []
+
+    for t in range(generator.n_a):
+        a_t = generator.draw_a(h, x, z)
+        y_t, done = generator.draw_y(a_t, h, x, z)
+        h.append(np.array([a_t, y_t]))
+        if done:
+            break
+    return z, x, h
 
 
 def generate_data(generator, n_samples):
     data = {'z': [], 'x': [], 'h': []}
 
+    results = []
     for i in range(n_samples):
-        z = generator.draw_z()
-        x = generator.draw_x(z)
+        results.append(generate_sample(generator))
 
-        h = []
-
-        for t in range(generator.n_a):
-            a_t = generator.draw_a(h, x, z)
-            y_t, done = generator.draw_y(a_t, h, x, z)
-            h.append(np.array([a_t, y_t]))
-            if done:
-                break
+    for i in range(n_samples):
+        z, x, h = results[i]
         data['z'].append(z)
         data['x'].append(x)
         data['h'].append(h)

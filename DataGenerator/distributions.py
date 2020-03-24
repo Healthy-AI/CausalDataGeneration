@@ -159,6 +159,14 @@ class DiscreteDistributionWithSmoothOutcomes(DiscreteDistribution):
         return y, done
 
 
+class TestSimilarTreatements(DiscreteDistributionWithSmoothOutcomes):
+    def __init__(self, n_z, n_x, n_a, steps_y, outcome_sensitivity_x_z=1, seed=None):
+        super().__init__(n_z, n_x, n_a, steps_y, outcome_sensitivity_x_z, seed)
+        self.name = 'Test Similars'
+
+        self.Py1[-1] = self.Py1[0] + self.random.normal(0, 0.02, 1 + self.n_x + self.n_z)
+        self.Py2[-1] = self.Py2[0] + self.random.normal(0, 0.02, 1 + self.n_x + self.n_z)
+
 class FredrikDistribution(Distribution):
     def __init__(self):
         super().__init__()
