@@ -69,7 +69,7 @@ class QLearner:
             if len(action_candidates) == 1:
                 action = action_candidates[0]
             else:
-                if self.statistics is not None:
+                if False:#self.statistics is not None:
                     highest_expected_outcome = -1
                     action = None
                     for a in action_candidates:
