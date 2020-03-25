@@ -25,18 +25,22 @@ class Constraint:
             try:
                 similar_patients = self.histories_to_compare[hash_state(x, outcomes_state)]
             except KeyError:
-                similar_patients = []
+                #similar_patients = []
+                init_state = tuple([-1]*len(outcomes_state))
+                similar_patients = self.histories_to_compare[hash_state(x, init_state)]
                 '''
-                index = random.choice(not_tested)
-                pseudo_state = outcomes_state
-                pseudo_state = list(pseudo_state)
-                pseudo_state[index] = -1
-                pseudo_state = tuple(pseudo_state)
-                try:
-                    similar_patients = self.histories_to_compare[hash_state(x, pseudo_state)]
-                except KeyError:
-                    similar_patients = []
-                    #similar_patients.append(patients)
+                for index in not_tested:
+                    pseudo_state = outcomes_state
+                    pseudo_state = list(pseudo_state)
+                    pseudo_state[index] = -1
+                    pseudo_state = tuple(pseudo_state)
+                    try:
+                        similar_patients = self.histories_to_compare[hash_state(x, pseudo_state)]
+                    except KeyError:
+                        pass
+                    if len(similar_patients) != 0:
+                        break
+                    #print(some_similar_patients)
                 #similar_patients = [item for sublist in similar_patients for item in sublist]
                 '''
             treatments_better = np.zeros(self.n_actions, dtype=int)
