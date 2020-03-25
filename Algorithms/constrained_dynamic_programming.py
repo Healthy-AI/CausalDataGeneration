@@ -45,27 +45,27 @@ class ConstrainedDynamicProgramming(QLearner):
                 for outcome in range(self.n_y):
                     stats_index = index + tuple([outcome])
                     probability_of_outcome = self.statistics[stats_index] / number_of_samples
-                    #if probability_of_outcome > 0:
-                    future_history = list(history)
-                    future_history[action] = outcome
-                    # Find the action with the greatest reward
-                    for new_action in range(self.n_a+1):
-                        if not self.q_table_done[self.to_index([x, future_history]) + (new_action, )]:
-                            self.populate_q_value(tuple(future_history), new_action, x)
-                    max_future_q = np.max(self.q_table[self.to_index([x, future_history])])
-                    max_future_action = np.argmax(self.q_table[self.to_index([x, future_history])])
-                    max_future_actions.append(max_future_action)
-                    #else:
-                    #    max_future_q = 0
-                    # For each outcome, add the probability times maximal future Q
-                    if future_reward == -np.inf or max_future_q == -np.inf:
-                        future_reward = -np.inf
+                    if probability_of_outcome > 0:
+                        future_history = list(history)
+                        future_history[action] = outcome
+                        # Find the action with the greatest reward
+                        for new_action in range(self.n_a+1):
+                            if not self.q_table_done[self.to_index([x, future_history]) + (new_action, )]:
+                                self.populate_q_value(tuple(future_history), new_action, x)
+                        max_future_q = np.max(self.q_table[self.to_index([x, future_history])])
+                    #max_future_action = np.argmax(self.q_table[self.to_index([x, future_history])])
+                    #max_future_actions.append(max_future_action)
                     else:
-                        future_reward = np.add(future_reward, np.multiply(probability_of_outcome, max_future_q))
+                        max_future_q = 0
+                    # For each outcome, add the probability times maximal future Q
+                    #if future_reward == -np.inf or max_future_q == -np.inf:
+                    #    future_reward = -np.inf
+                    #else:
+                    future_reward = np.add(future_reward, np.multiply(probability_of_outcome, max_future_q))
 
-                if all(action == self.stop_action for action in max_future_actions):
-                    #print('found useless action, prev future_reward', future_reward)
-                    future_reward = -1000
+                #if all(action == self.stop_action for action in max_future_actions):
+                #    #print('found useless action, prev future_reward', future_reward)
+                #    future_reward = -1000
             else:
                 future_reward = -np.inf
         '''
