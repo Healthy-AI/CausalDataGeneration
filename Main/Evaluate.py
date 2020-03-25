@@ -20,7 +20,7 @@ if __name__ == '__main__':
     training_episodes = 100000
     n_training_samples = 20000
     n_test_samples = 2000
-    delta = 0.1
+    delta = 0
     epsilon = 0
     reward = -0.25
 
@@ -32,8 +32,8 @@ if __name__ == '__main__':
 
     # Generate the data
     #dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    #dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    dist = TestSimilarTreatements(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
+    dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
+    #dist = TestSimilarTreatements(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
 
     '''
     dist = NewDistribution(seed=seed)
@@ -136,6 +136,27 @@ if __name__ == '__main__':
     mean_treatment_effects /= n_test_samples
     mean_num_tests /= n_test_samples
 
+    strictly_better_samples = np.zeros(n_algorithms, dtype=int)
+    for i_sample in range(n_test_samples):
+        samples = np.zeros((n_algorithms, 2))
+        for i_alg, alg in enumerate(algorithms):
+            treatments = evaluations[alg.name][i_sample]
+            n_treatments = len(treatments)
+            best_found_outcome = max([intervention[1] for intervention in treatments])
+            samples[i_alg, 0] = n_treatments
+            samples[i_alg, 1] = best_found_outcome
+
+        min_treatments = np.where(samples[:, 0] == samples[:, 0].min())
+        max_outcome = np.where(samples[:, 1] == samples[:, 1].max())
+        strictly_better_indices, _, _ = np.intersect1d(min_treatments, max_outcome, return_indices=True)
+        if len(strictly_better_indices) == 1:
+            strictly_better_samples[strictly_better_indices[0]] += 1
+
+    for i_alg, alg in enumerate(algorithms):
+        print(alg.name, 'has', strictly_better_samples[i_alg],
+              'strictly better samples than the other algorithms')
+    print('There is a total of', n_test_samples, 'test samples')
+
     # Plot mean treatment effect over population
     x = np.arange(0, n_a+1)
     x_ticks = list(np.arange(1, n_a+2))
@@ -199,6 +220,21 @@ if __name__ == '__main__':
         x_bars.append(alg.name)
     x_bars = [label.replace(" ", '\n') for label in x_bars]
     rects = plt.bar(x_bars, mean_num_tests)
+    for rect in rects:
+        h = rect.get_height()
+        plt.text(rect.get_x() + rect.get_width()/2., 0.90*h, "%f" % h, ha="center", va="bottom")
+    plt.show(block=False)
+
+    # Plot mean number of treatments tried
+    plt.figure()
+    plt.title('Nr of strictly better samples')
+    plt.ylabel('Samples where the policy performed better')
+    plt.xlabel('Policy')
+    x_bars = []
+    for i_alg, alg in enumerate(algorithms):
+        x_bars.append(alg.name)
+    x_bars = [label.replace(" ", '\n') for label in x_bars]
+    rects = plt.bar(x_bars, strictly_better_samples)
     for rect in rects:
         h = rect.get_height()
         plt.text(rect.get_x() + rect.get_width()/2., 0.90*h, "%f" % h, ha="center", va="bottom")
