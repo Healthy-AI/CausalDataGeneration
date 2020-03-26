@@ -66,7 +66,7 @@ class GreedyShuffled2:
                 best_outcome = outcome
             y[new_treatment] = outcome
             history.append([new_treatment, outcome])
-            gamma = self.constraint.no_better_treatment_exist(history_to_state(history, self.n_a), x)
-            if gamma == 1:
+            no_better_treatment_exist = self.constraint.no_better_treatment_exist(history_to_state(history, self.n_a), x)
+            if no_better_treatment_exist == 1:
                 stop = True
         return history
