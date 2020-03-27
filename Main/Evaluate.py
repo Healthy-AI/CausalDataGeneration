@@ -13,13 +13,13 @@ from Algorithms.online_q_learning import OnlineQLearner
 if __name__ == '__main__':
     # Training values
     seed = 8956
-    n_z = 4
-    n_x = 1
+    n_z = 3
+    n_x = 3
     n_a = 5
-    n_y = 5
-    training_episodes = 100000
-    n_training_samples = 20000
-    n_test_samples = 2000
+    n_y = 2
+    training_episodes = 500000
+    n_training_samples = 50000
+    n_test_samples = 5000
     delta = 0
     epsilon = 0
     reward = -0.25
@@ -33,8 +33,9 @@ if __name__ == '__main__':
     # Generate the data
     #dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
     dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    #dist = TestSimilarTreatements(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-
+    dist.print_moderator_statistics()
+    dist.print_covariate_statistics()
+    dist.print_treatment_statistics()
     '''
     dist = NewDistribution(seed=seed)
     n_x = 1
