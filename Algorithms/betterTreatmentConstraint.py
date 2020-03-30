@@ -38,6 +38,7 @@ class Constraint:
                             key = hash_state(x, tmp_state)
                             if key in self.histories_to_compare.keys():
                                 similar_patients.extend(self.histories_to_compare[key])
+                # Uses the prior from no tried treatments
                 else:
                     tmp_state = tuple([-1] * self.n_actions)
                     similar_patients = self.histories_to_compare[hash_state(x, tmp_state)]
