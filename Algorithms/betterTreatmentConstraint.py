@@ -2,6 +2,8 @@ import numpy as np
 from Algorithms.help_functions import *
 import random
 
+history_prior = False
+
 class Constraint:
     def __init__(self, data, n_actions, steps_y, delta=0, epsilon=0):
         self.data = data
@@ -26,15 +28,19 @@ class Constraint:
                 similar_patients = self.histories_to_compare[hash_state(x, outcomes_state)]
             except KeyError:
                 # Checks each "history" that is 1-off
-                similar_patients = []
-                for i in range(self.n_actions):
-                    if outcomes_state[i] != -1:
-                        tmp_state = list(outcomes_state)
-                        tmp_state[i] = -1
-                        tmp_state = tuple(tmp_state)
-                        key = hash_state(x, tmp_state)
-                        if key in self.histories_to_compare.keys():
-                            similar_patients.extend(self.histories_to_compare[key])
+                if history_prior:
+                    similar_patients = []
+                    for i in range(self.n_actions):
+                        if outcomes_state[i] != -1:
+                            tmp_state = list(outcomes_state)
+                            tmp_state[i] = -1
+                            tmp_state = tuple(tmp_state)
+                            key = hash_state(x, tmp_state)
+                            if key in self.histories_to_compare.keys():
+                                similar_patients.extend(self.histories_to_compare[key])
+                else:
+                    tmp_state = tuple([-1] * self.n_actions)
+                    similar_patients = self.histories_to_compare[hash_state(x, tmp_state)]
             treatments_better = np.zeros(self.n_actions, dtype=int)
             treatments_worse = np.zeros(self.n_actions, dtype=int)
             for patient in similar_patients:
