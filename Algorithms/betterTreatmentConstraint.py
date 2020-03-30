@@ -3,14 +3,14 @@ from Algorithms.help_functions import *
 import random
 
 class Constraint:
-    def __init__(self, data, n_actions, max_possible_outcome, delta=0, epsilon=0):
+    def __init__(self, data, n_actions, steps_y, delta=0, epsilon=0):
         self.data = data
         self.n_actions = n_actions
         self.histories_to_compare = self.history_to_compare_dict(self.data['h'], self.data['x'])
         self.better_treatment_constraint_dict = {}
         self.delta = delta
         self.epsilon = epsilon
-        self.max_possible_outcome = max_possible_outcome
+        self.max_possible_outcome = steps_y - 1
 
     def no_better_treatment_exist(self, outcomes_state, x):
         try:
