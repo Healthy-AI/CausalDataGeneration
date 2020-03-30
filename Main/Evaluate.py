@@ -9,14 +9,15 @@ import deepdish as dd
 import random
 from pathlib import Path
 from Algorithms.online_q_learning import OnlineQLearner
+from Algorithms.betterTreatmentConstraint import Constraint
 
 if __name__ == '__main__':
     # Training values
-    seed = 8956
+    seed = 12345
     n_z = 3
     n_x = 3
     n_a = 5
-    n_y = 2
+    n_y = 3
     training_episodes = 500000
     n_training_samples = 50000
     n_test_samples = 5000
@@ -73,13 +74,17 @@ if __name__ == '__main__':
 
     split_training_data = datasets['training']['data']
     test_data = datasets['test']['data']
+    print("Initializing Constraint")
+    start = time.time()
+    constraint = Constraint(split_training_data, n_a, n_y, delta=delta, epsilon=epsilon)
+    print("Initializing the constraint took {:.3f} seconds".format(time.time()-start))
     print("Initializing algorithms")
     algorithms = [
         #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
-        GreedyShuffled2(n_x, n_a, n_y, split_training_data, delta=delta, epsilon=epsilon),
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, delta=delta, epsilon=epsilon),
+        GreedyShuffled2(n_x, n_a, n_y, split_training_data, constraint),
+        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraint),
         #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
-        #QLearnerConstrained(n_x, n_a, n_y, split_training_data, delta=delta, epsilon=epsilon, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
+        #QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #OnlineQLearner(n_x, n_a, n_y, dist, learning_time=training_episodes),
     ]
 

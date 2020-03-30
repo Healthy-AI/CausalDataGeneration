@@ -127,7 +127,7 @@ class DiscreteDistribution(Distribution):
             total += tot_px
             print("{} : {:05.3f}".format(x, tot_px))
 
-        assert total == 1, "Probabilities of covariates don't add up to 1. Something is wrong!"
+        assert np.isclose(total, 1, atol=0.000001), "Probabilities of covariates don't add up to 1. Something is wrong!"
         print("---------------------")
 
     def print_treatment_statistics(self):
@@ -192,16 +192,17 @@ class DiscreteDistributionWithSmoothOutcomes(DiscreteDistribution):
 
     def calc_y_weights(self, a, x, z):
         v = np.concatenate(([1], x, z))
+        dist_index = tuple(np.concatenate(([a], x, z)))
         y0 = self.Py1[a].dot(v)
         y0 = (self.steps_y - 1) * (y0 - self.neg_Py1[a]) / (self.pos_Py1[a] - self.neg_Py1[a])
         gamma = self.Py2[a].dot(v)
         gamma = (gamma - self.neg_Py2[a]) / (self.pos_Py2[a] - self.neg_Py2[a])
         probs = np.zeros(self.steps_y)
-        if tuple(v) in self.dists:
-            dist = self.dists[tuple(v)]
+        if dist_index in self.dists:
+            dist = self.dists[dist_index]
         else:
             dist = scipy.stats.cauchy(y0, gamma)
-            self.dists[tuple(v)] = dist
+            self.dists[dist_index] = dist
         for i in range(self.steps_y):
             probs[i] = dist.pdf(i)
         probs = probs / sum(probs)

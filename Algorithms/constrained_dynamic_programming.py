@@ -5,16 +5,13 @@ import random
 
 
 class ConstrainedDynamicProgramming(QLearner):
-    def __init__(self, n_x, n_a, n_y, data, delta=0, epsilon=0):
-        constraint = Constraint(data, n_a, n_y-1, delta, epsilon)
+    def __init__(self, n_x, n_a, n_y, data, constraint):
         self.better_treatment_constraint = constraint.no_better_treatment_exist
         super().__init__(n_x, n_a, n_y, data)
         self.statistics = self.get_patient_statistics()
         # Q-table indexed with x, y_0, y_1, y_2, y_3 and a
         self.q_table = np.zeros((2,) * self.n_x + (self.n_y + 1,) * self.n_a + (self.n_a + 1,))
         self.q_table_done = self.q_table.copy().astype(bool)
-        self.delta = delta
-        self.epsilon = epsilon
         self.name = 'Constrained Dynamic Programming'
         self.label = 'CDP'
 
