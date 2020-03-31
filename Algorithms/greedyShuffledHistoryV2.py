@@ -4,7 +4,7 @@ from Algorithms.help_functions import *
 
 
 class GreedyShuffled2:
-    def __init__(self, n_x, n_a, n_y, data, delta, epsilon):
+    def __init__(self, n_x, n_a, n_y, data, constraint):
         self.n_x = n_x
         self.n_a = n_a
         self.n_y = n_y
@@ -12,9 +12,7 @@ class GreedyShuffled2:
         self.probabilities = None
         self.name = 'Constrained Greedy'
         self.label = 'CG'
-        self.delta = delta
-        self.eps = epsilon
-        self.constraint = Constraint(self.data, self.n_a, self.n_y - 1, self.delta, self.eps)
+        self.constraint = constraint
 
     def learn(self):
         histories = self.data['h']
@@ -38,7 +36,6 @@ class GreedyShuffled2:
         return patient_statistics
 
     def evaluate(self, patient):
-
         best_outcome = 0
         x = patient[1]
         y_fac = patient[2]
@@ -52,7 +49,7 @@ class GreedyShuffled2:
             tot = np.sum(prob_matrix, axis=1)
             tot[tot == 0] = 1
             ev_vec = np.zeros(self.n_a)
-            for i in range(best_outcome+1+self.eps, self.n_y):
+            for i in range(best_outcome+1, self.n_y):
                 ev_vec += prob_matrix[:, i] * i
 
             ev_vec = np.divide(ev_vec, tot)

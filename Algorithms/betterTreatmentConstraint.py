@@ -2,15 +2,17 @@ import numpy as np
 from Algorithms.help_functions import *
 import random
 
+history_prior = False
+
 class Constraint:
-    def __init__(self, data, n_actions, max_possible_outcome, delta=0, epsilon=0):
+    def __init__(self, data, n_actions, steps_y, delta=0, epsilon=0):
         self.data = data
         self.n_actions = n_actions
         self.histories_to_compare = self.history_to_compare_dict(self.data['h'], self.data['x'])
         self.better_treatment_constraint_dict = {}
         self.delta = delta
         self.epsilon = epsilon
-        self.max_possible_outcome = max_possible_outcome
+        self.max_possible_outcome = steps_y - 1
 
     def no_better_treatment_exist(self, outcomes_state, x):
         try:
@@ -25,24 +27,22 @@ class Constraint:
             try:
                 similar_patients = self.histories_to_compare[hash_state(x, outcomes_state)]
             except KeyError:
-                similar_patients = []
-                #init_state = tuple([-1]*len(outcomes_state))
-                #similar_patients = self.histories_to_compare[hash_state(x, init_state)]
-                '''
-                for index in not_tested:
-                    pseudo_state = outcomes_state
-                    pseudo_state = list(pseudo_state)
-                    pseudo_state[index] = -1
-                    pseudo_state = tuple(pseudo_state)
-                    try:
-                        similar_patients = self.histories_to_compare[hash_state(x, pseudo_state)]
-                    except KeyError:
-                        pass
-                    if len(similar_patients) != 0:
-                        break
-                    #print(some_similar_patients)
-                #similar_patients = [item for sublist in similar_patients for item in sublist]
-                '''
+
+                # Checks each "history" that is 1-off
+                if history_prior:
+                    similar_patients = []
+                    for i in range(self.n_actions):
+                        if outcomes_state[i] != -1:
+                            tmp_state = list(outcomes_state)
+                            tmp_state[i] = -1
+                            tmp_state = tuple(tmp_state)
+                            key = hash_state(x, tmp_state)
+                            if key in self.histories_to_compare.keys():
+                                similar_patients.extend(self.histories_to_compare[key])
+                # Uses the prior from no tried treatments
+                else:
+                    tmp_state = tuple([-1] * self.n_actions)
+                    similar_patients = self.histories_to_compare[hash_state(x, tmp_state)]
             treatments_better = np.zeros(self.n_actions, dtype=int)
             treatments_worse = np.zeros(self.n_actions, dtype=int)
             for patient in similar_patients:
@@ -52,6 +52,9 @@ class Constraint:
                     treatments_better[treatment] += 1
                 else:
                     treatments_worse[treatment] += 1
+            # Only check the treatments that have not been tested yet
+            treatments_better = treatments_better[not_tested]
+            treatments_worse = treatments_worse[not_tested]
             total = treatments_better + treatments_worse
             no_data_found = (total == 0).astype(int)
             total += no_data_found

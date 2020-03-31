@@ -1,3 +1,5 @@
+import itertools
+
 import numpy as np
 import scipy.stats
 from matplotlib import pyplot as plt
@@ -44,17 +46,16 @@ class DiscreteDistribution(Distribution):
 
     # Draw each Z_i according to the probabilities in Pz
     def draw_z(self):
-        z = np.zeros(self.n_z)
-        for i in range(self.n_z):
-            z[i] = self.random.binomial(1, p=self.Pz[i])
+        z = self.random.binomial(1, p=self.Pz)
         return z
 
-    def draw_x(self, z):
+    def calc_x_weights(self, z):
         weights_z = self.Px * z
         weights_x = np.maximum(np.minimum(np.sum(weights_z, 1), 0.98), 0.02)
-        x = np.zeros(self.n_x)
-        for i in range(self.n_x):
-            x[i] = self.random.binomial(1, p=weights_x[i])
+        return weights_x
+
+    def draw_x(self, z):
+        x = self.random.binomial(1, p=self.calc_x_weights(z))
         return x.astype(int)
 
     def draw_a(self, h, x, z):
@@ -79,19 +80,76 @@ class DiscreteDistribution(Distribution):
         dd = np.exp(self.Py[a1][0:self.n_x+1].T.dot(np.concatenate(([1], x)))) / sum(np.exp(self.Py[a1][0:self.n_x+1].T.dot(np.concatenate(([1], x)))))
         return np.linalg.norm(cc - dd)
 
-    def draw_y(self, a, h, x, z):
+    def calc_y_weights(self, a, x, z):
         v = np.concatenate(([1], x, z))
         probs = np.zeros(self.steps_y)
         for i in range(self.steps_y):
             probs[i] = np.exp(self.Py[a].T.dot(v)).T[i]
         den = np.sum(probs)
         probs = probs / den
+        return probs
+
+    def draw_y(self, a, h, x, z):
+        probs = self.calc_y_weights(a, x, z)
         y = self.random.choice(self.steps_y, p=probs)
         done = False
         if y >= self.steps_y - 1 and self.random.random() < 0.9:
             done = True
         return y, done
 
+    def get_z_probability(self, z):
+        pz = 1
+        for i in range(self.n_z):
+            pz *= self.Pz[i] ** z[i] * (1 - self.Pz[i]) ** (1 - z[i])
+        return pz
+
+    def print_moderator_statistics(self):
+        print("Probabilities for Z:")
+        total = 0
+        for z in itertools.product(range(2), repeat=self.n_z):
+            pz = self.get_z_probability(z)
+            print("{} : {:05.3f}".format(z, pz))
+            total += pz
+        assert total == 1, "Probabilities of moderators don't add up to 1. Something is wrong!"
+        print("---------------------")
+
+    def print_covariate_statistics(self):
+        print("Probabilities for X:")
+        total = 0
+        for x in itertools.product(range(2), repeat=self.n_x):
+            tot_px = 0
+            for z in itertools.product(range(2), repeat=self.n_z):
+                px = 1
+                prob_vec_x = self.calc_x_weights(z)
+                for i in range(self.n_x):
+                    px *= prob_vec_x[i]**x[i] * (1-prob_vec_x[i])**(1-x[i])
+                tot_px += px * self.get_z_probability(z)
+            total += tot_px
+            print("{} : {:05.3f}".format(x, tot_px))
+
+        assert np.isclose(total, 1, atol=0.000001), "Probabilities of covariates don't add up to 1. Something is wrong!"
+        print("---------------------")
+
+    def print_treatment_statistics(self):
+        for a in range(self.n_a):
+            print("Outcome probabilities for treatment A{}".format(a))
+            print("{:{width}}".format('', width=self.n_x*3), end='')
+            for i in range(self.steps_y):
+                print("|{:^5}".format("Y=" + str(i)), end='')
+            print("|")
+            for x in itertools.product(range(2), repeat=self.n_x):
+                tot_py = np.zeros(self.steps_y)
+                for z in itertools.product(range(2), repeat=self.n_z):
+                    py = self.calc_y_weights(a, x, z)
+                    assert np.isclose(np.sum(py), 1, atol=0.000001), \
+                        "Probabilities of treatment {} don't add up to 1 for x: {}, z: {}".format(a, x, z)
+                    py *= self.get_z_probability(z)
+                    tot_py += py
+                print("{:{width}}".format(str(x), width=self.n_x*3), end='')
+                for i in range(self.steps_y):
+                    print("|{:05.3f}".format(tot_py[i]), end='')
+                print("|")
+            print("---------------------")
 
 class DiscreteDistributionWithStaticOutcomes(DiscreteDistribution):
     def __init__(self, n_z, n_x, n_a, steps_y, outcome_sensitivity_x_z=1, seed=None):
@@ -99,12 +157,7 @@ class DiscreteDistributionWithStaticOutcomes(DiscreteDistribution):
         self.name = "Discrete with static outcomes"
 
     def draw_y(self, a, h, x, z):
-        v = np.concatenate(([1], x, z))
-        probs = np.zeros(self.steps_y)
-        for i in range(self.steps_y):
-            probs[i] = np.exp(self.Py[a].T.dot(v)).T[i]
-        den = np.sum(probs)
-        probs = probs / den
+        probs = self.calc_y_weights(a, x, z)
         y = np.argmax(probs)
         done = False
         if y >= self.steps_y - 1 and self.random.random() < 0.9:
@@ -137,27 +190,23 @@ class DiscreteDistributionWithSmoothOutcomes(DiscreteDistribution):
 
         return np.sum(d1**2) + np.sum(d2**2)
 
-    def draw_y(self, a, h, x, z):
+    def calc_y_weights(self, a, x, z):
         v = np.concatenate(([1], x, z))
+        dist_index = tuple(np.concatenate(([a], x, z)))
         y0 = self.Py1[a].dot(v)
         y0 = (self.steps_y - 1) * (y0 - self.neg_Py1[a]) / (self.pos_Py1[a] - self.neg_Py1[a])
         gamma = self.Py2[a].dot(v)
         gamma = (gamma - self.neg_Py2[a]) / (self.pos_Py2[a] - self.neg_Py2[a])
         probs = np.zeros(self.steps_y)
-        if tuple(v) in self.dists:
-            dist = self.dists[tuple(v)]
+        if dist_index in self.dists:
+            dist = self.dists[dist_index]
         else:
             dist = scipy.stats.cauchy(y0, gamma)
-            self.dists[tuple(v)] = dist
+            self.dists[dist_index] = dist
         for i in range(self.steps_y):
             probs[i] = dist.pdf(i)
         probs = probs / sum(probs)
-        y = self.random.choice(self.steps_y, p=probs)
-        done = False
-        if y >= self.steps_y - 1 and self.random.random() < 0.9:
-            done = True
-        return y, done
-
+        return probs
 
 class TestSimilarTreatements(DiscreteDistributionWithSmoothOutcomes):
     def __init__(self, n_z, n_x, n_a, steps_y, outcome_sensitivity_x_z=1, seed=None):
