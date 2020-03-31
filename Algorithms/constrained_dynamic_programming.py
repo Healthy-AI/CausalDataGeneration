@@ -41,7 +41,6 @@ class ConstrainedDynamicProgramming(QLearner):
             reward = self.get_reward(action, history, x)
             number_of_samples = np.sum(self.statistics[index], axis=None)
             if number_of_samples > 0:
-                max_future_actions = []
                 for outcome in range(self.n_y):
                     stats_index = index + tuple([outcome])
                     probability_of_outcome = self.statistics[stats_index] / number_of_samples
@@ -53,19 +52,9 @@ class ConstrainedDynamicProgramming(QLearner):
                             if not self.q_table_done[self.to_index([x, future_history]) + (new_action, )]:
                                 self.populate_q_value(tuple(future_history), new_action, x)
                         max_future_q = np.max(self.q_table[self.to_index([x, future_history])])
-                    #max_future_action = np.argmax(self.q_table[self.to_index([x, future_history])])
-                    #max_future_actions.append(max_future_action)
                     else:
                         max_future_q = 0
-                    # For each outcome, add the probability times maximal future Q
-                    #if future_reward == -np.inf or max_future_q == -np.inf:
-                    #    future_reward = -np.inf
-                    #else:
                     future_reward = np.add(future_reward, np.multiply(probability_of_outcome, max_future_q))
-
-                #if all(action == self.stop_action for action in max_future_actions):
-                #    #print('found useless action, prev future_reward', future_reward)
-                #    future_reward = -1000
             else:
                 future_reward = -np.inf
         '''
@@ -77,7 +66,7 @@ class ConstrainedDynamicProgramming(QLearner):
                 max_action_index = np.argmax(self.q_table[self.to_index([x, future_history])])
                 action_indicies.append(max_action_index)
             if all(action == self.stop_action for action in action_indicies):
-                print('found useless action, prev future_reward', future_reward)
+                #print('found useless action, prev future_reward', future_reward)
                 future_reward = -np.inf
         '''
         self.q_table[index] = reward + future_reward

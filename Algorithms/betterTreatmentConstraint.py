@@ -25,9 +25,9 @@ class Constraint:
             try:
                 similar_patients = self.histories_to_compare[hash_state(x, outcomes_state)]
             except KeyError:
-                #similar_patients = []
-                init_state = tuple([-1]*len(outcomes_state))
-                similar_patients = self.histories_to_compare[hash_state(x, init_state)]
+                similar_patients = []
+                #init_state = tuple([-1]*len(outcomes_state))
+                #similar_patients = self.histories_to_compare[hash_state(x, init_state)]
                 '''
                 for index in not_tested:
                     pseudo_state = outcomes_state
@@ -56,6 +56,24 @@ class Constraint:
             no_data_found = (total == 0).astype(int)
             total += no_data_found
             probability_of_better = treatments_better / total
+            '''
+            # Use this to set broad prior
+            init_state = tuple([-1]*len(outcomes_state))
+            similar_patients = self.histories_to_compare[hash_state(x, init_state)]
+            for i in range(len(treatments_better)):
+                if no_data_found[i] == 1:
+                    nr_better = 0
+                    nr_worse = 0
+                    for patient in similar_patients:
+                        for intervention in patient:
+                            treatment, outcome = intervention
+                            if treatment == i:
+                                if outcome > maxoutcome + self.epsilon:
+                                    nr_better += 1
+                                else:
+                                    nr_worse += 1
+                    probability_of_better[i] = nr_better / (nr_better + nr_worse)
+            '''
             tot_delta_limit = (probability_of_better > self.delta).astype(int)
             gamma = 1-max(tot_delta_limit)
             self.better_treatment_constraint_dict[hash_state(x, outcomes_state)] = gamma

@@ -18,9 +18,9 @@ if __name__ == '__main__':
     n_a = 5
     n_y = 5
     training_episodes = 100000
-    n_training_samples = 20000
+    n_training_samples = 2000
     n_test_samples = 2000
-    delta = 0
+    delta = 0.3
     epsilon = 0
     reward = -0.25
 
@@ -40,6 +40,12 @@ if __name__ == '__main__':
     n_x = 1
     n_a = 3
     n_y = 3
+    '''
+    '''
+    dist = FredrikDistribution()
+    n_x = 1
+    n_a = 3
+    n_y = 2
     '''
 
     training = {'name': 'training', 'samples': n_training_samples, 'func': generate_data, 'split': True}
@@ -77,9 +83,9 @@ if __name__ == '__main__':
         #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
         GreedyShuffled2(n_x, n_a, n_y, split_training_data, delta=delta, epsilon=epsilon),
         ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, delta=delta, epsilon=epsilon),
-        #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
-        #QLearnerConstrained(n_x, n_a, n_y, split_training_data, delta=delta, epsilon=epsilon, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
-        #OnlineQLearner(n_x, n_a, n_y, dist, learning_time=training_episodes),
+        QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
+        QLearnerConstrained(n_x, n_a, n_y, split_training_data, delta=delta, epsilon=epsilon, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
+        OnlineQLearner(n_x, n_a, n_y, dist, learning_time=training_episodes),
     ]
 
     n_algorithms = len(algorithms)
@@ -136,6 +142,7 @@ if __name__ == '__main__':
     mean_treatment_effects /= n_test_samples
     mean_num_tests /= n_test_samples
 
+    # Find strictly better samples for each algorithm
     strictly_better_samples = np.zeros(n_algorithms, dtype=int)
     for i_sample in range(n_test_samples):
         samples = np.zeros((n_algorithms, 2))
@@ -157,6 +164,18 @@ if __name__ == '__main__':
               'strictly better samples than the other algorithms')
     print('There is a total of', n_test_samples, 'test samples')
 
+    # Mean treatment effect test
+    mean_te = np.zeros(n_algorithms)
+    for i_alg, alg in enumerate(algorithms):
+        for i_sample in range(n_test_samples):
+            treatments = evaluations[alg.name][i_sample]
+            best_outcome = max([intervention[1] for intervention in treatments])
+            mean_te[i_alg] += best_outcome
+    mean_te /= n_test_samples
+
+    for i_alg, alg in enumerate(algorithms):
+        print(alg.name, 'has mean treatment effect', mean_te[i_alg])
+
     # Plot mean treatment effect over population
     x = np.arange(0, n_a+1)
     x_ticks = list(np.arange(1, n_a+2))
@@ -170,7 +189,7 @@ if __name__ == '__main__':
         plt.plot(x, mean_treatment_effects[i_plot], plot_colors[i_plot] + plot_markers[0], label=alg.label)
         plt.plot(x, max_mean_treatment_effects[i_plot], plot_colors[i_plot] + plot_markers[1])
         plt.fill_between(x, mean_treatment_effects[i_plot], max_mean_treatment_effects[i_plot], color=plot_colors[i_plot], alpha=0.1)
-        plt.axvline(mean_num_tests[i_plot], 0, average_max_treatment_effect, color=plot_colors[i_plot])
+        plt.axvline(mean_num_tests[i_plot]-1, 0, average_max_treatment_effect, color=plot_colors[i_plot])
 
     plt.grid(True)
     plt.xticks(x, x_ticks)

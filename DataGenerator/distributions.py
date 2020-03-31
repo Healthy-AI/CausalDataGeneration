@@ -173,7 +173,9 @@ class FredrikDistribution(Distribution):
         self.name = 'Fredrik'
     n_a = 3
     treatment_weights = np.array([0.65, 0.6, 0.4])
-    results_array = np.array([[1, 0, 1, 0], [1, 0, 0, 1], [0, 1, 1, 0]])
+    results_array = np.array([[1, 0, 1, 0],
+                              [1, 0, 0, 1],
+                              [0, 1, 1, 0]])
     z_weights = np.array([0.45, 0.20, 0.20, 0.15])
 
     def draw_z(self):

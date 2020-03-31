@@ -10,7 +10,7 @@ class OnlineQLearner:
         self.stop_action = self.n_a
         self.distribution = distribution
         self.step_reward = reward
-        self.name = "Online Q Learning"
+        self.name = "Online Q-learning"
         self.label = "OQL"
         self.learning_time = learning_time
         self.learning_rate = learning_rate

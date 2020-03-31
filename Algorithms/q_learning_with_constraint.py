@@ -17,8 +17,8 @@ class QLearnerConstrained:
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
         self.q_table = None
-        self.name = 'Q-learning Constrained'
-        self.label = 'QLC'
+        self.name = 'Constrained Q-learning'
+        self.label = 'CQL'
         self.statistics = None
         self.sars_data = self.convert_to_sars()
         self.constraint = Constraint(self.data, self.n_a, self.n_y - 1, delta, epsilon)
