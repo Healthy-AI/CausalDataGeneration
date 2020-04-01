@@ -69,11 +69,17 @@ class QLearner:
             if len(action_candidates) == 1:
                 action = action_candidates[0]
             else:
-                if False:#self.statistics is not None:
+                to_remove = []
+                for i, a in enumerate(action_candidates):
+                    if a != self.stop_action and y[a] != -1:
+                        to_remove.append(i)
+                action_candidates = np.delete(action_candidates, to_remove)
+
+                if self.statistics is not None:
                     highest_expected_outcome = -1
                     action = None
                     for a in action_candidates:
-                        index = tuple(x) + tuple(history_to_state(history[:-1], self.n_a)) + tuple([a])
+                        index = self.to_index([x, y, action])
                         total_n_samples = np.sum(self.statistics[index])
                         total_n_samples += (total_n_samples == 0).astype(int)
                         probabilities = self.statistics[index]/total_n_samples
