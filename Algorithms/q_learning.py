@@ -75,7 +75,7 @@ class QLearner:
                         to_remove.append(i)
                 action_candidates = np.delete(action_candidates, to_remove)
 
-                if self.statistics is not None:
+                if False:#self.statistics is not None:
                     highest_expected_outcome = -1
                     action = None
                     for a in action_candidates:
