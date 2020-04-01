@@ -13,6 +13,8 @@ class Constraint:
         self.delta = delta
         self.epsilon = epsilon
         self.max_possible_outcome = steps_y - 1
+        self.init_similar_patients = {}
+        self.n_outcomes = steps_y
 
     def no_better_treatment_exist(self, outcomes_state, x):
         try:
@@ -27,7 +29,6 @@ class Constraint:
             try:
                 similar_patients = self.histories_to_compare[hash_state(x, outcomes_state)]
             except KeyError:
-
                 # Checks each "history" that is 1-off
                 if history_prior:
                     similar_patients = []
@@ -53,30 +54,29 @@ class Constraint:
                 else:
                     treatments_worse[treatment] += 1
             # Only check the treatments that have not been tested yet
-            treatments_better = treatments_better[not_tested]
-            treatments_worse = treatments_worse[not_tested]
+            treatments_better[not_tested] = 0
+            treatments_worse[not_tested] = 0
             total = treatments_better + treatments_worse
             no_data_found = (total == 0).astype(int)
             total += no_data_found
             probability_of_better = treatments_better / total
-            '''
+
             # Use this to set broad prior
-            init_state = tuple([-1]*len(outcomes_state))
-            similar_patients = self.histories_to_compare[hash_state(x, init_state)]
+            try:
+                treatments_and_outcomes = self.init_similar_patients[hash_x(x)]
+            except KeyError:
+                init_state = tuple([-1]*len(outcomes_state))
+                similar_patients = self.histories_to_compare[hash_state(x, init_state)]
+                treatments_and_outcomes = np.zeros((self.n_actions, self.n_outcomes), dtype=int)
+                for patient in similar_patients:
+                    for intervention in patient:
+                        treatment, outcome = intervention
+                        treatments_and_outcomes[treatment, outcome] += 1
+                self.init_similar_patients[hash_x(x)] = treatments_and_outcomes
             for i in range(len(treatments_better)):
                 if no_data_found[i] == 1:
-                    nr_better = 0
-                    nr_worse = 0
-                    for patient in similar_patients:
-                        for intervention in patient:
-                            treatment, outcome = intervention
-                            if treatment == i:
-                                if outcome > maxoutcome + self.epsilon:
-                                    nr_better += 1
-                                else:
-                                    nr_worse += 1
-                    probability_of_better[i] = nr_better / (nr_better + nr_worse)
-            '''
+                    probability_of_better[i] = np.sum(treatments_and_outcomes[i][max(maxoutcome, 0):])/\
+                                               np.sum(treatments_and_outcomes[i])
             tot_delta_limit = (probability_of_better > self.delta).astype(int)
             gamma = 1-max(tot_delta_limit)
             self.better_treatment_constraint_dict[hash_state(x, outcomes_state)] = gamma
