@@ -35,37 +35,27 @@ class ConstrainedDynamicProgramming(QLearner):
             reward = -np.infty
         # else, calculate the sum of the reward for each outcome times its probability
         else:
+            p_index = self.to_index([x, [-1]*self.n_a]) + (action,)
+            prior_samples = self.statistics[p_index]
+            num_prior_samples = np.sum(prior_samples, axis=None)
+            p_power = 2 # TODO move to self!
             reward = self.get_reward(action, history, x)
             number_of_samples = np.sum(self.statistics[index], axis=None)
-            if number_of_samples > 0:
-                for outcome in range(self.n_y):
-                    stats_index = index + tuple([outcome])
-                    probability_of_outcome = self.statistics[stats_index] / number_of_samples
-                    if probability_of_outcome > 0:
-                        future_history = list(history)
-                        future_history[action] = outcome
-                        # Find the action with the greatest reward
-                        for new_action in range(self.n_a+1):
-                            if not self.q_table_done[self.to_index([x, future_history]) + (new_action, )]:
-                                self.populate_q_value(tuple(future_history), new_action, x)
-                        max_future_q = np.max(self.q_table[self.to_index([x, future_history])])
-                    else:
-                        max_future_q = 0
-                    future_reward = np.add(future_reward, np.multiply(probability_of_outcome, max_future_q))
-            else:
-                future_reward = -np.inf
-        '''
-        action_indicies = []
-        if action != self.stop_action:
             for outcome in range(self.n_y):
-                future_history = list(history)
-                future_history[action] = outcome
-                max_action_index = np.argmax(self.q_table[self.to_index([x, future_history])])
-                action_indicies.append(max_action_index)
-            if all(action == self.stop_action for action in action_indicies):
-                #print('found useless action, prev future_reward', future_reward)
-                future_reward = -np.inf
-        '''
+                stats_index = index + tuple([outcome])
+                prior = prior_samples[outcome] / (num_prior_samples + 1)
+                probability_of_outcome = (self.statistics[stats_index] + prior * p_power**2) / (number_of_samples + p_power**2)
+                if probability_of_outcome > 0:
+                    future_history = list(history)
+                    future_history[action] = outcome
+                    # Find the action with the greatest reward
+                    for new_action in range(self.n_a+1):
+                        if not self.q_table_done[self.to_index([x, future_history]) + (new_action, )]:
+                            self.populate_q_value(tuple(future_history), new_action, x)
+                    max_future_q = np.max(self.q_table[self.to_index([x, future_history])])
+                else:
+                    max_future_q = 0
+                future_reward = np.add(future_reward, np.multiply(probability_of_outcome, max_future_q))
         self.q_table[index] = reward + future_reward
         self.q_table_done[index] = True
 
