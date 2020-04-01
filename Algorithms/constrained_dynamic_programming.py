@@ -32,7 +32,7 @@ class ConstrainedDynamicProgramming(QLearner):
             reward = self.get_reward(self.stop_action, history, x)
         # if action is already used, set reward to -inf
         elif history[action] != -1:
-            reward = -np.infty
+            reward = -np.inf
         # else, calculate the sum of the reward for each outcome times its probability
         else:
             reward = self.get_reward(action, history, x)
@@ -46,7 +46,7 @@ class ConstrainedDynamicProgramming(QLearner):
                         future_history[action] = outcome
                         # Find the action with the greatest reward
                         for new_action in range(self.n_a+1):
-                            if not self.q_table_done[self.to_index([x, future_history]) + (new_action, )]:
+                            if not self.q_table_done[self.to_index([x, future_history, new_action])]:
                                 self.populate_q_value(tuple(future_history), new_action, x)
                         max_future_q = np.max(self.q_table[self.to_index([x, future_history])])
                     else:
@@ -54,28 +54,8 @@ class ConstrainedDynamicProgramming(QLearner):
                     future_reward = np.add(future_reward, np.multiply(probability_of_outcome, max_future_q))
             else:
                 future_reward = -np.inf
-        '''
-        action_indicies = []
-        if action != self.stop_action:
-            for outcome in range(self.n_y):
-                future_history = list(history)
-                future_history[action] = outcome
-                max_action_index = np.argmax(self.q_table[self.to_index([x, future_history])])
-                action_indicies.append(max_action_index)
-            if all(action == self.stop_action for action in action_indicies):
-                #print('found useless action, prev future_reward', future_reward)
-                future_reward = -np.inf
-        '''
         self.q_table[index] = reward + future_reward
         self.q_table_done[index] = True
-
-    def get_allowed_actions(self, history):
-        allowed_actions = []
-        for i, entry in enumerate(history[:self.n_a]):
-            if entry == -1:
-                allowed_actions.append(i)
-        allowed_actions.append(self.stop_action)
-        return allowed_actions
 
     def get_patient_statistics(self):
         histories = self.data['h']
