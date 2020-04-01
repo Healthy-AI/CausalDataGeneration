@@ -24,6 +24,7 @@ class Constraint:
             if maxoutcome == self.max_possible_outcome:
                 return 1
             not_tested = np.where(np.array(outcomes_state) == -1)[0]
+            tested = np.where(np.array(outcomes_state) != -1)[0]
             if len(not_tested) == 0:
                 return 1
             try:
@@ -43,7 +44,11 @@ class Constraint:
                 # Uses the prior from no tried treatments
                 else:
                     tmp_state = tuple([-1] * self.n_actions)
-                    similar_patients = self.histories_to_compare[hash_state(x, tmp_state)]
+                    state_hash = hash_state(x, tmp_state)
+                    if state_hash in self.histories_to_compare:
+                        similar_patients = self.histories_to_compare[state_hash]
+                    else:
+                        similar_patients = []
             treatments_better = np.zeros(self.n_actions, dtype=int)
             treatments_worse = np.zeros(self.n_actions, dtype=int)
             for patient in similar_patients:
@@ -54,19 +59,22 @@ class Constraint:
                 else:
                     treatments_worse[treatment] += 1
             # Only check the treatments that have not been tested yet
-            treatments_better[not_tested] = 0
-            treatments_worse[not_tested] = 0
+            treatments_better[tested] = 0
+            treatments_worse[tested] = 0
             total = treatments_better + treatments_worse
             no_data_found = (total == 0).astype(int)
             total += no_data_found
             probability_of_better = treatments_better / total
 
-            # Use this to set broad prior
+            # Sets broad prior
+
             try:
                 treatments_and_outcomes = self.init_similar_patients[hash_x(x)]
             except KeyError:
                 init_state = tuple([-1]*len(outcomes_state))
-                similar_patients = self.histories_to_compare[hash_state(x, init_state)]
+                state_hash = hash_state(x, init_state)
+                if state_hash in self.histories_to_compare:
+                    similar_patients = self.histories_to_compare[state_hash]
                 treatments_and_outcomes = np.zeros((self.n_actions, self.n_outcomes), dtype=int)
                 for patient in similar_patients:
                     for intervention in patient:
@@ -75,8 +83,12 @@ class Constraint:
                 self.init_similar_patients[hash_x(x)] = treatments_and_outcomes
             for i in range(len(treatments_better)):
                 if no_data_found[i] == 1:
-                    probability_of_better[i] = np.sum(treatments_and_outcomes[i][max(maxoutcome, 0):])/\
-                                               np.sum(treatments_and_outcomes[i])
+                    total = np.sum(treatments_and_outcomes[i])
+                    if total != 0:
+                        probability_of_better[i] = np.sum(treatments_and_outcomes[i][max(maxoutcome, 0):])/total
+                    else:
+                        probability_of_better[i] = 0
+
             tot_delta_limit = (probability_of_better > self.delta).astype(int)
             gamma = 1-max(tot_delta_limit)
             self.better_treatment_constraint_dict[hash_state(x, outcomes_state)] = gamma
