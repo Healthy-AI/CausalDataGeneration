@@ -2,84 +2,68 @@ import numpy as np
 from Algorithms.help_functions import *
 import random
 
-history_prior = False
-
 class Constraint:
-    def __init__(self, data, n_actions, steps_y, delta=0, epsilon=0):
+    def __init__(self, data, n_actions, steps_y, prior_weight=2, z_value=1.96, delta=0, epsilon=0):
         self.data = data
         self.n_actions = n_actions
         self.histories_to_compare = self.history_to_compare_dict(self.data['h'], self.data['x'])
         self.better_treatment_constraint_dict = {}
+        self.accuracy = prior_weight
+        self.optimism = z_value
         self.delta = delta
         self.epsilon = epsilon
         self.max_possible_outcome = steps_y - 1
 
     def no_better_treatment_exist(self, outcomes_state, x):
-        try:
-            gamma = self.better_treatment_constraint_dict[hash_state(x, outcomes_state)]
-        except KeyError:
-            maxoutcome = max(outcomes_state)
-            if maxoutcome == self.max_possible_outcome:
-                return 1
-            not_tested = np.where(np.array(outcomes_state) == -1)[0]
-            if len(not_tested) == 0:
-                return 1
-            try:
-                similar_patients = self.histories_to_compare[hash_state(x, outcomes_state)]
-            except KeyError:
-
-                # Checks each "history" that is 1-off
-                if history_prior:
+        dict_index = hash_state(x, outcomes_state)
+        gamma = 0
+        if dict_index in self.better_treatment_constraint_dict.keys():
+            gamma = self.better_treatment_constraint_dict[dict_index]
+        else:
+            max_outcome = max(outcomes_state)
+            if max_outcome == self.max_possible_outcome:
+                # If we already found max, stop
+                gamma = 1
+            elif np.count_nonzero(np.array(outcomes_state) == -1) == 0:
+                # If we have tried all treatments, stop
+                gamma = 1
+            else:
+                # Count the number of times each outcome has happened for each action
+                if dict_index in self.histories_to_compare.keys():
+                    similar_patients = self.histories_to_compare[hash_state(x, outcomes_state)]
+                else:
                     similar_patients = []
-                    for i in range(self.n_actions):
-                        if outcomes_state[i] != -1:
-                            tmp_state = list(outcomes_state)
-                            tmp_state[i] = -1
-                            tmp_state = tuple(tmp_state)
-                            key = hash_state(x, tmp_state)
-                            if key in self.histories_to_compare.keys():
-                                similar_patients.extend(self.histories_to_compare[key])
-                # Uses the prior from no tried treatments
-                else:
-                    tmp_state = tuple([-1] * self.n_actions)
-                    similar_patients = self.histories_to_compare[hash_state(x, tmp_state)]
-            treatments_better = np.zeros(self.n_actions, dtype=int)
-            treatments_worse = np.zeros(self.n_actions, dtype=int)
-            for patient in similar_patients:
-                intervention = patient[-1]
-                treatment, outcome = intervention
-                if outcome > maxoutcome + self.epsilon:
-                    treatments_better[treatment] += 1
-                else:
-                    treatments_worse[treatment] += 1
-            # Only check the treatments that have not been tested yet
-            treatments_better = treatments_better[not_tested]
-            treatments_worse = treatments_worse[not_tested]
-            total = treatments_better + treatments_worse
-            no_data_found = (total == 0).astype(int)
-            total += no_data_found
-            probability_of_better = treatments_better / total
-            '''
-            # Use this to set broad prior
-            init_state = tuple([-1]*len(outcomes_state))
-            similar_patients = self.histories_to_compare[hash_state(x, init_state)]
-            for i in range(len(treatments_better)):
-                if no_data_found[i] == 1:
-                    nr_better = 0
-                    nr_worse = 0
-                    for patient in similar_patients:
-                        for intervention in patient:
-                            treatment, outcome = intervention
-                            if treatment == i:
-                                if outcome > maxoutcome + self.epsilon:
-                                    nr_better += 1
-                                else:
-                                    nr_worse += 1
-                    probability_of_better[i] = nr_better / (nr_better + nr_worse)
-            '''
-            tot_delta_limit = (probability_of_better > self.delta).astype(int)
-            gamma = 1-max(tot_delta_limit)
-            self.better_treatment_constraint_dict[hash_state(x, outcomes_state)] = gamma
+                history_counts = np.zeros((self.n_actions, 2))
+                for patient in similar_patients:
+                    treatment, outcome = patient[0]
+                    if outcome > max_outcome + self.epsilon:
+                        history_counts[treatment][0] += 1
+                    else:
+                        history_counts[treatment][1] += 1
+
+                # Use the full dataset as prior
+                prior_patients = self.histories_to_compare[hash_state(x, [-1]*self.n_actions)]
+                prior_counts = np.zeros((self.n_actions, 2))
+                for patient in prior_patients:
+                    treatment, outcome = patient[0]
+                    if outcome > max_outcome + self.epsilon:
+                        prior_counts[treatment][0] += 1
+                    else:
+                        prior_counts[treatment][1] += 1
+
+                prior = prior_counts[:, 0] / (np.sum(prior_counts, 1) + (np.sum(prior_counts, 1) == 0))
+                estimated_probability = (history_counts[:, 0] + self.accuracy**2 * prior) /\
+                                    (np.sum(history_counts, 1) + self.accuracy**2)
+                tmp_alpha = (history_counts[:, 0] + self.accuracy**2 * prior) / (np.sum(history_counts, 1) + self.accuracy**2)
+                estimated_variance = tmp_alpha * (1 - tmp_alpha) / (np.sum(history_counts, 1) + self.accuracy**2 + 1)
+                estimated_stddev = np.sqrt(estimated_variance)
+                estimated_bounds = self.optimism * estimated_stddev / np.sqrt(np.sum(history_counts, 1) + self.accuracy**2)
+
+                best_probability = np.max(estimated_probability)
+
+                if best_probability < self.delta:
+                    gamma = 1
+            self.better_treatment_constraint_dict[dict_index] = gamma
         return gamma
 
     def history_to_compare_dict_alt(self, histories, xs):

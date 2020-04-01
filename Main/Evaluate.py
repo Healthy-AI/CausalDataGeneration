@@ -89,9 +89,9 @@ if __name__ == '__main__':
         #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
         GreedyShuffled2(n_x, n_a, n_y, split_training_data, constraint),
         ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraint),
-        QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
-        QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
-        OnlineQLearner(n_x, n_a, n_y, dist, learning_time=training_episodes),
+        #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
+        #QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
+        #OnlineQLearner(n_x, n_a, n_y, dist, learning_time=training_episodes),
     ]
 
     n_algorithms = len(algorithms)
