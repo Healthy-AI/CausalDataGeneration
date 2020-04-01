@@ -53,7 +53,7 @@ class ConstrainedDynamicProgramming(QLearner):
                         max_future_q = 0
                     future_reward = np.add(future_reward, np.multiply(probability_of_outcome, max_future_q))
             else:
-                future_reward = -np.inf
+                future_reward = -1
         self.q_table[index] = reward + future_reward
         self.q_table_done[index] = True
 
