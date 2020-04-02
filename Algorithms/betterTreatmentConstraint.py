@@ -42,7 +42,12 @@ class Constraint:
                         history_counts[treatment][1] += 1
 
                 # Use the full dataset as prior
-                prior_patients = self.histories_to_compare[hash_state(x, [-1]*self.n_actions)]
+                prior_index = hash_state(x, [-1]*self.n_actions)
+                if prior_index not in self.histories_to_compare.keys():
+                    # If there exists no prior, we can't do any calculations
+                    self.better_treatment_constraint_dict[dict_index] = gamma
+                    return 1
+                prior_patients = self.histories_to_compare[prior_index]
                 prior_counts = np.zeros((self.n_actions, 2))
                 for patient in prior_patients:
                     treatment, outcome = patient[0]

@@ -5,10 +5,11 @@ import random
 
 
 class ConstrainedDynamicProgramming(QLearner):
-    def __init__(self, n_x, n_a, n_y, data, constraint):
+    def __init__(self, n_x, n_a, n_y, data, constraint, prior_power=2):
         self.better_treatment_constraint = constraint.no_better_treatment_exist
         super().__init__(n_x, n_a, n_y, data)
         self.statistics = self.get_patient_statistics()
+        self.prior_power = prior_power
         # Q-table indexed with x, y_0, y_1, y_2, y_3 and a
         self.q_table = np.zeros((2,) * self.n_x + (self.n_y + 1,) * self.n_a + (self.n_a + 1,))
         self.q_table_done = self.q_table.copy().astype(bool)
@@ -38,13 +39,12 @@ class ConstrainedDynamicProgramming(QLearner):
             p_index = self.to_index([x, [-1]*self.n_a]) + (action,)
             prior_samples = self.statistics[p_index]
             num_prior_samples = np.sum(prior_samples, axis=None)
-            p_power = 2 # TODO move to self!
             reward = self.get_reward(action, history, x)
             number_of_samples = np.sum(self.statistics[index], axis=None)
             for outcome in range(self.n_y):
                 stats_index = index + tuple([outcome])
                 prior = prior_samples[outcome] / (num_prior_samples + 1)
-                probability_of_outcome = (self.statistics[stats_index] + prior * p_power**2) / (number_of_samples + p_power**2)
+                probability_of_outcome = (self.statistics[stats_index] + prior * self.prior_power**2) / (number_of_samples + self.prior_power**2)
                 if probability_of_outcome > 0:
                     future_history = list(history)
                     future_history[action] = outcome
