@@ -26,3 +26,8 @@ def hash_state(x, state):
     statestring = ''.join(str(a) for a in state)
     string = xstring + statestring
     return string
+
+
+def hash_x(x):
+    xstring = ''.join(str(a) for a in x)
+    return xstring

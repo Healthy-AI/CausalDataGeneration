@@ -33,7 +33,7 @@ class ConstrainedDynamicProgramming(QLearner):
             reward = self.get_reward(self.stop_action, history, x)
         # if action is already used, set reward to -inf
         elif history[action] != -1:
-            reward = -np.infty
+            reward = -np.inf
         # else, calculate the sum of the reward for each outcome times its probability
         else:
             p_index = self.to_index([x, [-1]*self.n_a]) + (action,)
@@ -58,14 +58,6 @@ class ConstrainedDynamicProgramming(QLearner):
                 future_reward = np.add(future_reward, np.multiply(probability_of_outcome, max_future_q))
         self.q_table[index] = reward + future_reward
         self.q_table_done[index] = True
-
-    def get_allowed_actions(self, history):
-        allowed_actions = []
-        for i, entry in enumerate(history[:self.n_a]):
-            if entry == -1:
-                allowed_actions.append(i)
-        allowed_actions.append(self.stop_action)
-        return allowed_actions
 
     def get_patient_statistics(self):
         histories = self.data['h']

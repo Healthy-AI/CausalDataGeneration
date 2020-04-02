@@ -13,6 +13,8 @@ class Constraint:
         self.delta = delta
         self.epsilon = epsilon
         self.max_possible_outcome = steps_y - 1
+        self.init_similar_patients = {}
+        self.n_outcomes = steps_y
 
     def no_better_treatment_exist(self, outcomes_state, x):
         dict_index = hash_state(x, outcomes_state)
