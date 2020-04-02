@@ -43,7 +43,7 @@ class ConstrainedDynamicProgramming(QLearner):
             number_of_samples = np.sum(self.statistics[index], axis=None)
             for outcome in range(self.n_y):
                 stats_index = index + tuple([outcome])
-                prior = prior_samples[outcome] / (num_prior_samples + (np.sum(prior_samples, 1) == 0))
+                prior = prior_samples[outcome] / (num_prior_samples + (prior_samples[outcome] == 0))
                 probability_of_outcome = (self.statistics[stats_index] + prior * self.prior_power**2) / (number_of_samples + self.prior_power**2)
                 if probability_of_outcome > 0:
                     future_history = list(history)
