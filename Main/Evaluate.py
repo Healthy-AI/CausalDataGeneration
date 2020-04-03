@@ -18,10 +18,10 @@ if __name__ == '__main__':
     n_x = 2
     n_a = 5
     n_y = 3
-    training_episodes = 100000
+    training_episodes = 250000
     n_training_samples = 20000
     n_test_samples = 2000
-    delta = 0.2
+    delta = 0.15
     epsilon = 0
     reward = -0.25
 
