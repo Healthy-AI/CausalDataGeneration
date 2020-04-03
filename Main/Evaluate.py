@@ -13,12 +13,12 @@ from Algorithms.betterTreatmentConstraint import Constraint
 
 if __name__ == '__main__':
     # Training values
-    seed = None
+    seed = 900413
     n_z = 3
     n_x = 2
     n_a = 5
     n_y = 3
-    training_episodes = 200000
+    training_episodes = 100000
     n_training_samples = 20000
     n_test_samples = 2000
     delta = 0.2
