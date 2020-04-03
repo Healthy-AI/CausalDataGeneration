@@ -17,6 +17,7 @@ class OnlineQLearner:
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
         self.q_table = None
+        self.q_table2 = None
 
         # Online stuff
         self.epsilon = 0.99
@@ -31,6 +32,7 @@ class OnlineQLearner:
     def learn(self):
         # Q-table indexed with x, y_0, y_1, y_2, y_3 and a
         self.q_table = np.zeros(((2,) * self.n_x + (self.n_y + 1,) * self.n_a + (self.n_a + 1,)))
+        self.q_table2 = np.zeros(((2,) * self.n_x + (self.n_y + 1,) * self.n_a + (self.n_a + 1,)))
 
         for k in range(self.learning_time):
             state = self.get_new_sample()
@@ -39,16 +41,23 @@ class OnlineQLearner:
                 action = self.select_action(state)
                 reward, next_state = self.observe(state, action)
 
+                if np.random.random() < 0.5:
+                    t1 = self.q_table
+                    t2 = self.q_table2
+                else:
+                    t2 = self.q_table
+                    t1 = self.q_table2
                 if action == self.stop_action or state[1][action] != -1:
                     done = True
-                    self.q_table[self.to_index(state) + (action,)] = self.q_table[self.to_index(state) + (action,)] \
-                                                        + self.learning_rate \
-                                                        * reward
+                    t1[self.to_index(state) + (action,)] = t1[self.to_index(state) + (action,)] \
+                                                        + self.learning_rate * reward
                 else:
-                    self.q_table[self.to_index(state) + (action,)] = self.q_table[self.to_index(state) + (action,)] \
-                                                         + self.learning_rate * (reward + self.discount_factor
-                                                         * max(self.q_table[self.to_index(next_state)])
-                                                         - self.q_table[self.to_index(state) + (action,)])
+                    max_action = self.choose_best_action(t1, next_state)
+                    if t2[self.to_index(next_state) + (max_action,)] != -np.inf:
+                        t1[self.to_index(state) + (action,)] = t1[self.to_index(state) + (action,)] \
+                                                             + self.learning_rate * (reward + self.discount_factor
+                                                             * t2[self.to_index(next_state) + (max_action,)]
+                                                             - t1[self.to_index(state) + (action,)])
                     state = next_state
 
             self.epsilon = max(self.min_epsilon, self.epsilon - self.max_epsilon/self.learning_time)
@@ -80,15 +89,18 @@ class OnlineQLearner:
         if np.random.random() < self.epsilon:
             a = np.random.choice(possible_actions)
         else:
-            a = self.choose_best_action(state)
+            a = self.choose_best_action(None, state)
         return a
 
-    def choose_best_action(self, state):
+    def choose_best_action(self, table, state):
         if np.max(state[1]) >= self.n_y - 1:
             return self.stop_action
         available_actions = np.argwhere(state[1] == -1).flatten()
         available_actions = np.append(available_actions, self.n_a)      # Add stop action to available
-        available_values = self.q_table[self.to_index(state)][available_actions]
+        if table is None:
+            available_values = self.q_table[self.to_index(state)][available_actions] + self.q_table2[self.to_index(state)][available_actions]
+        else:
+            available_values = table[self.to_index(state)][available_actions]
 
         action_indexes = np.argwhere(available_values == np.max(available_values)).flatten()
         chosen_action_index = np.random.choice(action_indexes)
@@ -120,10 +132,10 @@ class OnlineQLearner:
         y = np.array([-1] * self.n_a)
         history = []
         state = np.array([x, y])
-        action = self.choose_best_action(state)
+        action = self.choose_best_action(None, state)
         while action != self.n_a and len(history) < self.n_a:
             y[action] = y_fac[action]
             history.append([action, y[action]])
             state = np.array([x, y])
-            action = self.choose_best_action(state)
+            action = self.choose_best_action(None, state)
         return history
