@@ -37,7 +37,7 @@ class Constraint:
                     similar_patients = []
                 history_counts = np.zeros((self.n_actions, 2))
                 for patient in similar_patients:
-                    treatment, outcome = patient[0]
+                    treatment, outcome = patient[-1]
                     if outcome > max_outcome + self.epsilon:
                         history_counts[treatment][0] += 1
                     else:
@@ -52,7 +52,7 @@ class Constraint:
                 prior_patients = self.histories_to_compare[prior_index]
                 prior_counts = np.zeros((self.n_actions, 2))
                 for patient in prior_patients:
-                    treatment, outcome = patient[0]
+                    treatment, outcome = patient[-1]
                     if outcome > max_outcome + self.epsilon:
                         prior_counts[treatment][0] += 1
                     else:

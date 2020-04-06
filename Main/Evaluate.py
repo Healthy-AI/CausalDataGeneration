@@ -13,15 +13,15 @@ from Algorithms.betterTreatmentConstraint import Constraint
 
 if __name__ == '__main__':
     # Training values
-    seed = 12345
+    seed = 900413
     n_z = 3
-    n_x = 1
-    n_a = 3
+    n_x = 2
+    n_a = 5
     n_y = 3
-    training_episodes = 100000
+    training_episodes = 750000
     n_training_samples = 20000
-    n_test_samples = 5000
-    delta = 0
+    n_test_samples = 2000
+    delta = 0.15
     epsilon = 0
     reward = -0.25
 
@@ -34,10 +34,10 @@ if __name__ == '__main__':
     # Generate the data
     #dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
     dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    dist = NewDistribution(seed=seed)
-    #dist.print_moderator_statistics()
-    #dist.print_covariate_statistics()
-    #dist.print_treatment_statistics()
+    #dist = NewDistribution(seed=seed)
+    dist.print_moderator_statistics()
+    dist.print_covariate_statistics()
+    dist.print_treatment_statistics()
     '''
     dist = NewDistribution(seed=seed)
     n_x = 1
@@ -92,7 +92,7 @@ if __name__ == '__main__':
         ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraint),
         #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
-        OnlineQLearner(n_x, n_a, n_y, dist, learning_time=training_episodes),
+        OnlineQLearner(n_x, n_a, n_y, dist, constraint, learning_time=training_episodes),
     ]
 
     n_algorithms = len(algorithms)
