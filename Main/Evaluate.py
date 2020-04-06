@@ -13,7 +13,7 @@ from Algorithms.betterTreatmentConstraint import Constraint
 
 if __name__ == '__main__':
     # Training values
-    seed = 900413
+    seed = 92347
     n_z = 3
     n_x = 2
     n_a = 5
@@ -97,7 +97,7 @@ if __name__ == '__main__':
         GreedyShuffled2(n_x, n_a, n_y, split_training_data, constraint),
         ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraint),
         #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
-        QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
+        #QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #OnlineQLearner(n_x, n_a, n_y, dist, constraint, learning_time=training_episodes),
     ]
 
@@ -284,13 +284,16 @@ if __name__ == '__main__':
         plt.show(block=False)
 
     if plot_delta_grid_search:
+        time_name = 'time'
+        outcome_name = 'outcome'
         evaluations_delta = {}
         deltas = np.linspace(0, 1, nrdeltas)
-        for alg in algorithms:
-            alg_evals = []
-            alg_times = []
-            for delta in deltas:
-                constraint = Constraint(split_training_data, n_a, n_y, delta=delta, epsilon=epsilon)
+        for delta in deltas:
+            constraint.better_treatment_constraint_dict = {}
+            constraint.delta = delta
+            for alg in algorithms:
+                if alg.name not in evaluations_delta:
+                    evaluations_delta[alg.name] = {outcome_name: [], time_name: []}
                 try:
                     alg.constraint = constraint
                 except AttributeError:
@@ -305,9 +308,10 @@ if __name__ == '__main__':
                     best_outcome = max([treatment[1] for treatment in interventions])
                     total_outcome += best_outcome
                     total_time += search_time
-                alg_evals.append(total_outcome/n_test_samples)
-                alg_times.append(total_time/n_test_samples)
-            evaluations_delta[alg.name] = [alg_evals, alg_times]
+                mean_outcome = total_outcome/n_test_samples
+                mean_time = total_time/n_test_samples
+                evaluations_delta[alg.name][outcome_name].append(mean_outcome)
+                evaluations_delta[alg.name][time_name].append(mean_time)
         print("Running Evaluate (and training) over delta took {:.3f} seconds".format(time.time() - main_start))
 
         # Plot mean treatment effect vs delta
@@ -317,14 +321,13 @@ if __name__ == '__main__':
         plt.xlabel('delta')
         x = np.arange(0, n_a + 1)
         for i_plot, alg in enumerate(algorithms):
-            plt.plot(deltas, evaluations_delta[alg.name][0], plot_colors[i_plot],
+            plt.plot(deltas, evaluations_delta[alg.name][outcome_name], plot_colors[i_plot],
                      label='{} {}'.format(alg.label, 'effect'))
-            plt.plot(deltas, evaluations_delta[alg.name][1], plot_colors[i_plot] + plot_markers[1],
+            plt.plot(deltas, evaluations_delta[alg.name][time_name], plot_colors[i_plot] + plot_markers[1],
                      label='{} {}'.format(alg.label, 'time'))
         plt.grid(True)
         plt.legend(loc='lower left')
         plt.show(block=False)
-
 
     plt.show()
 
