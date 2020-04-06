@@ -29,6 +29,10 @@ if __name__ == '__main__':
     treatment_slack = 0     # Eg, how close to max must we be to be considered "good enough"
     plot_colors = ['k', 'r', 'b', 'g', 'm', 'c', 'y']
     plot_markers = ['', '--', ':']
+    plot_mean_treatment_effect = True
+    plot_treatment_efficiency = False
+    plot_search_time = True
+    plot_strictly_better = False
     main_start = time.time()
 
     # Generate the data
@@ -89,9 +93,9 @@ if __name__ == '__main__':
         #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
         GreedyShuffled2(n_x, n_a, n_y, split_training_data, constraint),
         ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraint),
-        QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
-        QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
-        OnlineQLearner(n_x, n_a, n_y, dist, learning_time=training_episodes),
+        #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
+        #QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
+        #OnlineQLearner(n_x, n_a, n_y, dist, learning_time=training_episodes),
     ]
 
     n_algorithms = len(algorithms)
@@ -114,156 +118,166 @@ if __name__ == '__main__':
     print("Running Evaluate took {:.3f} seconds".format(time.time()-main_start))
 
     print("Showing plots...")
-    # Calculate max mean treatment effect over population
-    max_mean_treatment_effects = np.zeros((n_algorithms, n_a + 1))
-    for i_alg, alg in enumerate(algorithms):
+    if plot_mean_treatment_effect:
+        # Calculate max mean treatment effect over population
+        max_mean_treatment_effects = np.zeros((n_algorithms, n_a + 1))
+        for i_alg, alg in enumerate(algorithms):
+            for i_sample in range(n_test_samples):
+                treatments = evaluations[alg.name][i_sample]
+                best_found = 0
+                for i_treatment in range(len(max_mean_treatment_effects[i_alg])):
+                    if i_treatment < len(treatments):
+                        effect = treatments[i_treatment][1]
+                        if effect > best_found:
+                            best_found = effect
+                    max_mean_treatment_effects[i_alg][i_treatment] += best_found
+        max_mean_treatment_effects /= n_test_samples
+
+
+        # Calculate mean treatment effect over population
+        mean_treatment_effects = np.zeros((n_algorithms, n_a + 1))      # Overshoot by 1 to get all max values at last step
+        mean_num_tests = np.zeros(n_algorithms)
+
         for i_sample in range(n_test_samples):
-            treatments = evaluations[alg.name][i_sample]
-            best_found = 0
-            for i_treatment in range(len(max_mean_treatment_effects[i_alg])):
-                if i_treatment < len(treatments):
-                    effect = treatments[i_treatment][1]
+            for i_alg, alg in enumerate(algorithms):
+                treatments = evaluations[alg.name][i_sample]
+                mean_num_tests[i_alg] += len(treatments)
+                best_found = 0
+                for i_treatment in range(len(mean_treatment_effects[i_alg])):
+                    if i_treatment >= len(treatments):
+                        effect = best_found
+                    else:
+                        effect = treatments[i_treatment][1]
                     if effect > best_found:
                         best_found = effect
-                max_mean_treatment_effects[i_alg][i_treatment] += best_found
-    max_mean_treatment_effects /= n_test_samples
+                    mean_treatment_effects[i_alg][i_treatment] += effect
+        mean_treatment_effects /= n_test_samples
+        mean_num_tests /= n_test_samples
 
-    # Calculate mean treatment effect over population
-    mean_treatment_effects = np.zeros((n_algorithms, n_a + 1))      # Overshoot by 1 to get all max values at last step
-    mean_num_tests = np.zeros(n_algorithms)
 
-    for i_sample in range(n_test_samples):
+        '''
+        # Mean treatment effect test
+        mean_te = np.zeros(n_algorithms)
         for i_alg, alg in enumerate(algorithms):
-            treatments = evaluations[alg.name][i_sample]
-            mean_num_tests[i_alg] += len(treatments)
-            best_found = 0
-            for i_treatment in range(len(mean_treatment_effects[i_alg])):
-                if i_treatment >= len(treatments):
-                    effect = best_found
-                else:
-                    effect = treatments[i_treatment][1]
-                if effect > best_found:
-                    best_found = effect
-                mean_treatment_effects[i_alg][i_treatment] += effect
-    mean_treatment_effects /= n_test_samples
-    mean_num_tests /= n_test_samples
-
-    # Find strictly better samples for each algorithm
-    strictly_better_samples = np.zeros(n_algorithms, dtype=int)
-    for i_sample in range(n_test_samples):
-        samples = np.zeros((n_algorithms, 2))
+            for i_sample in range(n_test_samples):
+                treatments = evaluations[alg.name][i_sample]
+                best_outcome = max([intervention[1] for intervention in treatments])
+                mean_te[i_alg] += best_outcome
+        mean_te /= n_test_samples
+    
         for i_alg, alg in enumerate(algorithms):
-            treatments = evaluations[alg.name][i_sample]
-            n_treatments = len(treatments)
-            best_found_outcome = max([intervention[1] for intervention in treatments])
-            samples[i_alg, 0] = n_treatments
-            samples[i_alg, 1] = best_found_outcome
+            print(alg.name, 'has mean treatment effect', mean_te[i_alg])
+        '''
+        # Plot mean treatment effect over population
+        x = np.arange(0, n_a+1)
+        x_ticks = list(np.arange(1, n_a+2))
+        x_ticks[-1] = 'Done'
+        plt.figure()
+        plt.title('Treatment effect')
+        plt.ylabel('Mean treatment effect')
+        plt.xlabel('Number of tried treatments')
+        average_max_treatment_effect = sum([max(data[-1]) for data in test_data])/len(test_data)
+        for i_plot, alg in enumerate(algorithms):
+            plt.plot(x, mean_treatment_effects[i_plot], plot_colors[i_plot] + plot_markers[0], label=alg.label)
+            plt.plot(x, max_mean_treatment_effects[i_plot], plot_colors[i_plot] + plot_markers[1])
+            plt.fill_between(x, mean_treatment_effects[i_plot], max_mean_treatment_effects[i_plot], color=plot_colors[i_plot], alpha=0.1)
+            plt.axvline(mean_num_tests[i_plot]-1, 0, average_max_treatment_effect, color=plot_colors[i_plot])
 
-        min_treatments = np.where(samples[:, 0] == samples[:, 0].min())
-        max_outcome = np.where(samples[:, 1] == samples[:, 1].max())
-        strictly_better_indices, _, _ = np.intersect1d(min_treatments, max_outcome, return_indices=True)
-        if len(strictly_better_indices) == 1:
-            strictly_better_samples[strictly_better_indices[0]] += 1
+        plt.grid(True)
+        plt.xticks(x, x_ticks)
+        plt.plot(x, np.ones(len(x))*average_max_treatment_effect, label='MAX_POSS_AVG')
 
-    for i_alg, alg in enumerate(algorithms):
-        print(alg.name, 'has', strictly_better_samples[i_alg],
-              'strictly better samples than the other algorithms')
-    print('There is a total of', n_test_samples, 'test samples')
+        plt.legend(loc='lower right')
+        plt.show(block=False)
 
-    # Mean treatment effect test
-    mean_te = np.zeros(n_algorithms)
-    for i_alg, alg in enumerate(algorithms):
+    if plot_treatment_efficiency:
+        # Calculate % of population at max - treatment_slack treatment over time
+        max_treatments = np.zeros(n_test_samples)
         for i_sample in range(n_test_samples):
-            treatments = evaluations[alg.name][i_sample]
-            best_outcome = max([intervention[1] for intervention in treatments])
-            mean_te[i_alg] += best_outcome
-    mean_te /= n_test_samples
-
-    for i_alg, alg in enumerate(algorithms):
-        print(alg.name, 'has mean treatment effect', mean_te[i_alg])
-
-    # Plot mean treatment effect over population
-    x = np.arange(0, n_a+1)
-    x_ticks = list(np.arange(1, n_a+2))
-    x_ticks[-1] = 'Done'
-    plt.figure()
-    plt.title('Treatment effect')
-    plt.ylabel('Mean treatment effect')
-    plt.xlabel('Number of tried treatments')
-    average_max_treatment_effect = sum([max(data[-1]) for data in test_data])/len(test_data)
-    for i_plot, alg in enumerate(algorithms):
-        plt.plot(x, mean_treatment_effects[i_plot], plot_colors[i_plot] + plot_markers[0], label=alg.label)
-        plt.plot(x, max_mean_treatment_effects[i_plot], plot_colors[i_plot] + plot_markers[1])
-        plt.fill_between(x, mean_treatment_effects[i_plot], max_mean_treatment_effects[i_plot], color=plot_colors[i_plot], alpha=0.1)
-        plt.axvline(mean_num_tests[i_plot]-1, 0, average_max_treatment_effect, color=plot_colors[i_plot])
-
-    plt.grid(True)
-    plt.xticks(x, x_ticks)
-    plt.plot(x, np.ones(len(x))*average_max_treatment_effect, label='MAX_POSS_AVG')
-
-    plt.legend(loc='lower right')
-    plt.show(block=False)
+            max_treatments[i_sample] = max(test_data[i_sample][2])
+        at_max = np.zeros((n_algorithms, n_a + 1))
+        for i, alg in enumerate(algorithms):
+            for i_sample in range(n_test_samples):
+                treatments = evaluations[alg.name][i_sample]
+                found_max = 0
+                for i_treatment in range(len(at_max[i])):
+                    if i_treatment >= len(treatments):
+                        at_max[i][i_treatment] += found_max
+                    else:
+                        if max_treatments[i_sample] <= treatments[i_treatment][1] + treatment_slack:
+                            at_max[i][i_treatment] += 1
+                            found_max = 1
+        at_max /= n_test_samples
 
 
-    # Calculate % of population at max - treatment_slack treatment over time
-    max_treatments = np.zeros(n_test_samples)
-    for i_sample in range(n_test_samples):
-        max_treatments[i_sample] = max(test_data[i_sample][2])
-    at_max = np.zeros((n_algorithms, n_a + 1))
-    for i, alg in enumerate(algorithms):
+        # Plot mean treatment effect over population
+        plt.figure()
+        plt.title('Treatment efficiency')
+        plt.ylabel('Percentage of population at best possible treatment')
+        plt.xlabel('Number of tried treatments')
+        x = np.arange(0, n_a + 1)
+        x_ticks = list(np.arange(1, n_a + 2))
+        x_ticks[-1] = 'Done'
+        for i_plot, alg in enumerate(algorithms):
+            plt.plot(x, at_max[i_plot], plot_colors[i_plot], label=alg.label)
+        plt.xticks(x, x_ticks)
+        plt.grid(True)
+        plt.legend(loc='lower right')
+        plt.show(block=False)
+
+    if plot_search_time:
+        # Plot mean number of treatments tried
+        plt.figure()
+        plt.title('Search time')
+        plt.ylabel('Mean number of treatments tried')
+        plt.xlabel('Policy')
+        x_bars = []
+        for i_alg, alg in enumerate(algorithms):
+            x_bars.append(alg.name)
+        x_bars = [label.replace(" ", '\n') for label in x_bars]
+        rects = plt.bar(x_bars, mean_num_tests)
+        for rect in rects:
+            h = rect.get_height()
+            plt.text(rect.get_x() + rect.get_width()/2., 0.90*h, "%f" % h, ha="center", va="bottom")
+        plt.show(block=False)
+
+    if plot_strictly_better:
+        # Find strictly better samples for each algorithm
+        strictly_better_samples = np.zeros(n_algorithms, dtype=int)
         for i_sample in range(n_test_samples):
-            treatments = evaluations[alg.name][i_sample]
-            found_max = 0
-            for i_treatment in range(len(at_max[i])):
-                if i_treatment >= len(treatments):
-                    at_max[i][i_treatment] += found_max
-                else:
-                    if max_treatments[i_sample] <= treatments[i_treatment][1] + treatment_slack:
-                        at_max[i][i_treatment] += 1
-                        found_max = 1
-    at_max /= n_test_samples
+            samples = np.zeros((n_algorithms, 2))
+            for i_alg, alg in enumerate(algorithms):
+                treatments = evaluations[alg.name][i_sample]
+                n_treatments = len(treatments)
+                best_found_outcome = max([intervention[1] for intervention in treatments])
+                samples[i_alg, 0] = n_treatments
+                samples[i_alg, 1] = best_found_outcome
 
-    # Plot mean treatment effect over population
-    plt.figure()
-    plt.title('Treatment efficiency')
-    plt.ylabel('Percentage of population at best possible treatment')
-    plt.xlabel('Number of tried treatments')
-    for i_plot, alg in enumerate(algorithms):
-        plt.plot(x, at_max[i_plot], plot_colors[i_plot], label=alg.label)
-    plt.xticks(x, x_ticks)
-    plt.grid(True)
-    plt.legend(loc='lower right')
-    plt.show(block=False)
+            min_treatments = np.where(samples[:, 0] == samples[:, 0].min())
+            max_outcome = np.where(samples[:, 1] == samples[:, 1].max())
+            strictly_better_indices, _, _ = np.intersect1d(min_treatments, max_outcome, return_indices=True)
+            if len(strictly_better_indices) == 1:
+                strictly_better_samples[strictly_better_indices[0]] += 1
 
-    # Plot mean number of treatments tried
-    plt.figure()
-    plt.title('Search time')
-    plt.ylabel('Mean number of treatments tried')
-    plt.xlabel('Policy')
-    x_bars = []
-    for i_alg, alg in enumerate(algorithms):
-        x_bars.append(alg.name)
-    x_bars = [label.replace(" ", '\n') for label in x_bars]
-    rects = plt.bar(x_bars, mean_num_tests)
-    for rect in rects:
-        h = rect.get_height()
-        plt.text(rect.get_x() + rect.get_width()/2., 0.90*h, "%f" % h, ha="center", va="bottom")
-    plt.show(block=False)
+        for i_alg, alg in enumerate(algorithms):
+            print(alg.name, 'has', strictly_better_samples[i_alg],
+                  'strictly better samples than the other algorithms')
+        print('There is a total of', n_test_samples, 'test samples')
 
-    # Plot mean number of treatments tried
-    plt.figure()
-    plt.title('% of strictly better samples')
-    plt.ylabel('% of samples where the policy performed better')
-    plt.xlabel('Policy')
-    x_bars = []
-    for i_alg, alg in enumerate(algorithms):
-        x_bars.append(alg.name)
-    x_bars = [label.replace(" ", '\n') for label in x_bars]
-    rects = plt.bar(x_bars, (strictly_better_samples/n_test_samples)*100)
-    for rect in rects:
-        h = rect.get_height()
-        plt.text(rect.get_x() + rect.get_width()/2., 0.90*h, "%f" % h, ha="center", va="bottom")
-    plt.show(block=False)
+        # Plot strictly better samples statistics
+        plt.figure()
+        plt.title('% of strictly better samples')
+        plt.ylabel('% of samples where the policy performed better')
+        plt.xlabel('Policy')
+        x_bars = []
+        for i_alg, alg in enumerate(algorithms):
+            x_bars.append(alg.name)
+        x_bars = [label.replace(" ", '\n') for label in x_bars]
+        rects = plt.bar(x_bars, (strictly_better_samples/n_test_samples)*100)
+        for rect in rects:
+            h = rect.get_height()
+            plt.text(rect.get_x() + rect.get_width()/2., 0.90*h, "%f" % h, ha="center", va="bottom")
+        plt.show(block=False)
 
     plt.show()
 
