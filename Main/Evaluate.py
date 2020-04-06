@@ -22,17 +22,20 @@ if __name__ == '__main__':
     n_training_samples = 20000
     n_test_samples = 2000
     delta = 0.15
+    nrdeltas = 6 # for grid search
     epsilon = 0
     reward = -0.25
 
     # Plot values
     treatment_slack = 0     # Eg, how close to max must we be to be considered "good enough"
     plot_colors = ['k', 'r', 'b', 'g', 'm', 'c', 'y']
-    plot_markers = ['', '--', ':']
-    plot_mean_treatment_effect = True
+    plot_markers = ['', '--', ':', 'x']
+    plot_mean_treatment_effect = False
     plot_treatment_efficiency = False
-    plot_search_time = True
-    plot_strictly_better = True
+    plot_search_time = False
+    plot_strictly_better = False
+    plot_delta_grid_search = True
+    plotbools = [plot_mean_treatment_effect, plot_treatment_efficiency, plot_search_time, plot_strictly_better]
     main_start = time.time()
 
     # Generate the data
@@ -94,28 +97,28 @@ if __name__ == '__main__':
         GreedyShuffled2(n_x, n_a, n_y, split_training_data, constraint),
         ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraint),
         #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
-        #QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
+        QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #OnlineQLearner(n_x, n_a, n_y, dist, constraint, learning_time=training_episodes),
     ]
 
     n_algorithms = len(algorithms)
+    if any(plotbools):
+        for alg in algorithms:
+            # Train the algorithms
+            start = time.time()
+            print("\tTraining %s..." % alg.name)
+            alg.learn()
+            print("\tTraining the %s algorithm took {:.3f} seconds".format(time.time()-start) % alg.name)
 
-    for alg in algorithms:
-        # Train the algorithms
-        start = time.time()
-        print("\tTraining %s..." % alg.name)
-        alg.learn()
-        print("\tTraining the %s algorithm took {:.3f} seconds".format(time.time()-start) % alg.name)
-
-    # Evaluate the algorithms
-    evaluations = {}
-    for alg in algorithms:
-        alg_evals = []
-        print("Evaluating {}".format(alg.name))
-        for i in range(n_test_samples):
-            alg_evals.append(alg.evaluate(test_data[i]))
-        evaluations[alg.name] = alg_evals
-    print("Running Evaluate took {:.3f} seconds".format(time.time()-main_start))
+        # Evaluate the algorithms
+        evaluations = {}
+        for alg in algorithms:
+            alg_evals = []
+            print("Evaluating {}".format(alg.name))
+            for i in range(n_test_samples):
+                alg_evals.append(alg.evaluate(test_data[i]))
+            evaluations[alg.name] = alg_evals
+        print("Running Evaluate took {:.3f} seconds".format(time.time()-main_start))
 
     print("Showing plots...")
     if plot_mean_treatment_effect or plot_search_time:
@@ -279,6 +282,49 @@ if __name__ == '__main__':
             h = rect.get_height()
             plt.text(rect.get_x() + rect.get_width()/2., 0.90*h, "%f" % h, ha="center", va="bottom")
         plt.show(block=False)
+
+    if plot_delta_grid_search:
+        evaluations_delta = {}
+        deltas = np.linspace(0, 1, nrdeltas)
+        for alg in algorithms:
+            alg_evals = []
+            alg_times = []
+            for delta in deltas:
+                constraint = Constraint(split_training_data, n_a, n_y, delta=delta, epsilon=epsilon)
+                try:
+                    alg.constraint = constraint
+                except AttributeError:
+                    pass
+                alg.learn()
+                total_outcome = 0
+                total_time = 0
+                print("Evaluating {} with delta = {}".format(alg.name, delta))
+                for i in range(n_test_samples):
+                    interventions = alg.evaluate(test_data[i])
+                    search_time = len(interventions)
+                    best_outcome = max([treatment[1] for treatment in interventions])
+                    total_outcome += best_outcome
+                    total_time += search_time
+                alg_evals.append(total_outcome/n_test_samples)
+                alg_times.append(total_time/n_test_samples)
+            evaluations_delta[alg.name] = [alg_evals, alg_times]
+        print("Running Evaluate (and training) over delta took {:.3f} seconds".format(time.time() - main_start))
+
+        # Plot mean treatment effect vs delta
+        plt.figure()
+        plt.title('Mean treatment effect/mean search time vs delta')
+        plt.ylabel('Mean treatment effect/mean search time')
+        plt.xlabel('delta')
+        x = np.arange(0, n_a + 1)
+        for i_plot, alg in enumerate(algorithms):
+            plt.plot(deltas, evaluations_delta[alg.name][0], plot_colors[i_plot],
+                     label='{} {}'.format(alg.label, 'effect'))
+            plt.plot(deltas, evaluations_delta[alg.name][1], plot_colors[i_plot] + plot_markers[1],
+                     label='{} {}'.format(alg.label, 'time'))
+        plt.grid(True)
+        plt.legend(loc='lower left')
+        plt.show(block=False)
+
 
     plt.show()
 

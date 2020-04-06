@@ -67,3 +67,6 @@ class GreedyShuffled2:
             if no_better_treatment_exist == 1:
                 stop = True
         return history
+
+    def set_constraint(self, constraint):
+        self.constraint = constraint

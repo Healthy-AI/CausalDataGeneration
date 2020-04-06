@@ -6,17 +6,19 @@ import random
 
 class ConstrainedDynamicProgramming(QLearner):
     def __init__(self, n_x, n_a, n_y, data, constraint, prior_power=2):
-        self.better_treatment_constraint = constraint.no_better_treatment_exist
+        self.constraint = constraint
         super().__init__(n_x, n_a, n_y, data)
         self.statistics = self.get_patient_statistics()
         self.prior_power = prior_power
         # Q-table indexed with x, y_0, y_1, y_2, y_3 and a
-        self.q_table = np.zeros((2,) * self.n_x + (self.n_y + 1,) * self.n_a + (self.n_a + 1,))
+        self.table_size = (2,) * self.n_x + (self.n_y + 1,) * self.n_a + (self.n_a + 1,)
+        self.q_table = np.zeros(self.table_size)
         self.q_table_done = self.q_table.copy().astype(bool)
         self.name = 'Constrained Dynamic Programming'
         self.label = 'CDP'
 
     def learn(self):
+        self.reset()
         possible_x = list(itertools.product(range(0, 2), repeat=self.n_x))
         possible_histories = list(itertools.product(range(-1, self.n_y), repeat=self.n_a))
         for x in possible_x:
@@ -79,7 +81,7 @@ class ConstrainedDynamicProgramming(QLearner):
         return patient_statistics
 
     def get_reward(self, action, history, x):
-        gamma = self.better_treatment_constraint(history, x)
+        gamma = self.constraint.no_better_treatment_exist(history, x)
         if action == self.stop_action and gamma == 0:
             return -np.infty
         elif action == self.stop_action and gamma == 1:
@@ -90,6 +92,13 @@ class ConstrainedDynamicProgramming(QLearner):
             import sys
             print(gamma, action, history)
             sys.exit()
+
+    def reset(self):
+        self.q_table = np.zeros(self.table_size)
+        self.q_table_done = self.q_table.copy().astype(bool)
+
+    def set_constraint(self, constraint):
+        self.constraint = constraint.no_better_treatment_exist
 
 
 

@@ -29,7 +29,7 @@ class QLearnerConstrained:
     def learn(self):
         # Q-table indexed with x, y_0, y_1, y_2, y_3 and a
         self.q_table = np.zeros((2,) * self.n_x + (self.n_y + 1,) * self.n_a + (self.n_a + 1,))
-        modified = self.q_table.copy()
+        modified = self.q_table.copy().astype(bool)
         history = self.sars_data
 
         # Initialize all final states with the rewards for picking that state
