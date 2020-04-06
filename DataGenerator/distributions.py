@@ -110,7 +110,7 @@ class DiscreteDistribution(Distribution):
             pz = self.get_z_probability(z)
             print("{} : {:05.3f}".format(z, pz))
             total += pz
-        assert total == 1, "Probabilities of moderators don't add up to 1. Something is wrong!"
+        assert np.isclose(total, 1, atol=0.000001), "Probabilities of moderators don't add up to 1. Something is wrong!"
         print("---------------------")
 
     def print_covariate_statistics(self):
