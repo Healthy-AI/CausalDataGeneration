@@ -56,8 +56,14 @@ class GreedyShuffled2:
             hstate = history_to_state(history, self.n_a)
             for i, hs in enumerate(hstate):
                 if hs != -1:
-                    ev_vec[i] = -np.infty
-            new_treatment = np.argmax(ev_vec)
+                    ev_vec[i] = -np.inf
+            mask_unknown_actions = y_fac.copy().astype(float)
+            mask_unknown_actions[mask_unknown_actions != -1] = 0
+            mask_unknown_actions[mask_unknown_actions == -1] = -np.inf
+            decision_probabilities = ev_vec+mask_unknown_actions
+            new_treatment = np.argmax(decision_probabilities)
+            if np.max(decision_probabilities) == -np.inf:
+                break
             outcome = int(y_fac[new_treatment])
             if outcome > best_outcome:
                 best_outcome = outcome

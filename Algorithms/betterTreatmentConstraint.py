@@ -2,6 +2,7 @@ import numpy as np
 from Algorithms.help_functions import *
 import random
 
+
 class Constraint:
     def __init__(self, data, n_actions, steps_y, prior_weight=2, z_value=1.96, delta=0, epsilon=0):
         self.data = data

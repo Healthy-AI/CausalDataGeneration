@@ -60,12 +60,19 @@ class QLearner:
         y = np.array([-1] * self.n_a)
         history = []
         state = np.array([x, y])
-        action = np.argmax(self.q_table[self.to_index(state)])
+        mask_unknown_actions = y_fac.copy().astype(float)
+        mask_unknown_actions[mask_unknown_actions != -1] = 0
+        mask_unknown_actions[mask_unknown_actions == -1] = -np.inf
+        mask_unknown_actions = np.append(mask_unknown_actions, 0)
+        action = np.argmax(self.q_table[self.to_index(state)]+mask_unknown_actions)
+
         while action != self.n_a and len(history) < self.n_a:
             y[action] = y_fac[action]
             history.append([action, y[action]])
             state = np.array([x, y])
-            action_candidates = np.argwhere(self.q_table[self.to_index(state)] == np.max(self.q_table[self.to_index(state)])).flatten()
+
+            action_candidates = np.argwhere(self.q_table[self.to_index(state)] ==
+                                            np.max(self.q_table[self.to_index(state)]+mask_unknown_actions)).flatten()
             if len(action_candidates) == 1:
                 action = action_candidates[0]
             else:
@@ -90,8 +97,12 @@ class QLearner:
                 else:
                     print("Choosing action arbitrarily")
                     for a in action_candidates:
-                        if y[a] == -1:
-                            action = a
+                        try:
+                            if y[a] == -1:
+                                action = a
+                                break
+                        except IndexError:
+                            action = self.stop_action
                             break
         return history
 

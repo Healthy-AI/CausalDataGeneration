@@ -10,29 +10,32 @@ import random
 from pathlib import Path
 from Algorithms.online_q_learning import OnlineQLearner
 from Algorithms.betterTreatmentConstraint import Constraint
+from Database.antibioticsdatabase import AntibioticsDatabase
 
 if __name__ == '__main__':
     # Training values
-    seed = 92347
-    n_z = 3
-    n_x = 2
+    seed = 8956
+    n_z = 4
+    n_x = 1
     n_a = 5
-    n_y = 3
+    n_y = 5
     training_episodes = 750000
-    n_training_samples = 20000
+    n_training_samples = 2000
     n_test_samples = 2000
     delta = 0.15
-    nrdeltas = 6 # for grid search
     epsilon = 0
     reward = -0.25
+    # for grid search
+    nr_deltas = 4
+    delta_limit = 0.6
 
     # Plot values
     treatment_slack = 0     # Eg, how close to max must we be to be considered "good enough"
     plot_colors = ['k', 'r', 'b', 'g', 'm', 'c', 'y']
-    plot_markers = ['', '--', ':', 'x']
-    plot_mean_treatment_effect = False
+    plot_markers = ['', '--', ':', '-.']
+    plot_mean_treatment_effect = True
     plot_treatment_efficiency = False
-    plot_search_time = False
+    plot_search_time = True
     plot_strictly_better = False
     plot_delta_grid_search = True
     plotbools = [plot_mean_treatment_effect, plot_treatment_efficiency, plot_search_time, plot_strictly_better]
@@ -44,6 +47,7 @@ if __name__ == '__main__':
     dist.print_moderator_statistics()
     dist.print_covariate_statistics()
     dist.print_treatment_statistics()
+    #dist = AntibioticsDatabase()
     '''
     dist = NewDistribution(seed=seed)
     n_x = 1
@@ -57,35 +61,44 @@ if __name__ == '__main__':
     n_y = 2
     '''
 
-    training = {'name': 'training', 'samples': n_training_samples, 'func': generate_data, 'split': True}
-    test = {'name': 'test', 'samples': n_test_samples, 'func': generate_test_data, 'split': False}
-    datasets = {'training': training, 'test': test}
+    if type(dist) != AntibioticsDatabase:
+        training = {'name': 'training', 'samples': n_training_samples, 'func': generate_data, 'split': True, 'database': False}
+        test = {'name': 'test', 'samples': n_test_samples, 'func': generate_test_data, 'split': False, 'database': False}
+        datasets = {'training': training, 'test': test}
 
-    for key, dataset in datasets.items():
-        filename = '{}{}{}{}vars{}{}{}{}.h5'.format(
-            dist.name, str(dataset['samples']), dataset['name'], seed,
-            n_z, n_x, n_a, n_y)
-        filepath = Path('Data', filename)
+        for key, dataset in datasets.items():
+            filename = '{}{}{}{}vars{}{}{}{}.h5'.format(
+                dist.name, str(dataset['samples']), dataset['name'], seed,
+                n_z, n_x, n_a, n_y)
+            filepath = Path('Data', filename)
 
-        try:
-            data = dd.io.load(filepath)
-            dataset['data'] = data
-            print('Found %s data on file' % dataset['name'])
-        except IOError:
-            start = time.time()
-            n_samples = dataset['samples']
-            print("Generating {} {} samples...".format(n_samples, dataset['name']))
-            generate_data_func = dataset['func']
-            data = generate_data_func(dist, n_samples)
-            if dataset['split']:
-                data = split_patients(data)
-            print("Generating samples took {:.3f} seconds".format(time.time()-start))
-            dataset['data'] = data
-            if seed is not None:
-                dd.io.save(filepath, data)
+            try:
+                data = dd.io.load(filepath)
+                dataset['data'] = data
+                print('Found %s data on file' % dataset['name'])
+            except IOError:
+                start = time.time()
+                n_samples = dataset['samples']
+                print("Generating {} {} samples...".format(n_samples, dataset['name']))
+                generate_data_func = dataset['func']
+                if dataset['database']:
+                    data = generate_data_func(n_samples)
+                else:
+                    data = generate_data_func(dist, n_samples)
+                if dataset['split']:
+                    data = split_patients(data)
+                print("Generating samples took {:.3f} seconds".format(time.time()-start))
+                dataset['data'] = data
+                if seed is not None:
+                    dd.io.save(filepath, data)
+    else:
+        datasets = {'training': {'data': dist.get_data()}, 'test': {'data':dist.get_test_data(n_test_samples)}}
 
+        n_x = dist.n_x
+        n_a = dist.n_a
+        n_y = dist.n_y
 
-    split_training_data = datasets['training']['data']
+    split_training_data = split_patients(datasets['training']['data'])
     test_data = datasets['test']['data']
     print("Initializing Constraint")
     start = time.time()
@@ -189,7 +202,7 @@ if __name__ == '__main__':
 
             plt.grid(True)
             plt.xticks(x, x_ticks)
-            plt.plot(x, np.ones(len(x))*average_max_treatment_effect, label='MAX_POSS_AVG')
+            plt.plot(x, np.ones(len(x))*average_max_treatment_effect, plot_markers[3], label='MAX_POSS_AVG')
 
             plt.legend(loc='lower right')
             plt.show(block=False)
@@ -287,7 +300,7 @@ if __name__ == '__main__':
         time_name = 'time'
         outcome_name = 'outcome'
         evaluations_delta = {}
-        deltas = np.linspace(0, 1, nrdeltas)
+        deltas = np.linspace(0, delta_limit, nr_deltas)
         for delta in deltas:
             constraint.better_treatment_constraint_dict = {}
             constraint.delta = delta
@@ -319,12 +332,13 @@ if __name__ == '__main__':
         plt.title('Mean treatment effect/mean search time vs delta')
         plt.ylabel('Mean treatment effect/mean search time')
         plt.xlabel('delta')
-        x = np.arange(0, n_a + 1)
+        average_max_treatment_effect = sum([max(data[-1]) for data in test_data]) / len(test_data)
         for i_plot, alg in enumerate(algorithms):
             plt.plot(deltas, evaluations_delta[alg.name][outcome_name], plot_colors[i_plot],
                      label='{} {}'.format(alg.label, 'effect'))
             plt.plot(deltas, evaluations_delta[alg.name][time_name], plot_colors[i_plot] + plot_markers[1],
                      label='{} {}'.format(alg.label, 'time'))
+        plt.plot(deltas, np.ones(nr_deltas) * average_max_treatment_effect, plot_markers[3], label='MAX_POSS_AVG')
         plt.grid(True)
         plt.legend(loc='lower left')
         plt.show(block=False)

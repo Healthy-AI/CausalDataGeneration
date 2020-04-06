@@ -65,7 +65,7 @@ class ConstrainedDynamicProgramming(QLearner):
         histories = self.data['h']
         x_s = self.data['x']
 
-        patient_statistics = np.zeros((2,) * self.n_x + (self.n_y+1,) * self.n_a + (self.n_a,) + (self.n_y,))
+        patient_statistics = np.zeros((2,) * self.n_x + (self.n_y+1,) * self.n_a + (self.n_a,) + (self.n_y,), dtype=int)
         for i, history in enumerate(histories):
             x = x_s[i]
             treatment, outcome = history[-1]
