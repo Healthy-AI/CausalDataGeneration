@@ -13,14 +13,14 @@ from Algorithms.betterTreatmentConstraint import Constraint
 
 if __name__ == '__main__':
     # Training values
-    seed = 12345
+    seed = 1234
     n_z = 3
-    n_x = 3
+    n_x = 1
     n_a = 5
     n_y = 3
     training_episodes = 100000
-    n_training_samples = 20000
-    n_test_samples = 5000
+    n_training_samples = 10000
+    n_test_samples = 2000
     delta = 0
     epsilon = 0
     reward = -0.25
@@ -32,7 +32,7 @@ if __name__ == '__main__':
     plot_mean_treatment_effect = True
     plot_treatment_efficiency = False
     plot_search_time = True
-    plot_strictly_better = False
+    plot_strictly_better = True
     main_start = time.time()
 
     # Generate the data
@@ -118,7 +118,7 @@ if __name__ == '__main__':
     print("Running Evaluate took {:.3f} seconds".format(time.time()-main_start))
 
     print("Showing plots...")
-    if plot_mean_treatment_effect:
+    if plot_mean_treatment_effect or plot_search_time:
         # Calculate max mean treatment effect over population
         max_mean_treatment_effects = np.zeros((n_algorithms, n_a + 1))
         for i_alg, alg in enumerate(algorithms):
@@ -168,27 +168,28 @@ if __name__ == '__main__':
         for i_alg, alg in enumerate(algorithms):
             print(alg.name, 'has mean treatment effect', mean_te[i_alg])
         '''
-        # Plot mean treatment effect over population
-        x = np.arange(0, n_a+1)
-        x_ticks = list(np.arange(1, n_a+2))
-        x_ticks[-1] = 'Done'
-        plt.figure()
-        plt.title('Treatment effect')
-        plt.ylabel('Mean treatment effect')
-        plt.xlabel('Number of tried treatments')
-        average_max_treatment_effect = sum([max(data[-1]) for data in test_data])/len(test_data)
-        for i_plot, alg in enumerate(algorithms):
-            plt.plot(x, mean_treatment_effects[i_plot], plot_colors[i_plot] + plot_markers[0], label=alg.label)
-            plt.plot(x, max_mean_treatment_effects[i_plot], plot_colors[i_plot] + plot_markers[1])
-            plt.fill_between(x, mean_treatment_effects[i_plot], max_mean_treatment_effects[i_plot], color=plot_colors[i_plot], alpha=0.1)
-            plt.axvline(mean_num_tests[i_plot]-1, 0, average_max_treatment_effect, color=plot_colors[i_plot])
+        if plot_mean_treatment_effect:
+            # Plot mean treatment effect over population
+            x = np.arange(0, n_a+1)
+            x_ticks = list(np.arange(1, n_a+2))
+            x_ticks[-1] = 'Done'
+            plt.figure()
+            plt.title('Treatment effect')
+            plt.ylabel('Mean treatment effect')
+            plt.xlabel('Number of tried treatments')
+            average_max_treatment_effect = sum([max(data[-1]) for data in test_data])/len(test_data)
+            for i_plot, alg in enumerate(algorithms):
+                plt.plot(x, mean_treatment_effects[i_plot], plot_colors[i_plot] + plot_markers[0], label=alg.label)
+                plt.plot(x, max_mean_treatment_effects[i_plot], plot_colors[i_plot] + plot_markers[1])
+                plt.fill_between(x, mean_treatment_effects[i_plot], max_mean_treatment_effects[i_plot], color=plot_colors[i_plot], alpha=0.1)
+                plt.axvline(mean_num_tests[i_plot]-1, 0, average_max_treatment_effect, color=plot_colors[i_plot])
 
-        plt.grid(True)
-        plt.xticks(x, x_ticks)
-        plt.plot(x, np.ones(len(x))*average_max_treatment_effect, label='MAX_POSS_AVG')
+            plt.grid(True)
+            plt.xticks(x, x_ticks)
+            plt.plot(x, np.ones(len(x))*average_max_treatment_effect, label='MAX_POSS_AVG')
 
-        plt.legend(loc='lower right')
-        plt.show(block=False)
+            plt.legend(loc='lower right')
+            plt.show(block=False)
 
     if plot_treatment_efficiency:
         # Calculate % of population at max - treatment_slack treatment over time
