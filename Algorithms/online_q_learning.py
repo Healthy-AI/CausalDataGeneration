@@ -63,13 +63,14 @@ class OnlineQLearner:
             self.epsilon = max(self.min_epsilon, self.epsilon - self.max_epsilon/self.learning_time)
             if k % 1000 == 0:
                 print("Episode {}".format(k))
+        np.save("oql-table", self.q_table)
         return self.q_table
 
     def observe(self, state, action):
         next_state = np.array((state[0], state[1].copy()))
         if action == self.stop_action:
             if self.constraint.no_better_treatment_exist(state[1], state[0]):
-                reward = 0
+                reward = np.max(state[1])
             else:
                 reward = -np.inf
         elif not state[1][action] == -1:

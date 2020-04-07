@@ -24,6 +24,7 @@ class ConstrainedDynamicProgramming(QLearner):
                 for action in range(self.n_a+1):
                     if not self.q_table_done[self.to_index([x, history, action])]:
                         self.populate_q_value(history, action, x)
+        np.save("cdp-table", self.q_table)
 
     def populate_q_value(self, history, action, x):
         index = self.to_index([x, history]) + (action,)

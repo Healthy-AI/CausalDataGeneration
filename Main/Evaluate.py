@@ -13,17 +13,17 @@ from Algorithms.betterTreatmentConstraint import Constraint
 
 if __name__ == '__main__':
     # Training values
-    seed = 900413
-    n_z = 3
-    n_x = 2
+    seed = None
+    n_z = 2
+    n_x = 3
     n_a = 5
     n_y = 3
-    training_episodes = 750000
+    training_episodes = 200000
     n_training_samples = 20000
     n_test_samples = 2000
-    delta = 0.15
+    delta = 0.1
     epsilon = 0
-    reward = -0.25
+    prior_power = 1.96
 
     # Plot values
     treatment_slack = 0     # Eg, how close to max must we be to be considered "good enough"
@@ -33,7 +33,7 @@ if __name__ == '__main__':
 
     # Generate the data
     #dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
+    dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=n_z/n_x)
     #dist = NewDistribution(seed=seed)
     dist.print_moderator_statistics()
     dist.print_covariate_statistics()
@@ -83,13 +83,13 @@ if __name__ == '__main__':
     test_data = datasets['test']['data']
     print("Initializing Constraint")
     start = time.time()
-    constraint = Constraint(split_training_data, n_a, n_y, delta=delta, epsilon=epsilon)
+    constraint = Constraint(split_training_data, n_a, n_y, delta=delta, epsilon=epsilon, prior_power=prior_power)
     print("Initializing the constraint took {:.3f} seconds".format(time.time()-start))
     print("Initializing algorithms")
     algorithms = [
         #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
         GreedyShuffled2(n_x, n_a, n_y, split_training_data, constraint),
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraint),
+        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraint, prior_power=prior_power),
         #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         OnlineQLearner(n_x, n_a, n_y, dist, constraint, learning_time=training_episodes),

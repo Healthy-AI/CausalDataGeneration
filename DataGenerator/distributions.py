@@ -34,7 +34,7 @@ class DiscreteDistribution(Distribution):
         self.n_x = n_x
         self.n_a = n_a
         self.steps_y = steps_y
-        self.x_weight = outcome_sensitivity_x_z*self.n_z/self.n_x
+        self.x_weight = outcome_sensitivity_x_z
 
         self.Pz = np.array(self.random.random(self.n_z))
         self.Px = np.array(self.random.random((self.n_x, self.n_z)))

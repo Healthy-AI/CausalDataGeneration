@@ -3,13 +3,13 @@ from Algorithms.help_functions import *
 import random
 
 class Constraint:
-    def __init__(self, data, n_actions, steps_y, prior_weight=2, z_value=1.96, delta=0, epsilon=0):
+    def __init__(self, data, n_actions, steps_y, prior_power=2, optimisim=1.96, delta=0, epsilon=0):
         self.data = data
         self.n_actions = n_actions
         self.histories_to_compare = self.history_to_compare_dict(self.data['h'], self.data['x'])
         self.better_treatment_constraint_dict = {}
-        self.accuracy = prior_weight
-        self.optimism = z_value
+        self.accuracy = prior_power
+        self.optimism = optimisim
         self.delta = delta
         self.epsilon = epsilon
         self.max_possible_outcome = steps_y - 1
