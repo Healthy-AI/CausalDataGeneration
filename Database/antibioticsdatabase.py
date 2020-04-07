@@ -9,14 +9,14 @@ class AntibioticsDatabase():
 
         self.antibiotic_to_treatment_dict = {}
         self.antibiotic_counter = 0
-        self.n_x = 1
+        self.n_x = 3
         self.x_counter = 0
         self.organism_to_x_dict = {}
         self.n_training_samples = None
         self.antibiotics_training_data = None
         self.antibiotics_test_data = None
         self.name = 'Antibiotics'
-        self.antibiotic_limit = 6
+        self.antibiotic_limit = 8
         self.n_a = None
         self.n_y = 3
 
@@ -49,7 +49,7 @@ class AntibioticsDatabase():
             for organism, history in data.items():
                 x = self.organism_to_x_dict[organism]
                 antibiotics_data['z'].append(-1)
-                antibiotics_data['x'].append([x])  # TODO: fix to use for more than 2 x
+                antibiotics_data['x'].append(x)
                 antibiotics_data['h'].append(history)
 
         self.n_a = self.get_n_a()
@@ -57,6 +57,7 @@ class AntibioticsDatabase():
         self.n_training_samples = len(patients)
         print("{} patients".format(self.n_training_samples))
         self.antibiotics_training_data = antibiotics_data
+        print("Organisms: {}".format(self.organism_to_x_dict.keys()))
         return antibiotics_data
 
     def interpretation_to_outcome(self, interpretation):
@@ -80,8 +81,9 @@ class AntibioticsDatabase():
         if organism in self.organism_to_x_dict:
             return False
         else:
-            if self.x_counter < self.n_x:
-                self.organism_to_x_dict[organism] = self.x_counter
+            if self.x_counter < 2**self.n_x:
+                conversion = '{}0:0{}b{}'.format('{', str(self.n_x), '}')
+                self.organism_to_x_dict[organism] = np.array([int(s) for s in list((conversion.format(self.x_counter)))])  # Convert to list of binary
                 self.x_counter += 1
                 return False
             else:
@@ -102,7 +104,7 @@ class AntibioticsDatabase():
             x = xs[i]
             subject = []
             subject.append(z)
-            subject.append(x)  # TODO: same as above, only binary x now
+            subject.append(x)
             subject.append(np.ones(self.n_a)*-1)
 
             for intervention in history:
