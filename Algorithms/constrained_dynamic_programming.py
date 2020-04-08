@@ -5,7 +5,7 @@ import random
 
 
 class ConstrainedDynamicProgramming(QLearner):
-    def __init__(self, n_x, n_a, n_y, data, constraint, prior_power=2):
+    def __init__(self, n_x, n_a, n_y, data, constraint, prior_power=2, max_steps=None, min_outcome=None):
         self.better_treatment_constraint = constraint.no_better_treatment_exist
         super().__init__(n_x, n_a, n_y, data)
         self.statistics = self.get_patient_statistics()
@@ -16,6 +16,9 @@ class ConstrainedDynamicProgramming(QLearner):
         self.name = 'Constrained Dynamic Programming'
         self.label = 'CDP'
 
+        self.max_steps = max_steps
+        self.min_outcome = min_outcome
+
     def learn(self):
         possible_x = list(itertools.product(range(0, 2), repeat=self.n_x))
         possible_histories = list(itertools.product(range(-1, self.n_y), repeat=self.n_a))
@@ -24,11 +27,19 @@ class ConstrainedDynamicProgramming(QLearner):
                 for action in range(self.n_a+1):
                     if not self.q_table_done[self.to_index([x, history, action])]:
                         self.populate_q_value(history, action, x)
-        np.save("cdp-table", self.q_table)
 
     def populate_q_value(self, history, action, x):
         index = self.to_index([x, history]) + (action,)
         future_reward = 0
+        if self.max_steps is not None:
+            if len(np.argwhere(history != -1)) >= self.max_steps:
+                if action == self.stop_action:
+                    reward = np.max(history)
+                else:
+                    reward = -np.inf
+                self.q_table[index] = reward + future_reward
+                self.q_table_done[index] = True
+                return
         # if action is stop action, calculate the reward
         if action == self.stop_action:
             reward = self.get_reward(self.stop_action, history, x)
@@ -88,6 +99,15 @@ class ConstrainedDynamicProgramming(QLearner):
         return patient_statistics
 
     def get_reward(self, action, history, x):
+        if self.min_outcome is not None:
+            if action == self.stop_action:
+                if np.max(history) >= self.min_outcome:
+                    return 0
+                else:
+                    return -np.inf
+            else:
+                return -1
+
         gamma = self.better_treatment_constraint(history, x)
         if action == self.stop_action and gamma == 0:
             return -np.infty

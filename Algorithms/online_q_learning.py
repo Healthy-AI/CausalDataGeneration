@@ -63,7 +63,6 @@ class OnlineQLearner:
             self.epsilon = max(self.min_epsilon, self.epsilon - self.max_epsilon/self.learning_time)
             if k % 1000 == 0:
                 print("Episode {}".format(k))
-        np.save("oql-table", self.q_table)
         return self.q_table
 
     def observe(self, state, action):
