@@ -10,6 +10,7 @@ import random
 from pathlib import Path
 from Algorithms.online_q_learning import OnlineQLearner
 from Algorithms.betterTreatmentConstraint import Constraint
+from Algorithms.function_approximation import FunctionApproximation
 from Database.antibioticsdatabase import AntibioticsDatabase
 
 if __name__ == '__main__':
@@ -22,7 +23,7 @@ if __name__ == '__main__':
     training_episodes = 750000
     n_training_samples = 2000
     n_test_samples = 2000
-    delta = 0.15
+    delta = 0.0
     epsilon = 0
     reward = -0.25
     # for grid search
@@ -37,17 +38,17 @@ if __name__ == '__main__':
     plot_treatment_efficiency = False
     plot_search_time = True
     plot_strictly_better = False
-    plot_delta_grid_search = True
+    plot_delta_grid_search = False
     plotbools = [plot_mean_treatment_effect, plot_treatment_efficiency, plot_search_time, plot_strictly_better]
     main_start = time.time()
 
     # Generate the data
     #dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    dist.print_moderator_statistics()
-    dist.print_covariate_statistics()
-    dist.print_treatment_statistics()
-    #dist = AntibioticsDatabase()
+    #dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
+    #dist.print_moderator_statistics()
+    #dist.print_covariate_statistics()
+    #dist.print_treatment_statistics()
+    dist = AntibioticsDatabase()
     '''
     dist = NewDistribution(seed=seed)
     n_x = 1
@@ -92,7 +93,7 @@ if __name__ == '__main__':
                 if seed is not None:
                     dd.io.save(filepath, data)
     else:
-        datasets = {'training': {'data': dist.get_data()}, 'test': {'data':dist.get_test_data(n_test_samples)}}
+        datasets = {'training': {'data': dist.get_data()}, 'test': {'data': dist.get_test_data(n_test_samples)}}
 
         n_x = dist.n_x
         n_a = dist.n_a
@@ -100,6 +101,10 @@ if __name__ == '__main__':
 
     split_training_data = split_patients(datasets['training']['data'])
     test_data = datasets['test']['data']
+    print("Initializing function approximation")
+    start = time.time()
+    function_approximation = FunctionApproximation(split_training_data, n_x, n_a, n_y)
+    print("Initializing function approximation took {:.3f} seconds".format(time.time()-start))
     print("Initializing Constraint")
     start = time.time()
     constraint = Constraint(split_training_data, n_a, n_y, delta=delta, epsilon=epsilon)
@@ -108,7 +113,8 @@ if __name__ == '__main__':
     algorithms = [
         #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
         GreedyShuffled2(n_x, n_a, n_y, split_training_data, constraint),
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraint),
+        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraint,
+                                      function_approximator=function_approximation),
         #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #OnlineQLearner(n_x, n_a, n_y, dist, constraint, learning_time=training_episodes),

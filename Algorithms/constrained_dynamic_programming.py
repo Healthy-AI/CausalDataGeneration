@@ -5,7 +5,7 @@ import random
 
 
 class ConstrainedDynamicProgramming(QLearner):
-    def __init__(self, n_x, n_a, n_y, data, constraint, prior_power=2):
+    def __init__(self, n_x, n_a, n_y, data, constraint, prior_power=2, function_approximator=None):
         self.constraint = constraint
         super().__init__(n_x, n_a, n_y, data)
         self.statistics = self.get_patient_statistics()
@@ -16,6 +16,9 @@ class ConstrainedDynamicProgramming(QLearner):
         self.q_table_done = self.q_table.copy().astype(bool)
         self.name = 'Constrained Dynamic Programming'
         self.label = 'CDP'
+        self.f_a = function_approximator
+        self.probability_of_outcome_prepare = self.f_a.prepare_single_feature_vector
+        self.calc_prob_of_outcome = self.f_a.calc
 
     def learn(self):
         self.reset()
@@ -43,10 +46,13 @@ class ConstrainedDynamicProgramming(QLearner):
             num_prior_samples = np.sum(prior_samples, axis=None)
             reward = self.get_reward(action, history, x)
             number_of_samples = np.sum(self.statistics[index], axis=None)
+            probability_of_outcome_approximation = self.probability_of_outcome_prepare(x, history, action)
             for outcome in range(self.n_y):
                 stats_index = index + tuple([outcome])
                 prior = prior_samples[outcome] / (num_prior_samples + (prior_samples[outcome] == 0))
-                probability_of_outcome = (self.statistics[stats_index] + prior * self.prior_power**2) / (number_of_samples + self.prior_power**2)
+                #probability_of_outcome = (self.statistics[stats_index] + prior * self.prior_power**2) / (number_of_samples + self.prior_power**2)
+                probability_of_outcome = self.calc_prob_of_outcome(probability_of_outcome_approximation, outcome)
+                #print(probability_of_outcome_stats, probability_of_outcome)
                 if probability_of_outcome > 0:
                     future_history = list(history)
                     future_history[action] = outcome
