@@ -9,14 +9,14 @@ class AntibioticsDatabase:
 
         self.antibiotic_to_treatment_dict = {}
         self.antibiotic_counter = 0
-        self.n_x = 1
+        self.n_x = 3
         self.x_counter = 0
         self.organism_to_x_dict = {}
         self.n_training_samples = None
         self.antibiotics_training_data = None
         self.antibiotics_test_data = None
         self.name = 'Antibiotics'
-        self.antibiotic_limit = 5
+        self.antibiotic_limit = 7
         self.n_a = None
         self.n_y = 3
 
@@ -31,6 +31,7 @@ class AntibioticsDatabase:
         cur.execute('SELECT subject_id, org_name, ab_name, interpretation FROM microbiologyevents WHERE ab_name IS NOT NULL;')
         data = cur.fetchall()
         patients = {}
+        random.shuffle(data)
         for chartevent in data:
             subject_id = chartevent[0]
             organism = chartevent[1]
@@ -92,9 +93,9 @@ class AntibioticsDatabase:
     def get_test_data(self, nr_test_samples=0):
         xs = self.antibiotics_training_data['x']
         histories = self.antibiotics_training_data['h']
-        #patients = list(zip(xs, histories))
-        #random.shuffle(patients)
-        #xs, histories = zip(*patients)
+        patients = list(zip(xs, histories))
+        random.shuffle(patients)
+        xs, histories = zip(*patients)
         xs = xs[:nr_test_samples]
         histories = histories[:nr_test_samples]
 

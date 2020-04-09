@@ -1,7 +1,5 @@
 from Algorithms.probability_approximator import ProbabilityApproximator
 import numpy as np
-from sklearn.linear_model import LogisticRegression
-from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
 from  Algorithms.help_functions import *
 
@@ -9,7 +7,6 @@ from  Algorithms.help_functions import *
 class FunctionApproximation(ProbabilityApproximator):
     def __init__(self, n_x, n_a, n_y, data):
         super().__init__(n_x, n_a, n_y, data)
-        #self.model = SVC(C=1, kernel='poly', degree=7, probability=True)
         self.model = RandomForestClassifier(n_jobs=-1)
         self.name = 'Random forest approximator'
         self.xs = data['x']
@@ -92,3 +89,8 @@ class FunctionApproximation(ProbabilityApproximator):
         x, history = state
         probability_of_outcome_approximation = self.prepare_calculation(x, history)
         return super(FunctionApproximation, self).calculate_probability_greedy(probability_of_outcome_approximation, best_outcome)
+
+    def calculate_probability_constraint(self, x, outcomes_state, accuracy=None):
+        probability_of_outcome_approximation = self.prepare_calculation(x, outcomes_state)
+        max_outcome = max(outcomes_state)
+        return super(FunctionApproximation, self).calculate_probability_greedy(probability_of_outcome_approximation, max_outcome)

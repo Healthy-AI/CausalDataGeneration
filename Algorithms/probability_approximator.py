@@ -27,3 +27,7 @@ class ProbabilityApproximator:
             ev_vec += prob_matrix[:, i] * i
         ev_vec = np.divide(ev_vec, tot)
         return ev_vec
+
+    def calculate_probability_constraint(self, x, outcomes_state, accuracy):
+        pass
+

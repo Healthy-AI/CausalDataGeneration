@@ -1,5 +1,5 @@
 from Algorithms.q_learning import *
-from Algorithms.betterTreatmentConstraint import *
+from Algorithms.better_treatment_constraint import *
 from Algorithms.help_functions import *
 import random
 

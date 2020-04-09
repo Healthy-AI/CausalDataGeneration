@@ -9,7 +9,7 @@ import deepdish as dd
 import random
 from pathlib import Path
 from Algorithms.online_q_learning import OnlineQLearner
-from Algorithms.betterTreatmentConstraint import Constraint
+from Algorithms.better_treatment_constraint import Constraint
 from Algorithms.function_approximation import FunctionApproximation
 from Algorithms.statistical_approximator import StatisticalApproximator
 from Database.antibioticsdatabase import AntibioticsDatabase
@@ -46,11 +46,11 @@ if __name__ == '__main__':
 
     # Generate the data
     #dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    dist.print_moderator_statistics()
-    dist.print_covariate_statistics()
-    dist.print_treatment_statistics()
-    #dist = AntibioticsDatabase()
+    #dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
+    #dist.print_moderator_statistics()
+    #dist.print_covariate_statistics()
+    #dist.print_treatment_statistics()
+    dist = AntibioticsDatabase()
     '''
     dist = NewDistribution(seed=seed)
     n_x = 1
@@ -105,22 +105,22 @@ if __name__ == '__main__':
     test_data = datasets['test']['data']
     print("Initializing function approximator")
     start = time.time()
-    #function_approximation = FunctionApproximation(n_x, n_a, n_y, split_training_data)
-    #print("Initializing {} took {:.3f} seconds".format(function_approximation.name, time.time()-start))
-    #print("Initializing statistical approximator")
+    function_approximation = FunctionApproximation(n_x, n_a, n_y, split_training_data)
+    print("Initializing {} took {:.3f} seconds".format(function_approximation.name, time.time()-start))
+    print("Initializing statistical approximator")
     start = time.time()
     statistical_approximation = StatisticalApproximator(n_x, n_a, n_y, split_training_data)
     print("Initializing {} took {:.3f} seconds".format(statistical_approximation.name, time.time() - start))
 
     print("Initializing Constraint")
     start = time.time()
-    constraint = Constraint(split_training_data, n_a, n_y, delta=delta, epsilon=epsilon)
+    constraint = Constraint(split_training_data, n_a, n_y, approximator=function_approximation, delta=delta, epsilon=epsilon)
     print("Initializing the constraint took {:.3f} seconds".format(time.time()-start))
     print("Initializing algorithms")
     algorithms = [
         #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
-        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraint, statistical_approximation),
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraint, statistical_approximation),
+        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraint, function_approximation),
+        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraint, function_approximation),
         #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #OnlineQLearner(n_x, n_a, n_y, dist, constraint, learning_time=training_episodes),
