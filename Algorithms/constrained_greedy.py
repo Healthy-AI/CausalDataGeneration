@@ -3,8 +3,8 @@ from Algorithms.betterTreatmentConstraint import Constraint
 from Algorithms.help_functions import *
 
 
-class GreedyShuffled2:
-    def __init__(self, n_x, n_a, n_y, data, constraint):
+class ConstrainedGreedy:
+    def __init__(self, n_x, n_a, n_y, data, constraint, statistical_approximator):
         self.n_x = n_x
         self.n_a = n_a
         self.n_y = n_y
@@ -13,27 +13,10 @@ class GreedyShuffled2:
         self.name = 'Constrained Greedy'
         self.label = 'CG'
         self.constraint = constraint
+        self.approximator = statistical_approximator
 
     def learn(self):
-        histories = self.data['h']
-        covariates = self.data['x']
-
-        patient_statistics = np.zeros(((2,) * self.n_x + (self.n_y + 1,) * self.n_a + (self.n_a,) + (self.n_y,)), dtype=int)
-        for i in range(len(covariates)):
-            history = histories[i]
-            covariate = covariates[i]
-            treatment, outcome = history[-1]
-            history = history[:-1]
-            index = np.hstack((covariate, np.ones(self.n_a, dtype=int) * -1))
-            new = np.zeros((self.n_a, self.n_y), dtype=int)
-            for h in history:
-                index[h[0] + self.n_x] = h[1]
-            new[treatment, outcome] = 1
-            ind = tuple(index)
-            patient_statistics[ind] += new
-        self.probabilities = patient_statistics
-
-        return patient_statistics
+        self.probabilities = self.approximator.statistics
 
     def evaluate(self, patient):
         best_outcome = 0
@@ -57,9 +40,7 @@ class GreedyShuffled2:
             for i, hs in enumerate(hstate):
                 if hs != -1:
                     ev_vec[i] = -np.inf
-            mask_unknown_actions = y_fac.copy().astype(float)
-            mask_unknown_actions[mask_unknown_actions != -1] = 0
-            mask_unknown_actions[mask_unknown_actions == -1] = -np.inf
+            mask_unknown_actions = get_mask(y_fac)
             decision_probabilities = ev_vec+mask_unknown_actions
             new_treatment = np.argmax(decision_probabilities)
             if np.max(decision_probabilities) == -np.inf:
@@ -76,3 +57,10 @@ class GreedyShuffled2:
 
     def set_constraint(self, constraint):
         self.constraint = constraint
+
+
+def get_mask(y_fac):
+    mask_unknown_actions = y_fac.copy().astype(float)
+    mask_unknown_actions[mask_unknown_actions != -1] = 0
+    mask_unknown_actions[mask_unknown_actions == -1] = -np.inf
+    return mask_unknown_actions

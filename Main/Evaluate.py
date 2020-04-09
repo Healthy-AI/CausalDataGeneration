@@ -1,7 +1,7 @@
 from Algorithms.q_learning import QLearner
 from Algorithms.q_learning_with_constraint import QLearnerConstrained
 from Algorithms.greedyShuffledHistory import GreedyShuffled
-from Algorithms.greedyShuffledHistoryV2 import GreedyShuffled2
+from Algorithms.constrained_greedy import ConstrainedGreedy
 from Algorithms.constrained_dynamic_programming import ConstrainedDynamicProgramming
 from DataGenerator.data_generator import *
 import time
@@ -104,12 +104,12 @@ if __name__ == '__main__':
     test_data = datasets['test']['data']
     print("Initializing function approximator")
     start = time.time()
-    #function_approximation = FunctionApproximation(n_x, n_a, n_y, split_training_data)
-    #print("Initializing {} approximation took {:.3f} seconds".format(function_approximation.name, time.time()-start))
+    function_approximation = FunctionApproximation(n_x, n_a, n_y, split_training_data)
+    print("Initializing {} took {:.3f} seconds".format(function_approximation.name, time.time()-start))
     print("Initializing statistical approximator")
     start = time.time()
     statistical_approximation = StatisticalApproximator(n_x, n_a, n_y, split_training_data)
-    print("Initializing {} approximation took {:.3f} seconds".format(statistical_approximation.name, time.time() - start))
+    print("Initializing {} took {:.3f} seconds".format(statistical_approximation.name, time.time() - start))
 
     print("Initializing Constraint")
     start = time.time()
@@ -118,8 +118,8 @@ if __name__ == '__main__':
     print("Initializing algorithms")
     algorithms = [
         #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
-        GreedyShuffled2(n_x, n_a, n_y, split_training_data, constraint),
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraint, statistical_approximation),
+        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraint, statistical_approximation),
+        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraint, function_approximation),
         #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #OnlineQLearner(n_x, n_a, n_y, dist, constraint, learning_time=training_episodes),
@@ -181,20 +181,6 @@ if __name__ == '__main__':
         mean_treatment_effects /= n_test_samples
         mean_num_tests /= n_test_samples
 
-
-        '''
-        # Mean treatment effect test
-        mean_te = np.zeros(n_algorithms)
-        for i_alg, alg in enumerate(algorithms):
-            for i_sample in range(n_test_samples):
-                treatments = evaluations[alg.name][i_sample]
-                best_outcome = max([intervention[1] for intervention in treatments])
-                mean_te[i_alg] += best_outcome
-        mean_te /= n_test_samples
-    
-        for i_alg, alg in enumerate(algorithms):
-            print(alg.name, 'has mean treatment effect', mean_te[i_alg])
-        '''
         if plot_mean_treatment_effect:
             # Plot mean treatment effect over population
             x = np.arange(0, n_a+1)

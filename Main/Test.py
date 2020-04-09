@@ -2,7 +2,7 @@ from Algorithms.constrained_dynamic_programming import ConstrainedDynamicProgram
 from Algorithms.greedyShuffledHistory import GreedyShuffled
 from DataGenerator.data_generator import *
 from Algorithms.q_learning import QLearner
-from Algorithms.greedyShuffledHistoryV2 import GreedyShuffled2
+from Algorithms.constrained_greedy import ConstrainedGreedy
 import sys
 
 seed = 12345
