@@ -1,7 +1,7 @@
 from Algorithms.probability_approximator import ProbabilityApproximator
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
-from  Algorithms.help_functions import *
+from Algorithms.help_functions import *
 
 
 class FunctionApproximation(ProbabilityApproximator):
@@ -22,7 +22,6 @@ class FunctionApproximation(ProbabilityApproximator):
             inp, outp = self.get_features(x, h)
             input_data[i] = inp
             output_data[i] = outp
-
         self.model.fit(input_data, output_data)
 
     def get_features(self, x, history):

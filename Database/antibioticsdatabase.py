@@ -5,18 +5,18 @@ import random
 
 
 class AntibioticsDatabase:
-    def __init__(self):
-
+    def __init__(self, seed=None):
+        random.seed(seed)
         self.antibiotic_to_treatment_dict = {}
         self.antibiotic_counter = 0
-        self.n_x = 3
+        self.n_x = 2
         self.x_counter = 0
         self.organism_to_x_dict = {}
         self.n_training_samples = None
         self.antibiotics_training_data = None
         self.antibiotics_test_data = None
         self.name = 'Antibiotics'
-        self.antibiotic_limit = 7
+        self.antibiotic_limit = 6
         self.n_a = None
         self.n_y = 3
 
@@ -36,8 +36,8 @@ class AntibioticsDatabase:
             subject_id = chartevent[0]
             organism = chartevent[1]
             treatment = self.antibiotic_to_treatment(chartevent[2])
-            if not self.too_many_x(organism) and treatment < self.antibiotic_limit:
-                outcome = self.interpretation_to_outcome(chartevent[3])
+            outcome = interpretation_to_outcome(chartevent[3])
+            if not self.too_many_x(organism) and treatment < self.antibiotic_limit and outcome is not None:
                 intervention = np.array([treatment, outcome])
                 try:
                     if treatment not in [intervention[0] for intervention in patients[subject_id][organism]]:
@@ -61,13 +61,7 @@ class AntibioticsDatabase:
         print("Organisms: {}".format(self.organism_to_x_dict.keys()))
         return antibiotics_data
 
-    def interpretation_to_outcome(self, interpretation):
-        if interpretation == 'S':
-            return 2
-        elif interpretation == 'I':
-            return 1
-        elif interpretation == 'R':
-            return 0
+
 
     def antibiotic_to_treatment(self, antibiotic):
         if antibiotic in self.antibiotic_to_treatment_dict:
@@ -93,9 +87,7 @@ class AntibioticsDatabase:
     def get_test_data(self, nr_test_samples=0):
         xs = self.antibiotics_training_data['x']
         histories = self.antibiotics_training_data['h']
-        patients = list(zip(xs, histories))
-        random.shuffle(patients)
-        xs, histories = zip(*patients)
+        xs, histories = shuffle_histories(xs, histories)
         xs = xs[:nr_test_samples]
         histories = histories[:nr_test_samples]
 
@@ -103,10 +95,7 @@ class AntibioticsDatabase:
         for i, history in enumerate(histories):
             z = -1
             x = xs[i]
-            subject = []
-            subject.append(z)
-            subject.append(x)
-            subject.append(np.ones(self.n_a)*-1)
+            subject = [z, x, np.ones(self.n_a)*-1]
 
             for intervention in history:
                 treatment, outcome = intervention
@@ -115,5 +104,22 @@ class AntibioticsDatabase:
         self.antibiotics_test_data = np.array(data)
         return self.antibiotics_test_data
 
+
+def interpretation_to_outcome(interpretation):
+    if interpretation == 'S':
+        return 2
+    elif interpretation == 'I':
+        return 1
+    elif interpretation == 'R':
+        return 0
+    elif interpretation == 'P':
+        return None
+
+
+def shuffle_histories(xs, histories):
+    patients = list(zip(xs, histories))
+    random.shuffle(patients)
+    xs, histories = zip(*patients)
+    return xs, histories
 
 
