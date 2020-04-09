@@ -5,11 +5,9 @@ import random
 
 
 class ConstrainedDynamicProgramming(QLearner):
-    def __init__(self, n_x, n_a, n_y, data, constraint, prior_power=2, function_approximator=None):
+    def __init__(self, n_x, n_a, n_y, data, constraint, function_approximator):
         self.constraint = constraint
         super().__init__(n_x, n_a, n_y, data)
-        self.statistics = self.get_patient_statistics()
-        self.prior_power = prior_power
         # Q-table indexed with x, y_0, y_1, y_2, y_3 and a
         self.table_size = (2,) * self.n_x + (self.n_y + 1,) * self.n_a + (self.n_a + 1,)
         self.q_table = np.zeros(self.table_size)
@@ -17,8 +15,8 @@ class ConstrainedDynamicProgramming(QLearner):
         self.name = 'Constrained Dynamic Programming'
         self.label = 'CDP'
         self.f_a = function_approximator
-        self.probability_of_outcome_prepare = self.f_a.prepare_single_feature_vector
-        self.calc_prob_of_outcome = self.f_a.calc
+        self.probability_of_outcome_prepare = self.f_a.prepare_calculation
+        self.calc_prob_of_outcome = self.f_a.calculate_probability
 
     def learn(self):
         self.reset()
@@ -41,16 +39,10 @@ class ConstrainedDynamicProgramming(QLearner):
             reward = -np.inf
         # else, calculate the sum of the reward for each outcome times its probability
         else:
-            p_index = self.to_index([x, [-1]*self.n_a]) + (action,)
-            prior_samples = self.statistics[p_index]
-            num_prior_samples = np.sum(prior_samples, axis=None)
             reward = self.get_reward(action, history, x)
-            number_of_samples = np.sum(self.statistics[index], axis=None)
             probability_of_outcome_approximation = self.probability_of_outcome_prepare(x, history, action)
+
             for outcome in range(self.n_y):
-                stats_index = index + tuple([outcome])
-                prior = prior_samples[outcome] / (num_prior_samples + (prior_samples[outcome] == 0))
-                #probability_of_outcome = (self.statistics[stats_index] + prior * self.prior_power**2) / (number_of_samples + self.prior_power**2)
                 probability_of_outcome = self.calc_prob_of_outcome(probability_of_outcome_approximation, outcome)
                 #print(probability_of_outcome_stats, probability_of_outcome)
                 if probability_of_outcome > 0:
@@ -66,25 +58,6 @@ class ConstrainedDynamicProgramming(QLearner):
                 future_reward = np.add(future_reward, np.multiply(probability_of_outcome, max_future_q))
         self.q_table[index] = reward + future_reward
         self.q_table_done[index] = True
-
-    def get_patient_statistics(self):
-        histories = self.data['h']
-        x_s = self.data['x']
-
-        patient_statistics = np.zeros((2,) * self.n_x + (self.n_y+1,) * self.n_a + (self.n_a,) + (self.n_y,), dtype=int)
-        for i, history in enumerate(histories):
-            x = x_s[i]
-            treatment, outcome = history[-1]
-            chopped_history = history[:-1]
-            index = np.ones(self.n_a, dtype=int) * -1
-            new = np.zeros((self.n_a, self.n_y), dtype=int)
-            for h in chopped_history:
-                index[h[0]] = h[1]
-            new[treatment, outcome] = 1
-            ind = tuple(x) + tuple(index)
-            patient_statistics[ind] += new
-
-        return patient_statistics
 
     def get_reward(self, action, history, x):
         gamma = self.constraint.no_better_treatment_exist(history, x)

@@ -5,15 +5,12 @@ from sklearn.svm import SVC
 
 
 class FunctionApproximation(ProbabilityApproximator):
-    def __init__(self, training_data, n_x, n_a, n_y):
-        super().__init__()
-        self.n_x = n_x
-        self.n_a = n_a
-        self.n_y = n_y
-        #self.model = LogisticRegression(max_iter=1000)
+    def __init__(self, n_x, n_a, n_y, data):
+        super().__init__(n_x, n_a, n_y, data)
         self.model = SVC(probability=True)
-        self.xs = training_data['x']
-        self.histories = training_data['h']
+        self.name = 'SVM approximator'
+        self.xs = data['x']
+        self.histories = data['h']
         self.n_samples = len(self.xs)
         self.n_features = n_x + n_a + n_a + 1
         input_data = np.zeros((self.n_samples, self.n_features))

@@ -11,6 +11,7 @@ from pathlib import Path
 from Algorithms.online_q_learning import OnlineQLearner
 from Algorithms.betterTreatmentConstraint import Constraint
 from Algorithms.function_approximation import FunctionApproximation
+from Algorithms.statistical_approximator import StatisticalApproximator
 from Database.antibioticsdatabase import AntibioticsDatabase
 
 if __name__ == '__main__':
@@ -101,10 +102,15 @@ if __name__ == '__main__':
 
     split_training_data = split_patients(datasets['training']['data'])
     test_data = datasets['test']['data']
-    print("Initializing function approximation")
+    print("Initializing function approximator")
     start = time.time()
-    function_approximation = FunctionApproximation(split_training_data, n_x, n_a, n_y)
-    print("Initializing function approximation took {:.3f} seconds".format(time.time()-start))
+    #function_approximation = FunctionApproximation(n_x, n_a, n_y, split_training_data)
+    #print("Initializing {} approximation took {:.3f} seconds".format(function_approximation.name, time.time()-start))
+    print("Initializing statistical approximator")
+    start = time.time()
+    statistical_approximation = StatisticalApproximator(n_x, n_a, n_y, split_training_data)
+    print("Initializing {} approximation took {:.3f} seconds".format(statistical_approximation.name, time.time() - start))
+
     print("Initializing Constraint")
     start = time.time()
     constraint = Constraint(split_training_data, n_a, n_y, delta=delta, epsilon=epsilon)
@@ -113,8 +119,7 @@ if __name__ == '__main__':
     algorithms = [
         #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
         GreedyShuffled2(n_x, n_a, n_y, split_training_data, constraint),
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraint,
-                                      function_approximator=function_approximation),
+        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraint, statistical_approximation),
         #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #OnlineQLearner(n_x, n_a, n_y, dist, constraint, learning_time=training_episodes),
