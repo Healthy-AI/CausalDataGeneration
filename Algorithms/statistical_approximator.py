@@ -42,3 +42,7 @@ class StatisticalApproximator(ProbabilityApproximator):
             patient_statistics[ind] += new
 
         return patient_statistics
+
+    def calculate_probability_greedy(self, state, best_outcome):
+        prob_matrix = self.statistics[tuple(np.hstack(state))]
+        return super(StatisticalApproximator, self).calculate_probability_greedy(prob_matrix, best_outcome)
