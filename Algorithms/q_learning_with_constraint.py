@@ -5,7 +5,7 @@ from Algorithms.help_functions import *
 
 
 class QLearnerConstrained:
-    def __init__(self, n_x, n_a, n_y, data, constraint, reward=-1, learning_time=10000, learning_rate=0.01, discount_factor=1):
+    def __init__(self, n_x, n_a, n_y, data, constraint, reward=-1, learning_time=10000, learning_rate=0.01, greedy=0, discount_factor=1):
         self.n_x = n_x
         self.n_y = n_y
         self.n_a = n_a
@@ -22,6 +22,7 @@ class QLearnerConstrained:
         self.statistics = None
         self.sars_data = self.convert_to_sars()
         self.constraint = constraint
+        self.greedy = greedy
 
     def to_index(self, state):
         return tuple(np.hstack(state))

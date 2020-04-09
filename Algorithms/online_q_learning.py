@@ -22,7 +22,7 @@ class OnlineQLearner:
         # Online stuff
         self.epsilon = 0.99
         self.max_epsilon = self.epsilon
-        self.min_epsilon = 0.03
+        self.min_epsilon = 0.02
         self.current_patient = {'z': None, 'x': None, 'h': []}
 
 
@@ -60,7 +60,7 @@ class OnlineQLearner:
                                                              - t1[self.to_index(state) + (action,)])
                     state = next_state
 
-            self.epsilon = max(self.min_epsilon, self.epsilon - self.max_epsilon/self.learning_time)
+            self.epsilon = self.min_epsilon + (1-self.min_epsilon) * (k - self.learning_time)**2 / self.learning_time**2
             if k % 1000 == 0:
                 print("Episode {}".format(k))
         return self.q_table

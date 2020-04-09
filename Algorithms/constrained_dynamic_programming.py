@@ -5,7 +5,7 @@ import random
 
 
 class ConstrainedDynamicProgramming(QLearner):
-    def __init__(self, n_x, n_a, n_y, data, constraint, prior_power=2, max_steps=None, min_outcome=None):
+    def __init__(self, n_x, n_a, n_y, data, constraint, prior_power=2, greedy=0, max_steps=None, min_outcome=None):
         self.better_treatment_constraint = constraint.no_better_treatment_exist
         super().__init__(n_x, n_a, n_y, data)
         self.statistics = self.get_patient_statistics()
@@ -16,6 +16,7 @@ class ConstrainedDynamicProgramming(QLearner):
         self.name = 'Constrained Dynamic Programming'
         self.label = 'CDP'
 
+        self.greedy = greedy
         self.max_steps = max_steps
         self.min_outcome = min_outcome
 
@@ -32,7 +33,7 @@ class ConstrainedDynamicProgramming(QLearner):
         index = self.to_index([x, history]) + (action,)
         future_reward = 0
         if self.max_steps is not None:
-            if len(np.argwhere(history != -1)) >= self.max_steps:
+            if len(np.argwhere(np.array(history) != -1)) >= self.max_steps:
                 if action == self.stop_action:
                     reward = np.max(history)
                 else:
