@@ -4,7 +4,7 @@ from Algorithms.help_functions import *
 
 
 class ConstrainedGreedy:
-    def __init__(self, n_x, n_a, n_y, data, constraint, statistical_approximator):
+    def __init__(self, n_x, n_a, n_y, data, constraint, approximator):
         self.n_x = n_x
         self.n_a = n_a
         self.n_y = n_y
@@ -13,7 +13,7 @@ class ConstrainedGreedy:
         self.name = 'Constrained Greedy'
         self.label = 'CG'
         self.constraint = constraint
-        self.approximator = statistical_approximator
+        self.approximator = approximator
 
     def learn(self):
         self.probabilities = self.approximator.statistics

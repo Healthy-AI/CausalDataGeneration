@@ -2,13 +2,16 @@ from Algorithms.probability_approximator import ProbabilityApproximator
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
+
 
 
 class FunctionApproximation(ProbabilityApproximator):
     def __init__(self, n_x, n_a, n_y, data):
         super().__init__(n_x, n_a, n_y, data)
-        self.model = SVC(probability=True)
-        self.name = 'SVM approximator'
+        #self.model = SVC(C=1, kernel='poly', degree=7, probability=True)
+        self.model = RandomForestClassifier(n_jobs=-1)
+        self.name = 'Random forest approximator'
         self.xs = data['x']
         self.histories = data['h']
         self.n_samples = len(self.xs)
