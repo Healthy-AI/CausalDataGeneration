@@ -1,3 +1,4 @@
+from Algorithms.naive_greedy import NaiveGreedy
 from Algorithms.q_learning import QLearner
 from Algorithms.q_learning_with_constraint import QLearnerConstrained
 from Algorithms.greedyShuffledHistory import GreedyShuffled
@@ -16,15 +17,15 @@ from Database.antibioticsdatabase import AntibioticsDatabase
 
 if __name__ == '__main__':
     # Training values
-    seed = 8956  # Used for both synthetic and real data
+    seed = None  # Used for both synthetic and real data
     n_z = 2
     n_x = 1
     n_a = 5
     n_y = 3
     training_episodes = 750000
-    n_training_samples = 10000
+    n_training_samples = 30000
     n_test_samples = 2000
-    delta = 0.1
+    delta = 0.25
     epsilon = 0
     reward = -0.25
     # for grid search
@@ -36,22 +37,23 @@ if __name__ == '__main__':
     plot_colors = ['k', 'r', 'b', 'g', 'm', 'c', 'y']
     plot_markers = ['s', 'v', 'P', '1', '2', '3', '4']
     plot_lines = ['-', '--', ':', '-.']
-    plot_mean_treatment_effect = False
+    plot_mean_treatment_effect = True
     plot_treatment_efficiency = False
     plot_search_time = False
     plot_strictly_better = False
-    plot_delta_grid_search = True
+    plot_delta_grid_search = False
     plotbools = [plot_mean_treatment_effect, plot_treatment_efficiency, plot_search_time, plot_strictly_better]
     main_start = time.time()
 
     # Generate the data
     #dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    #dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    dist = DiscreteDistributionWithInformation(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    dist.print_moderator_statistics()
-    dist.print_covariate_statistics()
-    dist.print_treatment_statistics()
-    #dist = AntibioticsDatabase(seed=seed)
+    #dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=0.2)
+    #dist = DiscreteDistributionWithInformation(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
+    #dist.print_moderator_statistics()
+    #dist.print_covariate_statistics()
+    #dist.print_treatment_statistics()
+
+    dist = AntibioticsDatabase(seed=seed)
     '''
     dist = NewDistribution(seed=seed)
     n_x = 1
@@ -115,13 +117,14 @@ if __name__ == '__main__':
 
     print("Initializing Constraint")
     start = time.time()
-    constraint = Constraint(split_training_data, n_a, n_y, approximator=function_approximation, delta=delta, epsilon=epsilon)
+    constraint = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximation, delta=delta, epsilon=epsilon)
     print("Initializing the constraint took {:.3f} seconds".format(time.time()-start))
     print("Initializing algorithms")
     algorithms = [
         #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
-        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraint, function_approximation),
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraint, function_approximation),
+        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraint, statistical_approximation),
+        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraint, statistical_approximation),
+        NaiveGreedy(n_x, n_a, n_y, split_training_data),
         #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #OnlineQLearner(n_x, n_a, n_y, dist, constraint, learning_time=training_episodes),
