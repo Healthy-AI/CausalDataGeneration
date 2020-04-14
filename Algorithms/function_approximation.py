@@ -84,12 +84,14 @@ class FunctionApproximation(ProbabilityApproximator):
     def calculate_probability(self, probability_of_outcome_approximation, outcome):
         return probability_of_outcome_approximation[0][outcome]
 
-    def calculate_probability_greedy(self, state, best_outcome):
+    def calculate_probability_greedy(self, state, best_outcome, use_expected_value=True):
         x, history = state
         probability_of_outcome_approximation = self.prepare_calculation(x, history)
-        return super(FunctionApproximation, self).calculate_probability_greedy(probability_of_outcome_approximation, best_outcome)
+        return super(FunctionApproximation, self).calculate_probability_greedy(
+            probability_of_outcome_approximation, best_outcome, use_expected_value)
 
     def calculate_probability_constraint(self, x, outcomes_state, accuracy=None):
         probability_of_outcome_approximation = self.prepare_calculation(x, outcomes_state)
         max_outcome = max(outcomes_state)
-        return super(FunctionApproximation, self).calculate_probability_greedy(probability_of_outcome_approximation, max_outcome)
+        return super(FunctionApproximation, self).calculate_probability_greedy(
+            probability_of_outcome_approximation, max_outcome, use_expected_value=False)

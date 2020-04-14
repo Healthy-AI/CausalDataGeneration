@@ -2,6 +2,7 @@ from Algorithms.q_learning import *
 from Algorithms.better_treatment_constraint import *
 from Algorithms.help_functions import *
 import random
+import multiprocessing as mp
 
 
 class ConstrainedDynamicProgramming(QLearner):

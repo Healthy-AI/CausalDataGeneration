@@ -313,6 +313,7 @@ if __name__ == '__main__':
                     alg.constraint = constraint
                 except AttributeError:
                     pass
+                print("Training {}".format(alg.name))
                 alg.learn()
                 total_outcome = 0
                 total_time = 0
@@ -336,20 +337,20 @@ if __name__ == '__main__':
         ax2 = ax1.twinx()
         ax1.set_ylabel('Mean treatment effect')
         ax2.set_ylabel('Mean search time')
-        average_max_treatment_effect = sum([max(data[-1]) for data in test_data]) / len(test_data)
         lns = []
         for i_plot, alg in enumerate(algorithms):
             ln1 = ax1.plot(deltas, evaluations_delta[alg.name][outcome_name], plot_colors[i_plot],
-                     label='{} {}'.format(alg.label, 'effect'))
+                           label='{} {}'.format(alg.label, 'effect'))
             ln2 = ax2.plot(deltas, evaluations_delta[alg.name][time_name], plot_colors[i_plot] + plot_lines[1],
-                     label='{} {}'.format(alg.label, 'time'))
+                           label='{} {}'.format(alg.label, 'time'))
             lns.append(ln1)
             lns.append(ln2)
-        plt.plot(deltas, np.ones(nr_deltas) * average_max_treatment_effect, plot_lines[3], label='MAX_POSS_AVG')
+        average_max_treatment_effect = sum([max(data[-1]) for data in test_data]) / len(test_data)
+        ax1.plot(deltas, np.ones(nr_deltas) * average_max_treatment_effect, plot_lines[3], label='MAX_POSS_AVG')
         plt.grid(True)
         lines1, labels1 = ax1.get_legend_handles_labels()
         lines2, labels2 = ax2.get_legend_handles_labels()
-        plt.legend(lines1 + lines2, labels1 + labels2, loc='lower left')
+        plt.legend(lines1 + lines2, labels1 + labels2)
         plt.show(block=False)
 
     plt.show()

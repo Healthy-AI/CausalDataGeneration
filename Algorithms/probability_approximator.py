@@ -19,12 +19,12 @@ class ProbabilityApproximator:
     def to_index(self, state):
         return tuple(np.hstack(state))
 
-    def calculate_probability_greedy(self, prob_matrix, best_outcome):
+    def calculate_probability_greedy(self, prob_matrix, best_outcome, use_expected_value=True):
         tot = np.sum(prob_matrix, axis=1)
         tot[tot == 0] = 1
         ev_vec = np.zeros(self.n_a)
         for i in range(best_outcome + 1, self.n_y):
-            ev_vec += prob_matrix[:, i] * i
+            ev_vec += prob_matrix[:, i] * (i * int(use_expected_value))
         ev_vec = np.divide(ev_vec, tot)
         return ev_vec
 
