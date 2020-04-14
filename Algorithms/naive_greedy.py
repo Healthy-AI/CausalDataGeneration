@@ -36,9 +36,21 @@ class NaiveGreedy:
         best_outcome = 0
         history = []
         while best_outcome < self.max_outcome and np.max(base_probabilities) > 0:
+            mask_unknown_actions = get_mask(y_fac)
+            base_probabilities += mask_unknown_actions
+            if np.max(base_probabilities) == -np.inf:
+                break
             a = np.argmax(base_probabilities)
             history.append([a, y_fac[a]])
             if y_fac[a] > best_outcome:
                 best_outcome = y_fac[a]
             base_probabilities[a] = 0
         return history
+
+
+def get_mask(y_fac):
+    mask_unknown_actions = y_fac.copy().astype(float)
+    mask_unknown_actions[mask_unknown_actions != -1] = 0
+    mask_unknown_actions[mask_unknown_actions == -1] = -np.inf
+    return mask_unknown_actions
+
