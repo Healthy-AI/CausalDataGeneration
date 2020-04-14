@@ -47,12 +47,13 @@ if __name__ == '__main__':
 
     # Generate the data
     #dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=0.2)
+    #dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=0.2)
     #dist = DiscreteDistributionWithInformation(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    dist.print_moderator_statistics()
-    dist.print_covariate_statistics()
-    dist.print_treatment_statistics()
-    #dist = AntibioticsDatabase(seed=seed)
+    #dist.print_moderator_statistics()
+    #dist.print_covariate_statistics()
+    #dist.print_treatment_statistics()
+
+    dist = AntibioticsDatabase(seed=seed)
     '''
     dist = NewDistribution(seed=seed)
     n_x = 1

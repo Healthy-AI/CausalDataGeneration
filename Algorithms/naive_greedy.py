@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class NaiveGreedy:
     def __init__(self, n_x, n_a, n_y, data):
         self.n_x = n_x
@@ -27,7 +28,11 @@ class NaiveGreedy:
     def evaluate(self, patient):
         z, x, y_fac = patient
         base_statistics = self.max_outcome_statistics[tuple(np.hstack(x))]
-        base_probabilities = base_statistics[:, 0] / (base_statistics[:, 0] + base_statistics[:, 1])
+        denominator = base_statistics[:, 0] + base_statistics[:, 1]
+        for i in range(len(denominator)):
+            if denominator[i] == 0:
+                denominator[i] = 1
+        base_probabilities = base_statistics[:, 0] / denominator
         best_outcome = 0
         history = []
         while best_outcome < self.max_outcome and np.max(base_probabilities) > 0:
