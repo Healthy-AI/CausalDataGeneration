@@ -61,8 +61,6 @@ class AntibioticsDatabase:
         print("Organisms: {}".format(self.organism_to_x_dict.keys()))
         return antibiotics_data
 
-
-
     def antibiotic_to_treatment(self, antibiotic):
         if antibiotic in self.antibiotic_to_treatment_dict:
             index = self.antibiotic_to_treatment_dict[antibiotic]
