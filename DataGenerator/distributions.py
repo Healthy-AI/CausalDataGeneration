@@ -208,6 +208,18 @@ class DiscreteDistributionWithSmoothOutcomes(DiscreteDistribution):
         probs = probs / sum(probs)
         return probs
 
+
+class DiscreteDistributionWithInformation(DiscreteDistributionWithSmoothOutcomes):
+    def __init__(self, n_z, n_x, n_a, steps_y, outcome_sensitivity_x_z=1, seed=None):
+        super().__init__(n_z, n_x, n_a, steps_y, outcome_sensitivity_x_z, seed)
+        self.name = "Discrete_with_information"
+
+        self.Py1[0, 1:self.n_x+1] *= 100
+        self.Py1[1, 1:self.n_x+1] /= 100
+
+
+
+
 class TestSimilarTreatements(DiscreteDistributionWithSmoothOutcomes):
     def __init__(self, n_z, n_x, n_a, steps_y, outcome_sensitivity_x_z=1, seed=None):
         super().__init__(n_z, n_x, n_a, steps_y, outcome_sensitivity_x_z, seed)
