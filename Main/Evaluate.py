@@ -16,15 +16,15 @@ from Database.antibioticsdatabase import AntibioticsDatabase
 
 if __name__ == '__main__':
     # Training values
-    seed = 8956
+    seed = 1337
     n_z = 2
     n_x = 1
     n_a = 5
-    n_y = 5
+    n_y = 3
     training_episodes = 750000
-    n_training_samples = 8000
+    n_training_samples = 10000
     n_test_samples = 2000
-    delta = 0.0
+    delta = 0.1
     epsilon = 0
     reward = -0.25
     # for grid search
@@ -46,7 +46,8 @@ if __name__ == '__main__':
 
     # Generate the data
     #dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
+    #dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
+    dist = DiscreteDistributionWithInformation(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
     dist.print_moderator_statistics()
     dist.print_covariate_statistics()
     dist.print_treatment_statistics()
