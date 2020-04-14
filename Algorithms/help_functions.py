@@ -28,6 +28,6 @@ def hash_state(x, state):
     return string
 
 
-def hash_x(x):
+def hash_array(x):
     xstring = ''.join(str(a) for a in x)
     return xstring

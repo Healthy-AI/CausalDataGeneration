@@ -1,5 +1,4 @@
 import numpy as np
-from Algorithms.betterTreatmentConstraint import Constraint
 from Algorithms.help_functions import *
 
 
@@ -9,14 +8,13 @@ class ConstrainedGreedy:
         self.n_a = n_a
         self.n_y = n_y
         self.data = data
-        self.probabilities = None
         self.name = 'Constrained Greedy'
         self.label = 'CG'
         self.constraint = constraint
         self.approximator = approximator
 
     def learn(self):
-        self.probabilities = self.approximator.statistics
+        pass
 
     def evaluate(self, patient):
         best_outcome = 0
@@ -27,15 +25,7 @@ class ConstrainedGreedy:
         history = []
         while not stop:
             state = np.array([x, y])
-            prob_matrix = self.probabilities[tuple(np.hstack(state))]
-
-            tot = np.sum(prob_matrix, axis=1)
-            tot[tot == 0] = 1
-            ev_vec = np.zeros(self.n_a)
-            for i in range(best_outcome+1, self.n_y):
-                ev_vec += prob_matrix[:, i] * i
-
-            ev_vec = np.divide(ev_vec, tot)
+            ev_vec = self.approximator.calculate_probability_greedy(state, best_outcome)
             hstate = history_to_state(history, self.n_a)
             for i, hs in enumerate(hstate):
                 if hs != -1:

@@ -9,14 +9,14 @@ import deepdish as dd
 import random
 from pathlib import Path
 from Algorithms.online_q_learning import OnlineQLearner
-from Algorithms.betterTreatmentConstraint import Constraint
+from Algorithms.better_treatment_constraint import Constraint
 from Algorithms.function_approximation import FunctionApproximation
 from Algorithms.statistical_approximator import StatisticalApproximator
 from Database.antibioticsdatabase import AntibioticsDatabase
 
 if __name__ == '__main__':
     # Training values
-    seed = 1337
+    seed = 8956  # Used for both synthetic and real data
     n_z = 2
     n_x = 1
     n_a = 5
@@ -36,11 +36,11 @@ if __name__ == '__main__':
     plot_colors = ['k', 'r', 'b', 'g', 'm', 'c', 'y']
     plot_markers = ['s', 'v', 'P', '1', '2', '3', '4']
     plot_lines = ['-', '--', ':', '-.']
-    plot_mean_treatment_effect = True
+    plot_mean_treatment_effect = False
     plot_treatment_efficiency = False
-    plot_search_time = True
+    plot_search_time = False
     plot_strictly_better = False
-    plot_delta_grid_search = False
+    plot_delta_grid_search = True
     plotbools = [plot_mean_treatment_effect, plot_treatment_efficiency, plot_search_time, plot_strictly_better]
     main_start = time.time()
 
@@ -51,7 +51,7 @@ if __name__ == '__main__':
     dist.print_moderator_statistics()
     dist.print_covariate_statistics()
     dist.print_treatment_statistics()
-    #dist = AntibioticsDatabase()
+    #dist = AntibioticsDatabase(seed=seed)
     '''
     dist = NewDistribution(seed=seed)
     n_x = 1
@@ -106,22 +106,22 @@ if __name__ == '__main__':
     test_data = datasets['test']['data']
     print("Initializing function approximator")
     start = time.time()
-    #function_approximation = FunctionApproximation(n_x, n_a, n_y, split_training_data)
-    #print("Initializing {} took {:.3f} seconds".format(function_approximation.name, time.time()-start))
-    #print("Initializing statistical approximator")
+    function_approximation = FunctionApproximation(n_x, n_a, n_y, split_training_data)
+    print("Initializing {} took {:.3f} seconds".format(function_approximation.name, time.time()-start))
+    print("Initializing statistical approximator")
     start = time.time()
     statistical_approximation = StatisticalApproximator(n_x, n_a, n_y, split_training_data)
     print("Initializing {} took {:.3f} seconds".format(statistical_approximation.name, time.time() - start))
 
     print("Initializing Constraint")
     start = time.time()
-    constraint = Constraint(split_training_data, n_a, n_y, delta=delta, epsilon=epsilon)
+    constraint = Constraint(split_training_data, n_a, n_y, approximator=function_approximation, delta=delta, epsilon=epsilon)
     print("Initializing the constraint took {:.3f} seconds".format(time.time()-start))
     print("Initializing algorithms")
     algorithms = [
         #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
-        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraint, statistical_approximation),
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraint, statistical_approximation),
+        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraint, function_approximation),
+        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraint, function_approximation),
         #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #OnlineQLearner(n_x, n_a, n_y, dist, constraint, learning_time=training_episodes),
@@ -327,19 +327,26 @@ if __name__ == '__main__':
         print("Running Evaluate (and training) over delta took {:.3f} seconds".format(time.time() - main_start))
 
         # Plot mean treatment effect vs delta
-        plt.figure()
+        fig, ax1 = plt.subplots()
         plt.title('Mean treatment effect/mean search time vs delta')
-        plt.ylabel('Mean treatment effect/mean search time')
         plt.xlabel('delta')
+        ax2 = ax1.twinx()
+        ax1.set_ylabel('Mean treatment effect')
+        ax2.set_ylabel('Mean search time')
         average_max_treatment_effect = sum([max(data[-1]) for data in test_data]) / len(test_data)
+        lns = []
         for i_plot, alg in enumerate(algorithms):
-            plt.plot(deltas, evaluations_delta[alg.name][outcome_name], plot_colors[i_plot],
+            ln1 = ax1.plot(deltas, evaluations_delta[alg.name][outcome_name], plot_colors[i_plot],
                      label='{} {}'.format(alg.label, 'effect'))
-            plt.plot(deltas, evaluations_delta[alg.name][time_name], plot_colors[i_plot] + plot_lines[1],
+            ln2 = ax2.plot(deltas, evaluations_delta[alg.name][time_name], plot_colors[i_plot] + plot_lines[1],
                      label='{} {}'.format(alg.label, 'time'))
+            lns.append(ln1)
+            lns.append(ln2)
         plt.plot(deltas, np.ones(nr_deltas) * average_max_treatment_effect, plot_lines[3], label='MAX_POSS_AVG')
         plt.grid(True)
-        plt.legend(loc='lower left')
+        lines1, labels1 = ax1.get_legend_handles_labels()
+        lines2, labels2 = ax2.get_legend_handles_labels()
+        plt.legend(lines1 + lines2, labels1 + labels2, loc='lower left')
         plt.show(block=False)
 
     plt.show()
