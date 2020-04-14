@@ -1,7 +1,6 @@
 import psycopg2
 import numpy as np
 import base64
-import random
 
 
 class AntibioticsDatabase:
