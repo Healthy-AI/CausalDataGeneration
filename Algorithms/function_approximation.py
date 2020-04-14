@@ -14,6 +14,7 @@ class FunctionApproximation(ProbabilityApproximator):
         self.n_samples = len(self.xs)
         self.n_features = n_x + n_a + n_a + 1
         self.predictions_dict = {}
+        self.predictions_all_actions_dict = {}
         input_data = np.zeros((self.n_samples, self.n_features))
         output_data = np.zeros(self.n_samples)
         for i in range(self.n_samples):
@@ -78,7 +79,12 @@ class FunctionApproximation(ProbabilityApproximator):
         else:
             old_actions, old_outcomes = self.state_to_actions_and_outcomes(history)
             features = self.fill_feature_vector(x, old_actions, old_outcomes, action)
-            probability_of_outcome_approximation = self.model.predict_proba(features.reshape(1, -1))
+            h = hash_array(features)
+            if h in self.predictions_all_actions_dict:
+                probability_of_outcome_approximation = self.predictions_all_actions_dict[h]
+            else:
+                probability_of_outcome_approximation = self.model.predict_proba(features.reshape(1, -1))
+                self.predictions_all_actions_dict[h] = probability_of_outcome_approximation
         return probability_of_outcome_approximation
 
     def calculate_probability(self, probability_of_outcome_approximation, outcome):
@@ -94,4 +100,4 @@ class FunctionApproximation(ProbabilityApproximator):
         probability_of_outcome_approximation = self.prepare_calculation(x, outcomes_state)
         max_outcome = max(outcomes_state)
         return super(FunctionApproximation, self).calculate_probability_greedy(
-            probability_of_outcome_approximation, max_outcome, use_expected_value=False)
+            probability_of_outcome_approximation, max_outcome, use_expected_value=True)

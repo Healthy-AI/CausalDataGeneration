@@ -17,7 +17,7 @@ from Database.antibioticsdatabase import AntibioticsDatabase
 
 if __name__ == '__main__':
     # Training values
-    seed = None  # Used for both synthetic and real data
+    seed = 1337  # Used for both synthetic and real data
     n_z = 2
     n_x = 1
     n_a = 5
@@ -25,12 +25,12 @@ if __name__ == '__main__':
     training_episodes = 750000
     n_training_samples = 30000
     n_test_samples = 2000
-    delta = 0.25
+    delta = 0.0
     epsilon = 0
     reward = -0.25
     # for grid search
-    nr_deltas = 4
-    delta_limit = 0.6
+    nr_deltas = 5
+    delta_limit = 1
 
     # Plot values
     treatment_slack = 0     # Eg, how close to max must we be to be considered "good enough"
@@ -117,14 +117,14 @@ if __name__ == '__main__':
 
     print("Initializing Constraint")
     start = time.time()
-    constraint = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximation, delta=delta, epsilon=epsilon)
+    constraint = Constraint(split_training_data, n_a, n_y, approximator=function_approximation, delta=delta, epsilon=epsilon)
     print("Initializing the constraint took {:.3f} seconds".format(time.time()-start))
     print("Initializing algorithms")
     algorithms = [
         #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
-        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraint, statistical_approximation),
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraint, statistical_approximation),
-        NaiveGreedy(n_x, n_a, n_y, split_training_data),
+        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraint, function_approximation),
+        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraint, function_approximation),
+        #NaiveGreedy(n_x, n_a, n_y, split_training_data),
         #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #OnlineQLearner(n_x, n_a, n_y, dist, constraint, learning_time=training_episodes),
