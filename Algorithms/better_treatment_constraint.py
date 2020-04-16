@@ -23,7 +23,7 @@ class Constraint:
         if dict_index in self.better_treatment_constraint_dict.keys():
             gamma = self.better_treatment_constraint_dict[dict_index]
         else:
-            max_outcome = max(outcomes_state)
+            max_outcome = max(outcomes_state)  # double-check input here
             if max_outcome == self.max_possible_outcome:
                 # If we already found max, stop
                 gamma = 1
