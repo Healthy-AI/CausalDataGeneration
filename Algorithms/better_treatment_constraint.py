@@ -31,7 +31,7 @@ class Constraint:
                 # If we have tried all treatments, stop
                 gamma = 1
             else:
-                estimated_probability = self.approximator.calculate_probability_constraint(x, outcomes_state, self.accuracy)
+                estimated_probability = self.approximator.calculate_probability_constraint(x, outcomes_state)
                 best_probability = np.max(estimated_probability)
 
                 if best_probability < self.delta:

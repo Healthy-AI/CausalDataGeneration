@@ -16,7 +16,6 @@ class ConstrainedDynamicProgramming(QLearner):
         self.name = name
         self.label = label
         self.approximator = approximator
-        self.probability_of_outcome_prepare = self.approximator.prepare_calculation
         self.calc_prob_of_outcome = self.approximator.calculate_probability
 
     def learn(self):
@@ -41,9 +40,8 @@ class ConstrainedDynamicProgramming(QLearner):
         # else, calculate the sum of the reward for each outcome times its probability
         else:
             reward = self.get_reward(action, history, x)
-            probability_of_outcome_package = self.probability_of_outcome_prepare(x, history, action)
             for outcome in range(self.n_y):
-                probability_of_outcome = self.calc_prob_of_outcome(probability_of_outcome_package, outcome)
+                probability_of_outcome = self.calc_prob_of_outcome(x, history, action, outcome)
                 if probability_of_outcome > 0:
                     future_history = list(history)
                     future_history[action] = outcome
