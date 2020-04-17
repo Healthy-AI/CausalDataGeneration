@@ -4,6 +4,7 @@ from Algorithms.q_learning_with_constraint import QLearnerConstrained
 from Algorithms.greedyShuffledHistory import GreedyShuffled
 from Algorithms.constrained_greedy import ConstrainedGreedy
 from Algorithms.constrained_dynamic_programming import ConstrainedDynamicProgramming
+from Algorithms.true_approximator import TrueApproximator
 from DataGenerator.data_generator import *
 import time
 import deepdish as dd
@@ -23,9 +24,9 @@ if __name__ == '__main__':
     n_a = 5
     n_y = 3
     training_episodes = 750000
-    n_training_samples = 30000
+    n_training_samples = 10000
     n_test_samples = 2000
-    delta = 0.25
+    delta = 0.15
     epsilon = 0
     reward = -0.25
     # for grid search
@@ -47,14 +48,15 @@ if __name__ == '__main__':
 
     # Generate the data
     #dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=0.2)
-    #dist = DiscreteDistributionWithInformation(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
+    #dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
+    dist = DiscreteDistributionWithInformation(n_z, n_x, n_a, n_y, seed=seed)
     dist.print_moderator_statistics()
     dist.print_covariate_statistics()
     dist.print_treatment_statistics()
+    dist.print_detailed_treatment_statistics()
     #dist = AntibioticsDatabase(seed=seed)
     '''
-    dist = NewDistribution(seed=seed)
+    dist = NewDistributionSlightlyRandom(seed=seed)
     n_x = 1
     n_a = 3
     n_y = 3
@@ -111,19 +113,24 @@ if __name__ == '__main__':
     print("Initializing {} took {:.3f} seconds".format(function_approximation.name, time.time()-start))
     print("Initializing statistical approximator")
     start = time.time()
-    statistical_approximation = StatisticalApproximator(n_x, n_a, n_y, split_training_data)
+    statistical_approximation = StatisticalApproximator(n_x, n_a, n_y, split_training_data, prior_power=0.001)
     print("Initializing {} took {:.3f} seconds".format(statistical_approximation.name, time.time() - start))
+
+    true_approximation = TrueApproximator(dist)
 
     print("Initializing Constraint")
     start = time.time()
-    constraint = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximation, delta=delta, epsilon=epsilon)
+    constraintStat = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximation, delta=delta, epsilon=epsilon)
+    constraintTrue = Constraint(split_training_data, n_a, n_y, approximator=true_approximation, delta=delta, epsilon=epsilon)
     print("Initializing the constraint took {:.3f} seconds".format(time.time()-start))
     print("Initializing algorithms")
     algorithms = [
         #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
-        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraint, statistical_approximation),
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraint, statistical_approximation),
-        NaiveGreedy(n_x, n_a, n_y, split_training_data),
+        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Constrained Greedy True", label="CGT"),
+        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
+        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Dynamic Programming True", label="CDPT"),
+        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
+        #NaiveGreedy(n_x, n_a, n_y, split_training_data),
         #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #OnlineQLearner(n_x, n_a, n_y, dist, constraint, learning_time=training_episodes),

@@ -3,13 +3,13 @@ from Algorithms.help_functions import *
 
 
 class ConstrainedGreedy:
-    def __init__(self, n_x, n_a, n_y, data, constraint, approximator):
+    def __init__(self, n_x, n_a, n_y, data, constraint, approximator, name='Constrained Greedy', label="CG"):
         self.n_x = n_x
         self.n_a = n_a
         self.n_y = n_y
         self.data = data
-        self.name = 'Constrained Greedy'
-        self.label = 'CG'
+        self.name = name
+        self.label = label
         self.constraint = constraint
         self.approximator = approximator
 
