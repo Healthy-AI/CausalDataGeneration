@@ -47,9 +47,9 @@ class StatisticalApproximator(ProbabilityApproximator):
 
         return patient_statistics
 
-    def calculate_probability_greedy(self, state, best_outcome):
+    def calculate_probability_greedy(self, state, best_outcome, use_expected_value=True):
         prob_matrix = self.statistics[tuple(np.hstack(state))]
-        return super(StatisticalApproximator, self).calculate_probability_greedy(prob_matrix, best_outcome)
+        return super(StatisticalApproximator, self).calculate_probability_greedy(prob_matrix, best_outcome, use_expected_value)
 
     def calculate_probability_constraint(self, x, outcomes_state, accuracy):
         dict_index = hash_state(x, outcomes_state)

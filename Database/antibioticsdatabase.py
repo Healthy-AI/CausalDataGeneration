@@ -1,12 +1,12 @@
 import psycopg2
 import numpy as np
 import base64
-import random
 
 
 class AntibioticsDatabase:
     def __init__(self, seed=None):
-        random.seed(seed)
+        self.random = np.random.RandomState()
+        self.random.seed(seed)
         self.antibiotic_to_treatment_dict = {}
         self.antibiotic_counter = 0
         self.n_x = 2
@@ -31,7 +31,7 @@ class AntibioticsDatabase:
         cur.execute('SELECT subject_id, org_name, ab_name, interpretation FROM microbiologyevents WHERE ab_name IS NOT NULL;')
         data = cur.fetchall()
         patients = {}
-        random.shuffle(data)
+        self.random.shuffle(data)
         for chartevent in data:
             subject_id = chartevent[0]
             organism = chartevent[1]
@@ -61,8 +61,6 @@ class AntibioticsDatabase:
         print("Organisms: {}".format(self.organism_to_x_dict.keys()))
         return antibiotics_data
 
-
-
     def antibiotic_to_treatment(self, antibiotic):
         if antibiotic in self.antibiotic_to_treatment_dict:
             index = self.antibiotic_to_treatment_dict[antibiotic]
@@ -87,7 +85,7 @@ class AntibioticsDatabase:
     def get_test_data(self, nr_test_samples=0):
         xs = self.antibiotics_training_data['x']
         histories = self.antibiotics_training_data['h']
-        xs, histories = shuffle_histories(xs, histories)
+        xs, histories = self.shuffle_histories(xs, histories)
         xs = xs[:nr_test_samples]
         histories = histories[:nr_test_samples]
 
@@ -104,8 +102,16 @@ class AntibioticsDatabase:
         self.antibiotics_test_data = np.array(data)
         return self.antibiotics_test_data
 
+    def shuffle_histories(self, xs, histories):
+        patients = list(zip(xs, histories))
+        self.random.shuffle(patients)
+        xs, histories = zip(*patients)
+        return xs, histories
+
 
 def interpretation_to_outcome(interpretation):
+
+
     if interpretation == 'S':
         return 2
     elif interpretation == 'I':
@@ -114,12 +120,5 @@ def interpretation_to_outcome(interpretation):
         return 0
     elif interpretation == 'P':
         return None
-
-
-def shuffle_histories(xs, histories):
-    patients = list(zip(xs, histories))
-    random.shuffle(patients)
-    xs, histories = zip(*patients)
-    return xs, histories
 
 

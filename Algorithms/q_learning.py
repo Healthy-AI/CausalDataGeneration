@@ -73,6 +73,7 @@ class QLearner:
 
             action_candidates = np.argwhere(self.q_table[self.to_index(state)] ==
                                             np.max(self.q_table[self.to_index(state)]+mask_unknown_actions)).flatten()
+
             to_remove = []
             for i, a in enumerate(action_candidates):
                 if a != self.stop_action and y[a] != -1:

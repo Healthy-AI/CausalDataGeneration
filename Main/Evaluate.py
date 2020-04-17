@@ -18,7 +18,7 @@ from Database.antibioticsdatabase import AntibioticsDatabase
 
 if __name__ == '__main__':
     # Training values
-    seed = None  # Used for both synthetic and real data
+    seed = 1337  # Used for both synthetic and real data
     n_z = 2
     n_x = 1
     n_a = 5
@@ -30,8 +30,8 @@ if __name__ == '__main__':
     epsilon = 0
     reward = -0.25
     # for grid search
-    nr_deltas = 4
-    delta_limit = 0.6
+    nr_deltas = 5
+    delta_limit = 1
 
     # Plot values
     treatment_slack = 0     # Eg, how close to max must we be to be considered "good enough"
@@ -126,9 +126,9 @@ if __name__ == '__main__':
     print("Initializing algorithms")
     algorithms = [
         #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
-        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Constrained Greedy True", label="CGT"),
+        #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Constrained Greedy True", label="CGT"),
         ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Dynamic Programming True", label="CDPT"),
+        #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Dynamic Programming True", label="CDPT"),
         ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
         #NaiveGreedy(n_x, n_a, n_y, split_training_data),
         #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
@@ -319,6 +319,7 @@ if __name__ == '__main__':
                     alg.constraint = constraint
                 except AttributeError:
                     pass
+                print("Training {}".format(alg.name))
                 alg.learn()
                 total_outcome = 0
                 total_time = 0
@@ -342,20 +343,20 @@ if __name__ == '__main__':
         ax2 = ax1.twinx()
         ax1.set_ylabel('Mean treatment effect')
         ax2.set_ylabel('Mean search time')
-        average_max_treatment_effect = sum([max(data[-1]) for data in test_data]) / len(test_data)
         lns = []
         for i_plot, alg in enumerate(algorithms):
             ln1 = ax1.plot(deltas, evaluations_delta[alg.name][outcome_name], plot_colors[i_plot],
-                     label='{} {}'.format(alg.label, 'effect'))
+                           label='{} {}'.format(alg.label, 'effect'))
             ln2 = ax2.plot(deltas, evaluations_delta[alg.name][time_name], plot_colors[i_plot] + plot_lines[1],
-                     label='{} {}'.format(alg.label, 'time'))
+                           label='{} {}'.format(alg.label, 'time'))
             lns.append(ln1)
             lns.append(ln2)
-        plt.plot(deltas, np.ones(nr_deltas) * average_max_treatment_effect, plot_lines[3], label='MAX_POSS_AVG')
+        average_max_treatment_effect = sum([max(data[-1]) for data in test_data]) / len(test_data)
+        ax1.plot(deltas, np.ones(nr_deltas) * average_max_treatment_effect, plot_lines[3], label='MAX_POSS_AVG')
         plt.grid(True)
         lines1, labels1 = ax1.get_legend_handles_labels()
         lines2, labels2 = ax2.get_legend_handles_labels()
-        plt.legend(lines1 + lines2, labels1 + labels2, loc='lower left')
+        plt.legend(lines1 + lines2, labels1 + labels2)
         plt.show(block=False)
 
     plt.show()
