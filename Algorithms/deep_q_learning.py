@@ -29,7 +29,7 @@ class Network(object):
     def __init__(self,
                  input_size,
                  output_size,
-                 hidden_size=[20, 20],
+                 hidden_size=[30, 30],
                  weights_initializer=tf.initializers.glorot_uniform(),
                  bias_initializer=tf.initializers.zeros(),
                  optimizer=tf.optimizers.Adam,
@@ -119,7 +119,7 @@ class DeepQLearning(object):
                  n_y,
                  data,
                  constraint,
-                 target_update_freq=10,
+                 target_update_freq=100,
                  discount=0.99,
                  batch_size=32,
                  max_explore=1,
@@ -205,7 +205,16 @@ class DeepQLearning(object):
         explore = max(explore_prob, self.min_explore) > np.random.rand()
 
         if training and explore:
-            action = np.random.randint(self.action_space_size)
+            if len(forbidden_actions) > 0:
+                possible_actions = np.arange(self.action_space_size)
+                probabilities = np.zeros(len(possible_actions))
+                for i, is_forbidden in enumerate(forbidden_actions):
+                    if not is_forbidden:
+                        probabilities[i] = 1
+                probabilities /= np.sum(probabilities)
+                action = np.random.choice(possible_actions, 1, p=probabilities)[0]
+            else:
+                action = np.random.randint(self.action_space_size)
         else:
             inputs = np.expand_dims(state, 0)
             qvalues = self.online_network.model(inputs)
@@ -243,31 +252,29 @@ class DeepQLearning(object):
         self.online_network.train_step(inputs, targets, actions_one_hot)
 
     def learn(self):
-
-        self.handle_episode_start()
         x_s = self.data['x']
         histories = self.data['h']
         n_patients = len(x_s)
+        n_batch_trainings = 0
+        self.handle_episode_start()
+        for j in range(n_patients):
+            x = x_s[j]
+            history = histories[j]
 
-        for i in range(n_patients):
-            #print(self.online_network.weights)
-            x = x_s[i]
-            history = histories[i]
             treatment, outcome = history[-1]
             h_state = history_to_state(history[:-1], self.n_a)
             state = np.concatenate((x, h_state)).astype('float32')
             last_reward = self.get_reward(treatment, state, x)
-            self.step(state, last_reward, training=True)
+            self.step(self.normalize_data(state), last_reward, training=True)
 
-        for i in range(n_patients):
-            #print(self.online_network.weights)
-            x = x_s[i]
-            history = histories[i]
-            h_state = history_to_state(history[:-1], self.n_a)
+            h_state = history_to_state(history, self.n_a)
             treatment = self.stop_action
             state = np.concatenate((x, h_state)).astype('float32')
             last_reward = self.get_reward(treatment, state, x)
-            self.step(state, last_reward, training=True)
+            self.step(self.normalize_data(state), last_reward, training=True)
+
+        for i in range(n_batch_trainings):
+            self.train_network()
 
     def evaluate(self, patient):
         z, x, y_fac = patient
@@ -275,7 +282,8 @@ class DeepQLearning(object):
         history = []
         state = np.concatenate((x, y)).astype('float32')
         forbidden_actions = (y_fac == -1)
-        action = self.step(state, 0, training=False, forbidden_actions=forbidden_actions)
+        forbidden_actions_init = np.concatenate((forbidden_actions, np.array([True])))
+        action = self.step(state, 0, training=False, forbidden_actions=forbidden_actions_init)
         while action != self.stop_action and len(history) < self.n_a:
             y[action] = y_fac[action]
             history.append([action, y[action]])
@@ -283,13 +291,13 @@ class DeepQLearning(object):
                 break
             state = np.concatenate((x, y)).astype('float32')
             last_reward = self.get_reward(action, y, x)
-            action = self.step(state, last_reward, training=False, forbidden_actions=forbidden_actions)
+            action = self.step(self.normalize_data(state), last_reward, training=False, forbidden_actions=forbidden_actions)
         return history
 
     def get_reward(self, action, history, x):
         gamma = self.constraint.no_better_treatment_exist(history, x)
         if action == self.stop_action and gamma == 0:
-            return -10000
+            return -1000
         elif action == self.stop_action and gamma == 1:
             return 0
         elif self.stop_action > action >= 0:
@@ -298,5 +306,10 @@ class DeepQLearning(object):
             import sys
             print(gamma, action, history)
             sys.exit()
+
+    def normalize_data(self, input):
+        #Normalization seem to suck for this input
+        #input = (input - 1)/(self.n_y - -1)
+        return input
 
 

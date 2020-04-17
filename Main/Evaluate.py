@@ -25,7 +25,7 @@ if __name__ == '__main__':
     n_a = 5
     n_y = 3
     training_episodes = 750000
-    n_training_samples = 3000
+    n_training_samples = 5000
     n_test_samples = 200
     delta = 0.0
     epsilon = 0
@@ -56,12 +56,12 @@ if __name__ == '__main__':
     #dist.print_treatment_statistics()
 
     #dist = AntibioticsDatabase(seed=seed)
-
+    #'''
     dist = NewDistribution(seed=seed)
     n_x = 1
     n_a = 3
     n_y = 3
-
+    #'''
     '''
     dist = FredrikDistribution()
     n_x = 1
