@@ -29,7 +29,7 @@ class Network(object):
     def __init__(self,
                  input_size,
                  output_size,
-                 hidden_size=[16, 8],
+                 hidden_size=[32, 16, 8],
                  weights_initializer=tf.initializers.glorot_uniform(),
                  bias_initializer=tf.initializers.zeros(),
                  optimizer=tf.optimizers.Adam,
@@ -275,13 +275,15 @@ class DeepQLearning(object):
         x_s = self.data['x']
         histories = self.data['h']
         n_patients = len(x_s)
-        n_batch_trainings = 0
+        n_batch_trainings = 100
         self.handle_episode_start()
         patient_indices = np.arange(n_patients)
         np.random.shuffle(patient_indices)
-        for j in patient_indices:
-            x = x_s[j]
-            history = histories[j]
+        for i, index in enumerate(patient_indices):
+            if i % 100 == 0:
+                print("{} out of {} interventions".format(i, n_patients))
+            x = x_s[index]
+            history = histories[index]
 
             last_action, outcome = history[-1]
             h_state = history_to_state(history[:-1], self.n_a)
