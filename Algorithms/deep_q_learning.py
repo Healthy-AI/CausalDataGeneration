@@ -90,9 +90,9 @@ class Network(object):
 class Memory(object):
     """Memory buffer for Experience Replay."""
 
-    def __init__(self, max_size):
+    def __init__(self):
         """Initialize a buffer containing max_size experiences."""
-        self.buffer = deque(maxlen=max_size)
+        self.buffer = deque()
 
     def add(self, experience):
         """Add an experience to the buffer."""
@@ -126,8 +126,7 @@ class DeepQLearning(object):
                  constraint,
                  target_update_freq=1000,
                  discount=0.99,
-                 batch_size=32,
-                 replay_memory_size=100):
+                 batch_size=32):
         """Set parameters, initialize network."""
         action_space_size = n_a + 1
         state_space_size = n_x + n_a
@@ -144,7 +143,7 @@ class DeepQLearning(object):
         self.batch_size = batch_size
 
         # replay memory
-        self.memory = Memory(replay_memory_size)
+        self.memory = Memory()
 
         self.name = 'Deep Q-learning'
         self.label = 'DQL'
@@ -221,9 +220,8 @@ class DeepQLearning(object):
         histories = self.data['h']
         n_interventions = len(x_s)
         n_batch_trainings = 10001
+        print("Adding {} interventions to memory".format(n_interventions))
         for i in range(n_interventions):
-            if i % 100 == 0:
-                print("Adding {} out of {} interventions to memory".format(i, n_interventions))
             x = x_s[i]
             history = histories[i]
 
@@ -251,8 +249,8 @@ class DeepQLearning(object):
                 self.update_target_network()
                 mean_treatment_effect, mean_num_tests = self.evaluate_test(self.target_network)
                 if mean_treatment_effect >= max_treatment_effect:
-                    max_treatment_effect = mean_treatment_effect
-                    if mean_num_tests < min_search_time:
+                    if mean_num_tests < min_search_time or mean_treatment_effect > max_treatment_effect:
+                        max_treatment_effect = mean_treatment_effect
                         min_search_time = mean_num_tests
                         best_variables = self.target_network.trainable_variables
                         best_variables_copy = [tf.Variable(v) for v in best_variables]
