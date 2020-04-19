@@ -1,6 +1,5 @@
 #Source: https://towardsdatascience.com/why-going-from-implementing-q-learning-to-deep-q-learning-can-be-difficult-36e7ea1648af
 from collections import deque
-
 import numpy as np
 import tensorflow as tf
 from Algorithms.help_functions import *
@@ -29,7 +28,7 @@ class Network(object):
     def __init__(self,
                  input_size,
                  output_size,
-                 hidden_size=[32, 16, 8],
+                 hidden_size=[16, 8],
                  weights_initializer=tf.initializers.glorot_uniform(),
                  bias_initializer=tf.initializers.zeros(),
                  optimizer=tf.optimizers.Adam,
@@ -51,25 +50,13 @@ class Network(object):
         for i in layer_indices:
             wshapes.append([self.hidden_size[i-1], self.hidden_size[i]])
         wshapes.append([self.hidden_size[-1], self.output_size])
-        '''
-        wshapes2 = [
-            [self.input_size, self.hidden_size[0]],
-            [self.hidden_size[0], self.hidden_size[1]],
-            [self.hidden_size[1], self.output_size]
-        ]
-        '''
+
         bshapes = []
         bias_indices = np.arange(0, len(self.hidden_size))
         for i in bias_indices:
             bshapes.append([1, self.hidden_size[i]])
         bshapes.append([1, self.output_size])
-        '''
-        bshapes2 = [
-            [1, self.hidden_size[0]],
-            [1, self.hidden_size[1]],
-            [1, self.output_size]
-        ]
-        '''
+
 
         self.weights = [init_weights(s, weights_initializer) for s in wshapes]
         self.biases = [init_weights(s, bias_initializer) for s in bshapes]
@@ -86,12 +73,6 @@ class Network(object):
             h = dense(h_s[i-1], self.weights[i], self.biases[i], tf.nn.relu)
             h_s.append(h)
         out = dense(h_s[-1], self.weights[-1], self.biases[-1])
-        '''
-        h1 = dense(inputs, self.weights[0], self.biases[0], tf.nn.relu)
-        h2 = dense(h1, self.weights[1], self.biases[1], tf.nn.relu)
-
-        out2 = dense(h2, self.weights[2], self.biases[2])
-        '''
 
         return out
 
@@ -141,15 +122,12 @@ class DeepQLearning(object):
                  n_a,
                  n_y,
                  data,
+                 test_data,
                  constraint,
-                 target_update_freq=10,
+                 target_update_freq=1000,
                  discount=0.99,
                  batch_size=32,
-                 max_explore=1,
-                 min_explore=0.05,
-                 anneal_rate=(1 / 100000),
-                 replay_memory_size=100,
-                 replay_start_size=64):
+                 replay_memory_size=100):
         """Set parameters, initialize network."""
         action_space_size = n_a + 1
         state_space_size = n_x + n_a
@@ -165,16 +143,8 @@ class DeepQLearning(object):
         self.discount = discount
         self.batch_size = batch_size
 
-        # policy during learning
-        self.max_explore = max_explore + (anneal_rate * replay_start_size)
-        self.min_explore = min_explore
-        self.anneal_rate = anneal_rate
-        self.steps = 0
-
         # replay memory
         self.memory = Memory(replay_memory_size)
-        self.replay_start_size = replay_start_size
-        self.experience_replay = Memory(replay_memory_size)
 
         self.name = 'Deep Q-learning'
         self.label = 'DQL'
@@ -182,13 +152,12 @@ class DeepQLearning(object):
         self.stop_action = n_a
         self.n_x = n_x
         self.n_y = n_y
+        self.max_outcome = n_y - 1
         self.data = data
+        self.test_data = test_data
         self.constraint = constraint
 
-    def handle_episode_start(self):
-        self.last_state, self.last_action = None, None
-
-    def step(self, state, last_reward, last_state, last_action, training=True, forbidden_actions=()):
+    def add_to_memory(self, state, last_reward, last_state, last_action):
         """Observe state and rewards, select action.
 
         It is assumed that `observation` will be an object with
@@ -196,58 +165,29 @@ class DeepQLearning(object):
         corresponds to the action taken in the previous step.
         """
 
-        if training:
-            self.steps += 1
+        experience = {
+            "state": last_state,
+            "action": last_action,
+            "reward": last_reward,
+            "next_state": state
+        }
+        self.memory.add(experience)
 
-            if last_state is not None:
-                experience = {
-                    "state": last_state,
-                    "action": last_action,
-                    "reward": last_reward,
-                    "next_state": state
-                }
+    def policy(self, state, network, forbidden_actions=()):
 
-                self.memory.add(experience)
-
-            if self.steps > self.replay_start_size:
-                self.train_network()
-
-                if self.steps % self.target_update_freq == 0:
-                    self.update_target_network()
-
-        action = self.policy(state, training, forbidden_actions)
-
-        return action
-
-    def policy(self, state, training, forbidden_actions=()):
-        """Epsilon-greedy policy for training, greedy policy otherwise."""
-        explore_prob = self.max_explore - (self.steps * self.anneal_rate)
-        explore = False #max(explore_prob, self.min_explore) > np.random.rand()
-
-        if training and explore:
-            if len(forbidden_actions) > 0:
-                possible_actions = np.arange(self.action_space_size)
-                probabilities = np.zeros(len(possible_actions))
-                for i, is_forbidden in enumerate(forbidden_actions):
-                    if not is_forbidden:
-                        probabilities[i] = 1
-                probabilities /= np.sum(probabilities)
-                action = np.random.choice(possible_actions, 1, p=probabilities)[0]
-            else:
-                action = np.random.randint(self.action_space_size)
-        else:
-            inputs = np.expand_dims(state, 0)
-            qvalues = self.online_network.model(inputs)
-            temp_qvalues = list(qvalues[0])
-            temp_h_state = state[self.n_x:]
-            for i in range(len(temp_h_state)):
-                if temp_h_state[i] != -1:
-                    temp_qvalues[i] = -np.inf
-            for i, is_forbidden in enumerate(forbidden_actions):
-                if is_forbidden:
-                    temp_qvalues[i] = -np.inf
-            action = np.squeeze(np.argmax(temp_qvalues))
-            assert np.max(temp_qvalues) != -np.inf
+        inputs = np.expand_dims(state, 0)
+        qvalues = network.model(inputs)
+        temp_qvalues = list(qvalues[0])
+        temp_h_state = state[self.n_x:]
+        #assert not np.any(np.isnan(temp_qvalues))
+        for i in range(len(temp_h_state)):
+            if temp_h_state[i] != -1:
+                temp_qvalues[i] = -np.inf
+        for i, is_forbidden in enumerate(forbidden_actions):
+            if is_forbidden:
+                temp_qvalues[i] = -np.inf
+        action = np.squeeze(np.argmax(temp_qvalues))
+        assert np.max(temp_qvalues) != -np.inf
         return action
 
     def update_target_network(self):
@@ -255,6 +195,11 @@ class DeepQLearning(object):
         variables = self.online_network.trainable_variables
         variables_copy = [tf.Variable(v) for v in variables]
         self.target_network.trainable_variables = variables_copy
+        self.set_target_variables(variables_copy)
+
+    def set_target_variables(self, variables):
+        self.target_network.weights = variables[:int(len(variables) / 2)]
+        self.target_network.biases = variables[int(len(variables) / 2):]
 
     def train_network(self):
         """Update online network weights."""
@@ -274,52 +219,83 @@ class DeepQLearning(object):
     def learn(self):
         x_s = self.data['x']
         histories = self.data['h']
-        n_patients = len(x_s)
-        n_batch_trainings = 100
-        self.handle_episode_start()
-        patient_indices = np.arange(n_patients)
-        np.random.shuffle(patient_indices)
-        for i, index in enumerate(patient_indices):
+        n_interventions = len(x_s)
+        n_batch_trainings = 10001
+        for i in range(n_interventions):
             if i % 100 == 0:
-                print("{} out of {} interventions".format(i, n_patients))
-            x = x_s[index]
-            history = histories[index]
+                print("Adding {} out of {} interventions to memory".format(i, n_interventions))
+            x = x_s[i]
+            history = histories[i]
 
             last_action, outcome = history[-1]
             h_state = history_to_state(history[:-1], self.n_a)
             last_reward = self.get_reward(last_action, h_state, x)
-            state = np.concatenate((x, h_state)).astype('float32')
+            state = self.create_state(x, h_state)
             next_state = state.copy()
-            next_state[last_action] = outcome
-            self.step(next_state, last_reward, state, last_action, training=True)
+            next_state[self.action_index(last_action)] = outcome
+            self.add_to_memory(next_state, last_reward, state, last_action)
 
             last_action = self.stop_action
             h_state = history_to_state(history, self.n_a)
             last_reward = self.get_reward(last_action, h_state, x)
-            next_state = state.copy()
-            next_state[last_action] = outcome
-            self.step(next_state, last_reward, state, last_action, training=True)
+            state = next_state
+            self.add_to_memory(next_state, last_reward, state, last_action)
 
+        print('Performing training')
+        max_treatment_effect = 0
+        min_search_time = self.n_a
+        best_variables_copy = None
         for i in range(n_batch_trainings):
             self.train_network()
-            self.update_target_network()
+            if i % self.target_update_freq == 0:
+                self.update_target_network()
+                mean_treatment_effect, mean_num_tests = self.evaluate_test(self.target_network)
+                if mean_treatment_effect >= max_treatment_effect:
+                    max_treatment_effect = mean_treatment_effect
+                    if mean_num_tests < min_search_time:
+                        min_search_time = mean_num_tests
+                        best_variables = self.target_network.trainable_variables
+                        best_variables_copy = [tf.Variable(v) for v in best_variables]
+                print('DQN performance: mean treatment effect {}, mean search time {}'.format(mean_treatment_effect, mean_num_tests))
+        self.set_target_variables(best_variables_copy)
+        print('Best time:', min_search_time)
 
-    def evaluate(self, patient):
+    def evaluate(self, patient, network=None):
+        if network is None:
+            network = self.target_network
         z, x, y_fac = patient
         y = np.array([-1] * self.n_a)
         history = []
-        state = np.concatenate((x, y)).astype('float32')
+        state = self.create_state(x, y)
         forbidden_actions = (y_fac == -1)
-        forbidden_actions_init = np.concatenate((forbidden_actions, np.array([True])))
-        action = self.policy(state, training=False, forbidden_actions=forbidden_actions_init)
+        forbidden_actions_init = np.concatenate((forbidden_actions, [True]))
+        action = self.policy(state, network, forbidden_actions=forbidden_actions_init)
         while action != self.stop_action and len(history) < self.n_a:
             y[action] = int(y_fac[action])
             history.append([action, y[action]])
-            if y[action] == self.n_y-1:
+            if y[action] == self.max_outcome:
                 break
-            state = np.concatenate((x, y)).astype('float32')
-            action = self.policy(state, training=False, forbidden_actions=forbidden_actions)
+            state = self.create_state(x, y)
+            action = self.policy(state, network, forbidden_actions=forbidden_actions)
         return history
+
+    def evaluate_test(self, network):
+        mean_num_tests = 0
+        max_treatment_effect = 0
+        n_test_samples = len(self.test_data)
+        for patient in self.test_data:
+            treatments = self.evaluate(patient, network=network)
+            mean_num_tests += len(treatments)
+            best_found = 0
+            for i_treatment in range(len(treatments)):
+                effect = treatments[i_treatment][1]
+                if effect > best_found:
+                    best_found = effect
+            max_treatment_effect += best_found
+        max_treatment_effect /= n_test_samples
+        mean_num_tests /= n_test_samples
+        return max_treatment_effect, mean_num_tests
+
 
     def get_reward(self, action, history, x):
         gamma = self.constraint.no_better_treatment_exist(history, x)
@@ -339,4 +315,9 @@ class DeepQLearning(object):
         #input = (input - -1)/(self.n_y - -1)
         return input
 
+    def create_state(self, x, h_state):
+        state = np.concatenate((x, h_state)).astype('float32')
+        return state
 
+    def action_index(self, action_index):
+        return self.n_x + action_index
