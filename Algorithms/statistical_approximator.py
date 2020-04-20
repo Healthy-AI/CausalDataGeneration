@@ -93,7 +93,7 @@ class StatisticalApproximator(ProbabilityApproximator):
             k = kernel(state, h)
             total_probabilities += k * self.get_probabilities(x, h, action)
             total_kernel += k
-        return total_probabilities / k
+        return total_probabilities / total_kernel
 
     def calculate_probability_constraint(self, x, state):
         best_outcome = np.max(state)
