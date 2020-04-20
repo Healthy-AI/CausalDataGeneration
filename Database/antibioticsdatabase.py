@@ -4,19 +4,19 @@ import base64
 
 
 class AntibioticsDatabase:
-    def __init__(self, seed=None):
+    def __init__(self, n_x=2, antibiotic_limit=8, seed=None):
         self.random = np.random.RandomState()
         self.random.seed(seed)
         self.antibiotic_to_treatment_dict = {}
         self.antibiotic_counter = 0
-        self.n_x = 1
+        self.n_x = n_x
+        self.antibiotic_limit = antibiotic_limit
         self.x_counter = 0
         self.organism_to_x_dict = {}
         self.n_training_samples = None
         self.antibiotics_training_data = None
         self.antibiotics_test_data = None
         self.name = 'Antibiotics'
-        self.antibiotic_limit = 30
         self.n_a = None
         self.n_y = 3
 

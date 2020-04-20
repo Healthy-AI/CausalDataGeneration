@@ -50,19 +50,22 @@ if __name__ == '__main__':
 
     # Generate the data
     #dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
+    #dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
     #dist = DiscreteDistributionWithInformation(n_z, n_x, n_a, n_y, seed=seed)
+    '''
     dist.print_moderator_statistics()
     dist.print_covariate_statistics()
     dist.print_treatment_statistics()
     dist.print_detailed_treatment_statistics()
-    #dist = AntibioticsDatabase(seed=seed)
     '''
-    dist = NewDistributionSlightlyRandom(seed=seed)
+    #dist = AntibioticsDatabase(n_x=2, antibiotic_limit=7, seed=seed)
+    #'''
+    dist = NewDistribution(seed=seed)
+    #dist = NewDistributionSlightlyRandom(seed=seed)
     n_x = 1
     n_a = 3
     n_y = 3
-    '''
+    #'''
     '''
     dist = FredrikDistribution()
     n_x = 1
@@ -127,19 +130,25 @@ if __name__ == '__main__':
 
     constraintStat = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximation, delta=delta, epsilon=epsilon)
     constraintTrue = Constraint(split_training_data, n_a, n_y, approximator=true_approximation, delta=delta, epsilon=epsilon)
+    constraintFuncApprox = Constraint(split_training_data, n_a, n_y, approximator=function_approximation, delta=delta,
+                                epsilon=epsilon)
+
     print("Initializing the constraint took {:.3f} seconds".format(time.time()-start))
     print("Initializing algorithms")
     algorithms = [
         #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
-        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Constrained Greedy True", label="CGT"),
+        #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Constrained Greedy True", label="CGT"),
         #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Dynamic Programming True", label="CDPT"),
+        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation, name="Constrained Greedy FuncApprox"),
+        #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Dynamic Programming True", label="CDPT"),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
+        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation,
+                                      name="Constrained Dynamic Programming FuncApprox"),
         NaiveGreedy(n_x, n_a, n_y, split_training_data),
         #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #OnlineQLearner(n_x, n_a, n_y, dist, constraint, learning_time=training_episodes),
-        DeepQLearning(n_x, n_a, n_y, split_training_data, test_data, constraint=constraintTrue),
+        DeepQLearning(n_x, n_a, n_y, split_training_data, test_data, constraint=constraintFuncApprox),
     ]
 
     n_algorithms = len(algorithms)
