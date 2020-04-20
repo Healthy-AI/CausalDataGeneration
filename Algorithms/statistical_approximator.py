@@ -37,8 +37,17 @@ class StatisticalApproximator(ProbabilityApproximator):
         return patient_statistics
 
     def calculate_probability_greedy(self, state, best_outcome, use_expected_value=True):
-        prob_matrix = self.statistics[tuple(np.hstack(state))]
-        return super(StatisticalApproximator, self).calculate_probability_greedy(prob_matrix, best_outcome, use_expected_value)
+        #prob_matrix = self.statistics[tuple(np.hstack(state))]
+        #return super(StatisticalApproximator, self).calculate_probability_greedy(prob_matrix, best_outcome, use_expected_value)
+
+        x, history = state
+        probs = np.zeros(self.n_a)
+        for a in range(self.n_a):
+            action_outcome_probs = self.full_history_prior(x, history, a, kernel=self.kernel_gaussian)
+            for y in range(self.n_y):
+                if y > best_outcome:
+                    probs[a] += y * action_outcome_probs[y]
+        return probs
 
     def generate_all_possible_histories(self, state):
         to_generate_for = [tuple(state)]

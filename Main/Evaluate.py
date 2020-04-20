@@ -18,13 +18,13 @@ from Database.antibioticsdatabase import AntibioticsDatabase
 
 if __name__ == '__main__':
     # Training values
-    seed = None  # Used for both synthetic and real data
+    seed = 1337  # Used for both synthetic and real data
     n_z = 2
     n_x = 1
     n_a = 5
     n_y = 3
     training_episodes = 750000
-    n_training_samples = 1000
+    n_training_samples = 20000
     n_test_samples = 2000
     delta = 0.15
     epsilon = 0
@@ -55,12 +55,12 @@ if __name__ == '__main__':
     dist.print_treatment_statistics()
     dist.print_detailed_treatment_statistics()
     #dist = AntibioticsDatabase(seed=seed)
-    #'''
+    '''
     dist = NewDistributionSlightlyRandom(seed=seed)
     n_x = 1
     n_a = 3
     n_y = 3
-    #'''
+    '''
     '''
     dist = FredrikDistribution()
     n_x = 1
