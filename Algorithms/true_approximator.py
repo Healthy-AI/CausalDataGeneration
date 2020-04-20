@@ -9,11 +9,7 @@ class TrueApproximator(ProbabilityApproximator):
         self.y_y_dict = dict()
         self.y_h_dict = dict()
 
-    def prepare_calculation(self, x, history, action):
-        return x, history, action
-
-    def calculate_probability(self, probability_of_outcome_approximation, outcome):
-        x, history, action = probability_of_outcome_approximation
+    def calculate_probability(self, x, history, action, outcome):
         tried_history = np.argwhere(np.array(history) != -1).flatten()
         h_list = []
         for h in tried_history:
@@ -27,16 +23,16 @@ class TrueApproximator(ProbabilityApproximator):
         for y in range(self.dist.n_y):
             if y > best_outcome:
                 for a in range(self.dist.n_a):
-                    total_ev[a] += self.calculate_probability(self.prepare_calculation(x, outcome_state, a), y)
+                    total_ev[a] += self.calculate_probability(x, outcome_state, a, y)
         return total_ev
 
-    def calculate_probability_constraint(self, x, outcomes_state, accuracy):
+    def calculate_probability_constraint(self, x, state):
         probs = np.zeros(self.dist.n_a)
         for a in range(self.dist.n_a):
-            if outcomes_state[a] == -1:
+            if state[a] == -1:
                 for y in range(self.dist.n_y):
-                    if y > np.max(outcomes_state):
-                        probs[a] += self.calculate_probability(self.prepare_calculation(x, outcomes_state, a), y)
+                    if y > np.max(state):
+                        probs[a] += self.calculate_probability(x, state, a, y)
         return np.max(probs)
 
     def calculate_y_given_y_pr(self, x, outcome, action, history):

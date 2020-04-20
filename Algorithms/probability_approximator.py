@@ -10,10 +10,7 @@ class ProbabilityApproximator:
         self.stop_action = self.n_a
         self.data = data
 
-    def prepare_calculation(self, x, history, action):
-        pass
-
-    def calculate_probability(self, probability_of_outcome_approximation, outcome):
+    def calculate_probability(self, x, history, action, outcome):
         pass
 
     def to_index(self, state):
@@ -31,6 +28,6 @@ class ProbabilityApproximator:
         ev_vec = np.divide(ev_vec, tot)
         return ev_vec
 
-    def calculate_probability_constraint(self, x, outcomes_state, accuracy):
+    def calculate_probability_constraint(self, x, state):
         pass
 
