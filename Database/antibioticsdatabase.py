@@ -9,14 +9,14 @@ class AntibioticsDatabase:
         self.random.seed(seed)
         self.antibiotic_to_treatment_dict = {}
         self.antibiotic_counter = 0
-        self.n_x = 2
+        self.n_x = 1
         self.x_counter = 0
         self.organism_to_x_dict = {}
         self.n_training_samples = None
         self.antibiotics_training_data = None
         self.antibiotics_test_data = None
         self.name = 'Antibiotics'
-        self.antibiotic_limit = 6
+        self.antibiotic_limit = 30
         self.n_a = None
         self.n_y = 3
 
@@ -58,6 +58,7 @@ class AntibioticsDatabase:
         self.n_training_samples = len(patients)
         print("{} patients".format(self.n_training_samples))
         self.antibiotics_training_data = antibiotics_data
+        print("{} organisms".format(self.x_counter))
         print("Organisms: {}".format(self.organism_to_x_dict.keys()))
         return antibiotics_data
 

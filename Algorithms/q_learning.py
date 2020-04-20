@@ -2,6 +2,7 @@ from DataGenerator.data_generator import *
 from DataGenerator.data_visualizer import *
 from Algorithms.help_functions import *
 
+
 class QLearner:
     def __init__(self, n_x, n_a, n_y, data, reward=-0.1, learning_time=10000, learning_rate=0.01, discount_factor=1):
         self.n_x = n_x

@@ -14,7 +14,9 @@ from Algorithms.online_q_learning import OnlineQLearner
 from Algorithms.better_treatment_constraint import Constraint
 from Algorithms.function_approximation import FunctionApproximation
 from Algorithms.statistical_approximator import StatisticalApproximator
+from Algorithms.deep_q_learning import DeepQLearning
 from Database.antibioticsdatabase import AntibioticsDatabase
+
 
 if __name__ == '__main__':
     # Training values
@@ -24,14 +26,14 @@ if __name__ == '__main__':
     n_a = 5
     n_y = 3
     training_episodes = 750000
-    n_training_samples = 20000
-    n_test_samples = 2000
-    delta = 0.15
+    n_training_samples = 5000
+    n_test_samples = 1000
+    delta = 0.0
     epsilon = 0
     reward = -0.25
     # for grid search
     nr_deltas = 5
-    delta_limit = 1
+    delta_limit = 0.6
 
     # Plot values
     treatment_slack = 0     # Eg, how close to max must we be to be considered "good enough"
@@ -40,7 +42,7 @@ if __name__ == '__main__':
     plot_lines = ['-', '--', ':', '-.']
     plot_mean_treatment_effect = True
     plot_treatment_efficiency = False
-    plot_search_time = False
+    plot_search_time = True
     plot_strictly_better = False
     plot_delta_grid_search = False
     plotbools = [plot_mean_treatment_effect, plot_treatment_efficiency, plot_search_time, plot_strictly_better]
@@ -48,8 +50,8 @@ if __name__ == '__main__':
 
     # Generate the data
     #dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    #dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    dist = DiscreteDistributionWithInformation(n_z, n_x, n_a, n_y, seed=seed)
+    dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
+    #dist = DiscreteDistributionWithInformation(n_z, n_x, n_a, n_y, seed=seed)
     dist.print_moderator_statistics()
     dist.print_covariate_statistics()
     dist.print_treatment_statistics()
@@ -78,12 +80,14 @@ if __name__ == '__main__':
                 dist.name, str(dataset['samples']), dataset['name'], seed,
                 n_z, n_x, n_a, n_y)
             filepath = Path('Data', filename)
-
+            '''
             try:
                 data = dd.io.load(filepath)
                 dataset['data'] = data
                 print('Found %s data on file' % dataset['name'])
             except IOError:
+            '''
+            if True:
                 start = time.time()
                 n_samples = dataset['samples']
                 print("Generating {} {} samples...".format(n_samples, dataset['name']))
@@ -96,8 +100,8 @@ if __name__ == '__main__':
                     data = split_patients(data)
                 print("Generating samples took {:.3f} seconds".format(time.time()-start))
                 dataset['data'] = data
-                if seed is not None:
-                    dd.io.save(filepath, data)
+                #if seed is not None:
+                #    dd.io.save(filepath, data)
     else:
         datasets = {'training': {'data': dist.get_data()}, 'test': {'data': dist.get_test_data(n_test_samples)}}
 
@@ -120,20 +124,22 @@ if __name__ == '__main__':
 
     print("Initializing Constraint")
     start = time.time()
+
     constraintStat = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximation, delta=delta, epsilon=epsilon)
     constraintTrue = Constraint(split_training_data, n_a, n_y, approximator=true_approximation, delta=delta, epsilon=epsilon)
     print("Initializing the constraint took {:.3f} seconds".format(time.time()-start))
     print("Initializing algorithms")
     algorithms = [
         #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
-        #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Constrained Greedy True", label="CGT"),
-        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
-        #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Dynamic Programming True", label="CDPT"),
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
+        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Constrained Greedy True", label="CGT"),
+        #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
+        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Dynamic Programming True", label="CDPT"),
+        #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
         NaiveGreedy(n_x, n_a, n_y, split_training_data),
         #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #OnlineQLearner(n_x, n_a, n_y, dist, constraint, learning_time=training_episodes),
+        DeepQLearning(n_x, n_a, n_y, split_training_data, test_data, constraint=constraintTrue),
     ]
 
     n_algorithms = len(algorithms)
@@ -310,13 +316,13 @@ if __name__ == '__main__':
         evaluations_delta = {}
         deltas = np.linspace(0, delta_limit, nr_deltas)
         for delta in deltas:
-            constraint.better_treatment_constraint_dict = {}
-            constraint.delta = delta
+            constraintStat.better_treatment_constraint_dict = {}  # Maybe not the right constraint, fix
+            constraintStat.delta = delta
             for alg in algorithms:
                 if alg.name not in evaluations_delta:
                     evaluations_delta[alg.name] = {outcome_name: [], time_name: []}
                 try:
-                    alg.constraint = constraint
+                    alg.constraint = constraintStat
                 except AttributeError:
                     pass
                 print("Training {}".format(alg.name))
