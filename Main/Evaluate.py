@@ -20,15 +20,15 @@ from Database.antibioticsdatabase import AntibioticsDatabase
 
 if __name__ == '__main__':
     # Training values
-    seed = 1337  # Used for both synthetic and real data
+    seed = 871294  # Used for both synthetic and real data
     n_z = 2
     n_x = 1
     n_a = 5
     n_y = 3
     training_episodes = 750000
-    n_training_samples = 5000
+    n_training_samples = 25000
     n_test_samples = 1000
-    delta = 0.0
+    delta = 0.2
     epsilon = 0
     reward = -0.25
     # for grid search
@@ -45,13 +45,14 @@ if __name__ == '__main__':
     plot_search_time = True
     plot_strictly_better = False
     plot_delta_grid_search = False
+    fixed_scale = False
     plotbools = [plot_mean_treatment_effect, plot_treatment_efficiency, plot_search_time, plot_strictly_better]
     main_start = time.time()
 
     # Generate the data
     #dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    #dist = DiscreteDistributionWithInformation(n_z, n_x, n_a, n_y, seed=seed)
+    #dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
+    dist = DiscreteDistributionWithInformation(n_z, n_x, n_a, n_y, seed=seed)
     dist.print_moderator_statistics()
     dist.print_covariate_statistics()
     dist.print_treatment_statistics()
@@ -111,10 +112,10 @@ if __name__ == '__main__':
 
     split_training_data = split_patients(datasets['training']['data'])
     test_data = datasets['test']['data']
-    print("Initializing function approximator")
-    start = time.time()
-    function_approximation = FunctionApproximation(n_x, n_a, n_y, split_training_data)
-    print("Initializing {} took {:.3f} seconds".format(function_approximation.name, time.time()-start))
+    #print("Initializing function approximator")
+    #start = time.time()
+    #function_approximation = FunctionApproximation(n_x, n_a, n_y, split_training_data)
+    #print("Initializing {} took {:.3f} seconds".format(function_approximation.name, time.time()-start))
     print("Initializing statistical approximator")
     start = time.time()
     statistical_approximation = StatisticalApproximator(n_x, n_a, n_y, split_training_data)
@@ -131,15 +132,15 @@ if __name__ == '__main__':
     print("Initializing algorithms")
     algorithms = [
         #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
-        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Constrained Greedy True", label="CGT"),
-        #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
+        #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Constrained Greedy True", label="CGT"),
+        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
         ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Dynamic Programming True", label="CDPT"),
-        #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
+        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
         NaiveGreedy(n_x, n_a, n_y, split_training_data),
         #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #OnlineQLearner(n_x, n_a, n_y, dist, constraint, learning_time=training_episodes),
-        DeepQLearning(n_x, n_a, n_y, split_training_data, test_data, constraint=constraintTrue),
+        #DeepQLearning(n_x, n_a, n_y, split_training_data, test_data, constraint=constraintTrue),
     ]
 
     n_algorithms = len(algorithms)
@@ -216,6 +217,8 @@ if __name__ == '__main__':
 
             plt.grid(True)
             plt.xticks(x, x_ticks)
+            if fixed_scale:
+                plt.gca().set_ylim([0, n_y-1])
             plt.plot(x, np.ones(len(x)) * average_max_treatment_effect, plot_lines[3], label='MAX_POSS_AVG')
 
             plt.legend(loc='lower right')
