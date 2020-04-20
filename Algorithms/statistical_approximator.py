@@ -12,7 +12,7 @@ class StatisticalApproximator(ProbabilityApproximator):
         self.epsilon = epsilon
         self.type = type
         self.name = 'statistics approximator'
-        self.default_kernel = self.kernel_gaussian
+        self.default_kernel = self.kernel_laplace
 
     def calculate_probability(self, x, history, action, outcome):
         probs = self.full_history_prior(x, history, action, kernel=self.default_kernel)

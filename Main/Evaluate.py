@@ -26,7 +26,7 @@ if __name__ == '__main__':
     n_a = 5
     n_y = 3
     training_episodes = 750000
-    n_training_samples = 25000
+    n_training_samples = 75000
     n_test_samples = 1000
     delta = 0.2
     epsilon = 0
