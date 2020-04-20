@@ -33,14 +33,14 @@ class DiscreteDistribution(Distribution):
         self.n_z = n_z
         self.n_x = n_x
         self.n_a = n_a
-        self.steps_y = steps_y
+        self.n_y = steps_y
         self.x_weight = outcome_sensitivity_x_z*self.n_z/self.n_x
 
         self.Pz = np.array(self.random.random(self.n_z))
         self.Px = np.array(self.random.random((self.n_x, self.n_z)))
         self.Px = (self.Px.T / np.sum(self.Px, 1)).T
         self.Pa = np.array(self.random.normal(0, 1, (1 + self.n_x + self.n_a, self.n_a)))
-        self.Py = np.array(self.random.normal(0, 1, (self.n_a, 1 + self.n_x + self.n_z, self.steps_y)))
+        self.Py = np.array(self.random.normal(0, 1, (self.n_a, 1 + self.n_x + self.n_z, self.n_y)))
         for coeffs in self.Py:
             coeffs[1:self.n_x+1] *= self.x_weight
 
@@ -82,8 +82,8 @@ class DiscreteDistribution(Distribution):
 
     def calc_y_weights(self, a, x, z):
         v = np.concatenate(([1], x, z))
-        probs = np.zeros(self.steps_y)
-        for i in range(self.steps_y):
+        probs = np.zeros(self.n_y)
+        for i in range(self.n_y):
             probs[i] = np.exp(self.Py[a].T.dot(v)).T[i]
         den = np.sum(probs)
         probs = probs / den
@@ -91,9 +91,9 @@ class DiscreteDistribution(Distribution):
 
     def draw_y(self, a, h, x, z):
         probs = self.calc_y_weights(a, x, z)
-        y = self.random.choice(self.steps_y, p=probs)
+        y = self.random.choice(self.n_y, p=probs)
         done = False
-        if y >= self.steps_y - 1 and self.random.random() < 0.9:
+        if y >= self.n_y - 1 and self.random.random() < 0.9:
             done = True
         return y, done
 
@@ -133,22 +133,44 @@ class DiscreteDistribution(Distribution):
     def print_treatment_statistics(self):
         for a in range(self.n_a):
             print("Outcome probabilities for treatment A{}".format(a))
-            print("{:{width}}".format('', width=self.n_x*3), end='')
-            for i in range(self.steps_y):
+            print("{:{width}}".format('', width=self.n_x*3 + int(self.n_x == 1)), end='')
+            for i in range(self.n_y):
                 print("|{:^5}".format("Y=" + str(i)), end='')
             print("|")
             for x in itertools.product(range(2), repeat=self.n_x):
-                tot_py = np.zeros(self.steps_y)
+                tot_py = np.zeros(self.n_y)
                 for z in itertools.product(range(2), repeat=self.n_z):
-                    py = self.calc_y_weights(a, x, z)
+                    py = np.copy(self.calc_y_weights(a, x, z))
                     assert np.isclose(np.sum(py), 1, atol=0.000001), \
-                        "Probabilities of treatment {} don't add up to 1 for x: {}, z: {}".format(a, x, z)
+                        "Probabilities of treatment {} don't add up to 1 for x: {}, z: {}, is {}".format(a, x, z, np.sum(py))
                     py *= self.get_z_probability(z)
                     tot_py += py
-                print("{:{width}}".format(str(x), width=self.n_x*3), end='')
-                for i in range(self.steps_y):
+                print("{:{width}}".format(str(x), width=self.n_x*3 + int(self.n_x == 1)), end='')
+                for i in range(self.n_y):
                     print("|{:05.3f}".format(tot_py[i]), end='')
                 print("|")
+            print("---------------------")
+
+    def print_detailed_treatment_statistics(self):
+        for a in range(self.n_a):
+            print("Outcome probabilities for treatment A{}".format(a))
+            print("{:{width}}".format('', width=self.n_x*3 + int(self.n_x == 1) + 1 + self.n_z*3), end='')
+            for i in range(self.n_y):
+                print("|{:^5}".format("Y=" + str(i)), end='')
+            print("|")
+            for x in itertools.product(range(2), repeat=self.n_x):
+                print("{:{width}}".format(str(x), width=self.n_x*3), end=' ')
+                for z in itertools.product(range(2), repeat=self.n_z):
+                    print("{:{width}}".format(str(z), width=self.n_z * 3), end='')
+                    py = np.copy(self.calc_y_weights(a, x, z))
+                    assert np.isclose(np.sum(py), 1, atol=0.000001), \
+                        "Probabilities of treatment {} don't add up to 1 for x: {}, z: {}, is {}".format(a, x, z,
+                                                                                                         np.sum(py))
+                    for i in range(self.n_y):
+                        print("|{:05.3f}".format(py[i]), end='')
+                    print("|")
+                    if np.min(z) == 0:
+                        print("{:{width}}".format("", width=self.n_x * 3 + int(self.n_x == 1) + 1), end='')
             print("---------------------")
 
 class DiscreteDistributionWithStaticOutcomes(DiscreteDistribution):
@@ -160,7 +182,7 @@ class DiscreteDistributionWithStaticOutcomes(DiscreteDistribution):
         probs = self.calc_y_weights(a, x, z)
         y = np.argmax(probs)
         done = False
-        if y >= self.steps_y - 1 and self.random.random() < 0.9:
+        if y >= self.n_y - 1 and self.random.random() < 0.9:
             done = True
         return y, done
 
@@ -194,39 +216,65 @@ class DiscreteDistributionWithSmoothOutcomes(DiscreteDistribution):
         v = np.concatenate(([1], x, z))
         dist_index = tuple(np.concatenate(([a], x, z)))
         y0 = self.Py1[a].dot(v)
-        y0 = (self.steps_y - 1) * (y0 - self.neg_Py1[a]) / (self.pos_Py1[a] - self.neg_Py1[a])
+        y0 = (self.n_y - 1) * (y0 - self.neg_Py1[a]) / (self.pos_Py1[a] - self.neg_Py1[a])
         gamma = self.Py2[a].dot(v)
         gamma = (gamma - self.neg_Py2[a]) / (self.pos_Py2[a] - self.neg_Py2[a])
-        probs = np.zeros(self.steps_y)
+        probs = np.zeros(self.n_y)
         if dist_index in self.dists:
             dist = self.dists[dist_index]
         else:
             dist = scipy.stats.cauchy(y0, gamma)
             self.dists[dist_index] = dist
-        for i in range(self.steps_y):
+        for i in range(self.n_y):
             probs[i] = dist.pdf(i)
         probs = probs / sum(probs)
         return probs
 
-
-class DiscreteDistributionWithInformation(DiscreteDistributionWithSmoothOutcomes):
-    def __init__(self, n_z, n_x, n_a, steps_y, outcome_sensitivity_x_z=1, seed=None):
-        super().__init__(n_z, n_x, n_a, steps_y, outcome_sensitivity_x_z, seed)
+class DiscreteDistributionWithInformation(DiscreteDistribution):
+    def __init__(self, n_z, n_x, n_a, n_y, seed=None):
+        super().__init__(n_z, n_x, n_a, n_y, seed=seed)
         self.name = "Discrete_with_information"
 
-        self.Py1[0, 1:self.n_x+1] *= 100
-        self.Py1[1, 1:self.n_x+1] /= 100
+        self.y_coefficients = np.array(self.random.uniform(-1, 1, (self.n_a, 1 + self.n_x + self.n_z)))
+        self.y_coefficients[:, 1:1+n_z] *= 5
 
+        self.outcome_probabilities = np.zeros((2,)*self.n_z + (2,)*self.n_x + (n_a,) + (n_y,))
 
+        mean_outcomes = np.zeros((2,)*self.n_z + (2,)*self.n_x + (n_a,))
+        for z, _ in np.ndenumerate(np.zeros((2,)*self.n_z)):
+            for x, _ in np.ndenumerate(np.zeros((2,)*self.n_x)):
+                for a in range(self.n_a):
+                    coeffs = self.y_coefficients[a]
+                    mean_outcomes[z+x+(a,)] = np.dot(coeffs, np.array((1,) + z + x))
+        mean_outcomes += np.abs(np.min(mean_outcomes))
+        mean_outcomes /= np.max(mean_outcomes)
+        mean_outcomes *= (self.n_y - 0.7)
+        for z, _ in np.ndenumerate(np.zeros((2,)*self.n_z)):
+            for x, _ in np.ndenumerate(np.zeros((2,)*self.n_x)):
+                for a in range(self.n_a):
+                    dist = scipy.stats.cauchy(mean_outcomes[z+x+(a,)], self.random.uniform(0.2, 0.6))
+                    for y in range(self.n_y):
+                        self.outcome_probabilities[z+x+(a,)+(y,)] = dist.pdf(y)
+                    self.outcome_probabilities[z+x+(a,)] /= np.sum(self.outcome_probabilities[z+x+(a,)])
+                    assert np.isclose(np.sum(self.outcome_probabilities[z+x+(a,)]), 1, 0.00001), "z{}, x{}, a{}, sum{}".format(z, x, a, np.sum(self.outcome_probabilities[z+x+(a,)]))
 
+        for z, _ in np.ndenumerate(np.zeros((2,)*self.n_z)):
+            if self.random.random() < 1:
+                x = tuple(np.random.binomial(1, 0.5, size=n_x))
+                a0 = self.random.choice(self.n_a)
+                a1 = self.random.choice(self.n_a)
+                if a0 != a1:
+                    for y in range(self.n_y):
+                        self.outcome_probabilities[z+x+(a0,)+(y,)] = self.outcome_probabilities[z+x+(a1,)+(-(y+1),)]
+                    print("Mirrored treatments {} and {} for x: {}, z: {}".format(a0, a1, x, z))
 
-class TestSimilarTreatements(DiscreteDistributionWithSmoothOutcomes):
-    def __init__(self, n_z, n_x, n_a, steps_y, outcome_sensitivity_x_z=1, seed=None):
-        super().__init__(n_z, n_x, n_a, steps_y, outcome_sensitivity_x_z, seed)
-        self.name = 'Test Similars'
+    def calc_a_closeness(self, a0, a1, x):
+        return np.sum((self.y_coefficients[a0] - self.y_coefficients[a1]))**2
 
-        self.Py1[-1] = self.Py1[0] + self.random.normal(0, 0.02, 1 + self.n_x + self.n_z)
-        self.Py2[-1] = self.Py2[0] + self.random.normal(0, 0.02, 1 + self.n_x + self.n_z)
+    def calc_y_weights(self, a, x, z):
+        dist_index = tuple(np.concatenate((z, x, [a])))
+        return self.outcome_probabilities[dist_index]
+
 
 class FredrikDistribution(Distribution):
     def __init__(self):
@@ -277,14 +325,17 @@ class NewDistribution(Distribution):
     def __init__(self, seed=None):
         super().__init__(seed)
         self.name = 'New'
+    n_x = 1
+    n_z = 3
     n_a = 3
-    pz = np.array([0.3, 0.16, 0.35, 0.13, 0.04, 0.01, 0.01])
-    results_array = np.array([[2, 2, 1, 1, 1, 1, 0],
-                              [2, 1, 0, 2, 1, 1, 2],
-                              [1, 0, 2, 0, 1, 2, 0]])
+    n_y = 3
+    pz = np.array([0.3, 0.16, 0.35, 0.13, 0.04, 0.01, 0.01, 0.0])
+    results_array = np.array([[2, 2, 1, 1, 1, 1, 0, 0],
+                              [2, 1, 0, 2, 1, 1, 2, 0],
+                              [1, 0, 2, 0, 1, 2, 0, 0]])
 
     def draw_z(self):
-        return self.random.choice(7, p=self.pz)
+        return self.random.choice(8, p=self.pz)
 
     def draw_x(self, z):
         return [0]
@@ -306,3 +357,45 @@ class NewDistribution(Distribution):
         if ((max_y == 2 or y == 2) and self.random.random() < 0.90) or self.random.random() < 0.1:
             return y, True
         return y, False
+
+    def calc_x_weights(self, z):
+        return np.array([1, 0])
+
+    def convert_binary_to_decimal(self, t):
+        if t is int:
+            return t
+        t_val = 0
+        for i in range(len(t)):
+            t_val += 2**i*t[-(i+1)]
+        return t_val
+
+    def get_z_probability(self, z):
+        z_val = self.convert_binary_to_decimal(z)
+        return self.pz[z_val]
+
+    def calc_y_weights(self, a, x, z):
+        z_val = self.convert_binary_to_decimal(z)
+        result = self.results_array[a][z_val]
+        probs = np.zeros(3)
+        probs[result] = 1
+        return probs
+
+
+class NewDistributionSlightlyRandom(NewDistribution):
+    def draw_y(self, a, h, x, z):
+        y = self.results_array[a][z]
+        if self.random.random() < 0.15:
+            y = self.random.choice(3)
+        max_y = 0
+        if len(h) > 0:
+            max_y = np.max(h, 0)[1]
+        if ((max_y == 2 or y == 2) and self.random.random() < 0.90) or self.random.random() < 0.1:
+            return y, True
+        return y, False
+
+    def calc_y_weights(self, a, x, z):
+        z_val = self.convert_binary_to_decimal(z)
+        result = self.results_array[a][z_val]
+        probs = np.ones(3)*0.05
+        probs[result] = 0.9
+        return probs

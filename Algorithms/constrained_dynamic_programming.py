@@ -6,17 +6,16 @@ import multiprocessing as mp
 
 
 class ConstrainedDynamicProgramming(QLearner):
-    def __init__(self, n_x, n_a, n_y, data, constraint, approximator):
+    def __init__(self, n_x, n_a, n_y, data, constraint, approximator, name='Constrained Dynamic Programming', label='CDP'):
         self.constraint = constraint
         super().__init__(n_x, n_a, n_y, data)
         # Q-table indexed with x, y_0, y_1, y_2, y_3 and a
         self.table_size = (2,) * self.n_x + (self.n_y + 1,) * self.n_a + (self.n_a + 1,)
         self.q_table = np.zeros(self.table_size)
         self.q_table_done = self.q_table.copy().astype(bool)
-        self.name = 'Constrained Dynamic Programming'
-        self.label = 'CDP'
+        self.name = name
+        self.label = label
         self.approximator = approximator
-        self.probability_of_outcome_prepare = self.approximator.prepare_calculation
         self.calc_prob_of_outcome = self.approximator.calculate_probability
 
     def learn(self):
@@ -41,9 +40,8 @@ class ConstrainedDynamicProgramming(QLearner):
         # else, calculate the sum of the reward for each outcome times its probability
         else:
             reward = self.get_reward(action, history, x)
-            probability_of_outcome_package = self.probability_of_outcome_prepare(x, history, action)
             for outcome in range(self.n_y):
-                probability_of_outcome = self.calc_prob_of_outcome(probability_of_outcome_package, outcome)
+                probability_of_outcome = self.calc_prob_of_outcome(x, history, action, outcome)
                 if probability_of_outcome > 0:
                     future_history = list(history)
                     future_history[action] = outcome

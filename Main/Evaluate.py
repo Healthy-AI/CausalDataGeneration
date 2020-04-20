@@ -4,6 +4,7 @@ from Algorithms.q_learning_with_constraint import QLearnerConstrained
 from Algorithms.greedyShuffledHistory import GreedyShuffled
 from Algorithms.constrained_greedy import ConstrainedGreedy
 from Algorithms.constrained_dynamic_programming import ConstrainedDynamicProgramming
+from Algorithms.true_approximator import TrueApproximator
 from DataGenerator.data_generator import *
 import time
 import deepdish as dd
@@ -49,15 +50,15 @@ if __name__ == '__main__':
 
     # Generate the data
     #dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=0.2)
-    #dist = DiscreteDistributionWithInformation(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    #dist.print_moderator_statistics()
-    #dist.print_covariate_statistics()
-    #dist.print_treatment_statistics()
-
+    dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
+    #dist = DiscreteDistributionWithInformation(n_z, n_x, n_a, n_y, seed=seed)
+    dist.print_moderator_statistics()
+    dist.print_covariate_statistics()
+    dist.print_treatment_statistics()
+    dist.print_detailed_treatment_statistics()
     #dist = AntibioticsDatabase(seed=seed)
     '''
-    dist = NewDistribution(seed=seed)
+    dist = NewDistributionSlightlyRandom(seed=seed)
     n_x = 1
     n_a = 3
     n_y = 3
@@ -119,20 +120,26 @@ if __name__ == '__main__':
     statistical_approximation = StatisticalApproximator(n_x, n_a, n_y, split_training_data)
     print("Initializing {} took {:.3f} seconds".format(statistical_approximation.name, time.time() - start))
 
+    true_approximation = TrueApproximator(dist)
+
     print("Initializing Constraint")
     start = time.time()
-    constraint = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximation, delta=delta, epsilon=epsilon)
+
+    constraintStat = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximation, delta=delta, epsilon=epsilon)
+    constraintTrue = Constraint(split_training_data, n_a, n_y, approximator=true_approximation, delta=delta, epsilon=epsilon)
     print("Initializing the constraint took {:.3f} seconds".format(time.time()-start))
     print("Initializing algorithms")
     algorithms = [
         #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
-        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraint, statistical_approximation),
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraint, statistical_approximation),
+        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Constrained Greedy True", label="CGT"),
+        #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
+        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Dynamic Programming True", label="CDPT"),
+        #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
         NaiveGreedy(n_x, n_a, n_y, split_training_data),
         #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #OnlineQLearner(n_x, n_a, n_y, dist, constraint, learning_time=training_episodes),
-        DeepQLearning(n_x, n_a, n_y, split_training_data, test_data, constraint=constraint),
+        DeepQLearning(n_x, n_a, n_y, split_training_data, test_data, constraint=constraintTrue),
     ]
 
     n_algorithms = len(algorithms)
@@ -309,13 +316,13 @@ if __name__ == '__main__':
         evaluations_delta = {}
         deltas = np.linspace(0, delta_limit, nr_deltas)
         for delta in deltas:
-            constraint.better_treatment_constraint_dict = {}
-            constraint.delta = delta
+            constraintStat.better_treatment_constraint_dict = {}  # Maybe not the right constraint, fix
+            constraintStat.delta = delta
             for alg in algorithms:
                 if alg.name not in evaluations_delta:
                     evaluations_delta[alg.name] = {outcome_name: [], time_name: []}
                 try:
-                    alg.constraint = constraint
+                    alg.constraint = constraintStat
                 except AttributeError:
                     pass
                 print("Training {}".format(alg.name))
