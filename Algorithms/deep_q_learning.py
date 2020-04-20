@@ -18,7 +18,6 @@ def init_weights(shape, initializer):
         trainable=True,
         dtype=tf.float32
     )
-
     return weights
 
 
@@ -56,7 +55,6 @@ class Network(object):
         for i in bias_indices:
             bshapes.append([1, self.hidden_size[i]])
         bshapes.append([1, self.output_size])
-
 
         self.weights = [init_weights(s, weights_initializer) for s in wshapes]
         self.biases = [init_weights(s, bias_initializer) for s in bshapes]
@@ -125,8 +123,8 @@ class DeepQLearning(object):
                  test_data,
                  constraint,
                  target_update_freq=1000,
-                 discount=0.99,
-                 batch_size=32):
+                 discount=1,
+                 batch_size=16):
         """Set parameters, initialize network."""
         action_space_size = n_a + 1
         state_space_size = n_x + n_a
@@ -172,10 +170,10 @@ class DeepQLearning(object):
         }
         self.memory.add(experience)
 
-    def policy(self, state, network, forbidden_actions=()):
+    def policy(self, state, forbidden_actions=()):
 
         inputs = np.expand_dims(state, 0)
-        qvalues = network.model(inputs)
+        qvalues = self.target_network.model(inputs)
         temp_qvalues = list(qvalues[0])
         temp_h_state = state[self.n_x:]
         #assert not np.any(np.isnan(temp_qvalues))
@@ -247,7 +245,7 @@ class DeepQLearning(object):
             self.train_network()
             if i % self.target_update_freq == 0:
                 self.update_target_network()
-                mean_treatment_effect, mean_num_tests = self.evaluate_test(self.target_network)
+                mean_treatment_effect, mean_num_tests = self.evaluate_test()
                 if mean_treatment_effect >= max_treatment_effect:
                     if mean_num_tests < min_search_time or mean_treatment_effect > max_treatment_effect:
                         max_treatment_effect = mean_treatment_effect
@@ -258,31 +256,29 @@ class DeepQLearning(object):
         self.set_target_variables(best_variables_copy)
         print('Best time:', min_search_time)
 
-    def evaluate(self, patient, network=None):
-        if network is None:
-            network = self.target_network
+    def evaluate(self, patient):
         z, x, y_fac = patient
         y = np.array([-1] * self.n_a)
         history = []
         state = self.create_state(x, y)
         forbidden_actions = (y_fac == -1)
         forbidden_actions_init = np.concatenate((forbidden_actions, [True]))
-        action = self.policy(state, network, forbidden_actions=forbidden_actions_init)
+        action = self.policy(state, forbidden_actions=forbidden_actions_init)
         while action != self.stop_action and len(history) < self.n_a:
             y[action] = int(y_fac[action])
             history.append([action, y[action]])
             if y[action] == self.max_outcome:
                 break
             state = self.create_state(x, y)
-            action = self.policy(state, network, forbidden_actions=forbidden_actions)
+            action = self.policy(state, forbidden_actions=forbidden_actions)
         return history
 
-    def evaluate_test(self, network):
+    def evaluate_test(self):
         mean_num_tests = 0
         max_treatment_effect = 0
         n_test_samples = len(self.test_data)
         for patient in self.test_data:
-            treatments = self.evaluate(patient, network=network)
+            treatments = self.evaluate(patient)
             mean_num_tests += len(treatments)
             best_found = 0
             for i_treatment in range(len(treatments)):
@@ -293,7 +289,6 @@ class DeepQLearning(object):
         max_treatment_effect /= n_test_samples
         mean_num_tests /= n_test_samples
         return max_treatment_effect, mean_num_tests
-
 
     def get_reward(self, action, history, x):
         gamma = self.constraint.no_better_treatment_exist(history, x)
