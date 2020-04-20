@@ -58,7 +58,7 @@ if __name__ == '__main__':
     dist.print_treatment_statistics()
     dist.print_detailed_treatment_statistics()
     '''
-    #dist = AntibioticsDatabase(seed=seed)
+    #dist = AntibioticsDatabase(n_x=2, antibiotic_limit=7, seed=seed)
     #'''
     dist = NewDistribution(seed=seed)
     #dist = NewDistributionSlightlyRandom(seed=seed)
