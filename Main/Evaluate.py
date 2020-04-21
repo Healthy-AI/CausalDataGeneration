@@ -22,9 +22,9 @@ if __name__ == '__main__':
     # Training values
     seed = 1337  # Used for both synthetic and real data
     n_z = 2
-    n_x = 1
+    n_x = 3
     n_a = 5
-    n_y = 3
+    n_y = 5
     training_episodes = 750000
     n_training_samples = 5000
     n_test_samples = 1000
@@ -58,7 +58,7 @@ if __name__ == '__main__':
     dist.print_treatment_statistics()
     dist.print_detailed_treatment_statistics()
     '''
-    #dist = AntibioticsDatabase(n_x=2, antibiotic_limit=7, seed=seed)
+    #dist = AntibioticsDatabase(n_x=4, antibiotic_limit=6, seed=seed)
     #'''
     dist = NewDistribution(seed=seed)
     #dist = NewDistributionSlightlyRandom(seed=seed)
@@ -120,15 +120,15 @@ if __name__ == '__main__':
     print("Initializing {} took {:.3f} seconds".format(function_approximation.name, time.time()-start))
     print("Initializing statistical approximator")
     start = time.time()
-    statistical_approximation = StatisticalApproximator(n_x, n_a, n_y, split_training_data)
-    print("Initializing {} took {:.3f} seconds".format(statistical_approximation.name, time.time() - start))
+    #statistical_approximation = StatisticalApproximator(n_x, n_a, n_y, split_training_data)
+    #print("Initializing {} took {:.3f} seconds".format(statistical_approximation.name, time.time() - start))
 
     true_approximation = TrueApproximator(dist)
 
     print("Initializing Constraint")
     start = time.time()
 
-    constraintStat = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximation, delta=delta, epsilon=epsilon)
+    #constraintStat = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximation, delta=delta, epsilon=epsilon)
     constraintTrue = Constraint(split_training_data, n_a, n_y, approximator=true_approximation, delta=delta, epsilon=epsilon)
     constraintFuncApprox = Constraint(split_training_data, n_a, n_y, approximator=function_approximation, delta=delta,
                                 epsilon=epsilon)
@@ -142,8 +142,8 @@ if __name__ == '__main__':
         ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation, name="Constrained Greedy FuncApprox"),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Dynamic Programming True", label="CDPT"),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation,
-                                      name="Constrained Dynamic Programming FuncApprox"),
+        #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation,
+        #                              name="Constrained Dynamic Programming FuncApprox"),
         NaiveGreedy(n_x, n_a, n_y, split_training_data),
         #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
@@ -325,13 +325,12 @@ if __name__ == '__main__':
         evaluations_delta = {}
         deltas = np.linspace(0, delta_limit, nr_deltas)
         for delta in deltas:
-            constraintStat.better_treatment_constraint_dict = {}  # Maybe not the right constraint, fix
-            constraintStat.delta = delta
             for alg in algorithms:
                 if alg.name not in evaluations_delta:
                     evaluations_delta[alg.name] = {outcome_name: [], time_name: []}
                 try:
-                    alg.constraint = constraintStat
+                    alg.constraint.delta = delta
+                    alg.constraint.better_treatment_constraint_dict = {}
                 except AttributeError:
                     pass
                 print("Training {}".format(alg.name))
