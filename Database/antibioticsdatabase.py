@@ -111,8 +111,6 @@ class AntibioticsDatabase:
 
 
 def interpretation_to_outcome(interpretation):
-
-
     if interpretation == 'S':
         return 2
     elif interpretation == 'I':
