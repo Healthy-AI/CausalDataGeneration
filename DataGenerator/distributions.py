@@ -235,8 +235,9 @@ class DiscreteDistributionWithInformation(DiscreteDistribution):
         super().__init__(n_z, n_x, n_a, n_y, seed=seed)
         self.name = "Discrete_with_information"
 
+        self.Pz = np.array((0.5,)*self.n_z)
         self.y_coefficients = np.array(self.random.uniform(-1, 1, (self.n_a, 1 + self.n_x + self.n_z)))
-        self.y_coefficients[:, 1:1+n_z] *= 5
+        self.y_coefficients[:, 1:1+n_z] *= 5000
 
         self.outcome_probabilities = np.zeros((2,)*self.n_z + (2,)*self.n_x + (n_a,) + (n_y,))
 
