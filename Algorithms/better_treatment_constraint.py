@@ -32,12 +32,17 @@ class Constraint:
                 gamma = 1
             else:
                 estimated_probability = self.approximator.calculate_probability_constraint(x, outcomes_state)
-                best_probability = np.max(estimated_probability)
+                probability_limit = self.upper_bound_constraint(estimated_probability)
 
-                if best_probability < self.delta:
+                if probability_limit < self.delta:
                     gamma = 1
             self.better_treatment_constraint_dict[dict_index] = gamma
         return gamma
 
+    def upper_bound_constraint(self, estimated_probabilities):
+        sum_probability = np.sum(estimated_probabilities)
+        return sum_probability
 
-
+    def lower_bound_constraint(self, estimated_probabilities):
+        max_probability = np.max(estimated_probabilities)
+        return max_probability

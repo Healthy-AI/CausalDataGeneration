@@ -1,3 +1,4 @@
+from Algorithms.naive_dynamic_programming import NaiveDynamicProgramming
 from Algorithms.naive_greedy import NaiveGreedy
 from Algorithms.q_learning import QLearner
 from Algorithms.q_learning_with_constraint import QLearnerConstrained
@@ -26,11 +27,11 @@ if __name__ == '__main__':
     n_a = 5
     n_y = 5
     training_episodes = 750000
-    n_training_samples = 5000
-    n_test_samples = 1000
-    delta = 0.0
+    n_training_samples = 15000
+    n_test_samples = 300
+    delta = 0.45
     epsilon = 0
-    reward = -0.25
+    reward = -0.35
     # for grid search
     nr_deltas = 5
     delta_limit = 0.6
@@ -42,10 +43,12 @@ if __name__ == '__main__':
     plot_lines = ['-', '--', ':', '-.']
     plot_mean_treatment_effect = True
     plot_treatment_efficiency = False
-    plot_search_time = True
+    plot_delta_efficiency = True
+    plot_search_time = False
     plot_strictly_better = False
     plot_delta_grid_search = False
-    plotbools = [plot_mean_treatment_effect, plot_treatment_efficiency, plot_search_time, plot_strictly_better]
+    fixed_scale = False
+    plotbools = [plot_mean_treatment_effect, plot_treatment_efficiency, plot_delta_efficiency, plot_search_time, plot_strictly_better]
     main_start = time.time()
 
     # Generate the data
@@ -114,10 +117,10 @@ if __name__ == '__main__':
 
     split_training_data = split_patients(datasets['training']['data'])
     test_data = datasets['test']['data']
-    print("Initializing function approximator")
-    start = time.time()
-    function_approximation = FunctionApproximation(n_x, n_a, n_y, split_training_data)
-    print("Initializing {} took {:.3f} seconds".format(function_approximation.name, time.time()-start))
+    #print("Initializing function approximator")
+    #start = time.time()
+    #function_approximation = FunctionApproximation(n_x, n_a, n_y, split_training_data)
+    #print("Initializing {} took {:.3f} seconds".format(function_approximation.name, time.time()-start))
     print("Initializing statistical approximator")
     start = time.time()
     #statistical_approximation = StatisticalApproximator(n_x, n_a, n_y, split_training_data)
@@ -213,53 +216,52 @@ if __name__ == '__main__':
             x_ticks = list(np.arange(1, n_a+2))
             x_ticks[-1] = 'Done'
             plt.figure()
-            plt.title('Treatment effect')
+            plt.title('Treatment effect. d: {}'.format(delta))
             plt.ylabel('Mean treatment effect')
             plt.xlabel('Number of tried treatments')
             average_max_treatment_effect = sum([max(data[-1]) for data in test_data])/len(test_data)
             for i_plot, alg in enumerate(algorithms):
-                plt.plot(x, max_mean_treatment_effects[i_plot], plot_markers[i_plot] + plot_colors[i_plot] + plot_lines[0])
-                plt.plot(x, mean_treatment_effects[i_plot], plot_markers[i_plot] + plot_colors[i_plot] + plot_lines[1], label=alg.label)
-                plt.fill_between(x, mean_treatment_effects[i_plot], max_mean_treatment_effects[i_plot], color=plot_colors[i_plot], alpha=0.1)
+                plt.plot(x, max_mean_treatment_effects[i_plot], plot_markers[i_plot] + plot_colors[i_plot] + plot_lines[0], label=alg.label)
+                if plot_treatment_efficiency:
+                    plt.plot(x, mean_treatment_effects[i_plot], plot_markers[i_plot] + plot_colors[i_plot] + plot_lines[1])
+                    plt.fill_between(x, mean_treatment_effects[i_plot], max_mean_treatment_effects[i_plot], color=plot_colors[i_plot], alpha=0.1)
                 plt.axvline(mean_num_tests[i_plot]-1, 0, average_max_treatment_effect, color=plot_colors[i_plot])
 
             plt.grid(True)
             plt.xticks(x, x_ticks)
+            if fixed_scale:
+                plt.gca().set_ylim([0, n_y-1])
             plt.plot(x, np.ones(len(x)) * average_max_treatment_effect, plot_lines[3], label='MAX_POSS_AVG')
 
             plt.legend(loc='lower right')
             plt.show(block=False)
 
-    if plot_treatment_efficiency:
+    if plot_delta_efficiency:
         # Calculate % of population at max - treatment_slack treatment over time
-        max_treatments = np.zeros(n_test_samples)
-        for i_sample in range(n_test_samples):
-            max_treatments[i_sample] = max(test_data[i_sample][2])
-        at_max = np.zeros((n_algorithms, n_a + 1))
-        for i, alg in enumerate(algorithms):
+        best_founds_efficiency = np.zeros((n_algorithms, n_a + 1))
+        for i_alg, alg in enumerate(algorithms):
             for i_sample in range(n_test_samples):
                 treatments = evaluations[alg.name][i_sample]
-                found_max = 0
-                for i_treatment in range(len(at_max[i])):
-                    if i_treatment >= len(treatments):
-                        at_max[i][i_treatment] += found_max
-                    else:
-                        if max_treatments[i_sample] <= treatments[i_treatment][1] + treatment_slack:
-                            at_max[i][i_treatment] += 1
-                            found_max = 1
-        at_max /= n_test_samples
+                best_found = 0
+                for i_treatment in range(len(best_founds_efficiency[i_alg])):
+                    if i_treatment < len(treatments):
+                        effect = treatments[i_treatment][1]
+                        if effect > best_found:
+                            best_found = effect
+                    best_founds_efficiency[i_alg][i_treatment] += best_found
+        best_founds_efficiency /= n_test_samples
 
 
         # Plot mean treatment effect over population
         plt.figure()
-        plt.title('Treatment efficiency')
+        plt.title('Treatment efficiency. d: {}'.format(delta))
         plt.ylabel('Percentage of population at best possible treatment')
         plt.xlabel('Number of tried treatments')
         x = np.arange(0, n_a + 1)
         x_ticks = list(np.arange(1, n_a + 2))
         x_ticks[-1] = 'Done'
         for i_plot, alg in enumerate(algorithms):
-            plt.plot(x, at_max[i_plot], plot_colors[i_plot], label=alg.label)
+            plt.plot(x, best_founds_efficiency[i_plot], plot_markers[i_plot] + plot_colors[i_plot] + plot_lines[0], label=alg.label)
         plt.xticks(x, x_ticks)
         plt.grid(True)
         plt.legend(loc='lower right')

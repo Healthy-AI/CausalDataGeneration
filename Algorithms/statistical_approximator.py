@@ -12,9 +12,10 @@ class StatisticalApproximator(ProbabilityApproximator):
         self.epsilon = epsilon
         self.type = type
         self.name = 'statistics approximator'
+        self.default_kernel = self.kernel_gaussian
 
     def calculate_probability(self, x, history, action, outcome):
-        probs = self.full_history_prior(x, history, action, kernel=self.kernel_gaussian)
+        probs = self.full_history_prior(x, history, action, kernel=self.default_kernel)
         return probs[outcome]
 
     def get_patient_statistics(self):
@@ -43,7 +44,7 @@ class StatisticalApproximator(ProbabilityApproximator):
         x, history = state
         probs = np.zeros(self.n_a)
         for a in range(self.n_a):
-            action_outcome_probs = self.full_history_prior(x, history, a, kernel=self.kernel_gaussian)
+            action_outcome_probs = self.full_history_prior(x, history, a, kernel=self.default_kernel)
             for y in range(self.n_y):
                 if y > best_outcome:
                     probs[a] += y * action_outcome_probs[y]
@@ -90,16 +91,18 @@ class StatisticalApproximator(ProbabilityApproximator):
         total_probabilities = np.zeros(self.n_y)
         total_kernel = 0
         for h in histories:
-            k = kernel(state, h)
-            total_probabilities += k * self.get_probabilities(x, h, action)
-            total_kernel += k
+            probs = self.get_probabilities(x, h, action)
+            if np.max(probs) != 0:
+                k = kernel(state, h)
+                total_probabilities += k * self.get_probabilities(x, h, action)
+                total_kernel += k
         return total_probabilities / total_kernel
 
     def calculate_probability_constraint(self, x, state):
         best_outcome = np.max(state)
         full_probabilities = np.zeros((self.n_a, self.n_y))
         for a in range(self.n_a):
-            full_probabilities[a] = self.full_history_prior(x, state, a, self.kernel_gaussian)
+            full_probabilities[a] = self.full_history_prior(x, state, a, self.default_kernel)
         better_probabilities = np.zeros(self.n_a)
         for a in range(self.n_a):
             total = 0
