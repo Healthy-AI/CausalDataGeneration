@@ -1,22 +1,18 @@
-from Algorithms.q_learning import *
-from Algorithms.better_treatment_constraint import *
-from Algorithms.help_functions import *
-import random
-import multiprocessing as mp
+from Algorithms.q_learning import QLearner
+import numpy as np
+import itertools
 
 
-class ConstrainedDynamicProgramming(QLearner):
-    def __init__(self, n_x, n_a, n_y, data, constraint, approximator, name='Constrained Dynamic Programming', label='CDP'):
+class NaiveDynamicProgramming(QLearner):
+    def __init__(self, n_x, n_a, n_y, data, approximator, reward=-0.25, name='Naive Dynamic Programming', label='NDP'):
         super().__init__(n_x, n_a, n_y, data)
-        self.constraint = constraint
-        # Q-table indexed with x, y_0, y_1, y_2, y_3 and a
         self.table_size = (2,) * self.n_x + (self.n_y + 1,) * self.n_a + (self.n_a + 1,)
         self.q_table = np.zeros(self.table_size)
         self.q_table_done = self.q_table.copy().astype(bool)
         self.name = name
         self.label = label
         self.approximator = approximator
-        self.calc_prob_of_outcome = self.approximator.calculate_probability
+        self.reward = reward
 
     def learn(self):
         self.reset()
@@ -33,15 +29,15 @@ class ConstrainedDynamicProgramming(QLearner):
         future_reward = 0
         # if action is stop action, calculate the reward
         if action == self.stop_action:
-            reward = self.get_reward(self.stop_action, history, x)
+            reward = self.get_reward(self.stop_action, history)
         # if action is already used, set reward to -inf
         elif history[action] != -1:
             reward = -np.inf
         # else, calculate the sum of the reward for each outcome times its probability
         else:
-            reward = self.get_reward(action, history, x)
+            reward = self.get_reward(action, history)
             for outcome in range(self.n_y):
-                probability_of_outcome = self.calc_prob_of_outcome(x, history, action, outcome)
+                probability_of_outcome = self.approximator.calculate_probability(x, history, action, outcome)
                 if probability_of_outcome > 0:
                     future_history = list(history)
                     future_history[action] = outcome
@@ -56,28 +52,13 @@ class ConstrainedDynamicProgramming(QLearner):
         self.q_table[index] = reward + future_reward
         self.q_table_done[index] = True
 
-    def get_reward(self, action, history, x):
-        gamma = self.constraint.no_better_treatment_exist(history, x)
-        if action == self.stop_action and gamma == 0:
-            return -np.infty
-        elif action == self.stop_action and gamma == 1:
-            return 0
+    def get_reward(self, action, history):
+        if action == self.stop_action:
+            return np.max(history)
         elif self.stop_action > action >= 0:
-            return -1
-        else:
-            import sys
-            print(gamma, action, history)
-            sys.exit()
+            return self.reward
+        Exception("Error, invalid action {} at {}".format(action, history))
 
     def reset(self):
         self.q_table = np.zeros(self.table_size)
         self.q_table_done = self.q_table.copy().astype(bool)
-
-    def set_constraint(self, constraint):
-        self.constraint = constraint.no_better_treatment_exist
-
-
-
-
-
-

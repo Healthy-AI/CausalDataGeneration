@@ -257,7 +257,7 @@ class DiscreteDistributionWithInformation(DiscreteDistribution):
                         self.outcome_probabilities[z+x+(a,)+(y,)] = dist.pdf(y)
                     self.outcome_probabilities[z+x+(a,)] /= np.sum(self.outcome_probabilities[z+x+(a,)])
                     assert np.isclose(np.sum(self.outcome_probabilities[z+x+(a,)]), 1, 0.00001), "z{}, x{}, a{}, sum{}".format(z, x, a, np.sum(self.outcome_probabilities[z+x+(a,)]))
-
+        '''
         for z, _ in np.ndenumerate(np.zeros((2,)*self.n_z)):
             if self.random.random() < 1:
                 x = tuple(np.random.binomial(1, 0.5, size=n_x))
@@ -267,6 +267,14 @@ class DiscreteDistributionWithInformation(DiscreteDistribution):
                     for y in range(self.n_y):
                         self.outcome_probabilities[z+x+(a0,)+(y,)] = self.outcome_probabilities[z+x+(a1,)+(-(y+1),)]
                     print("Mirrored treatments {} and {} for x: {}, z: {}".format(a0, a1, x, z))
+        '''
+        # Reverse a treatment
+        x = tuple(np.random.binomial(1, 0.5, size=self.n_x))
+        for z, _ in np.ndenumerate(np.zeros((2,)*self.n_z)):
+            a0 = 0
+            a1 = self.n_a - 1
+            for y in range(self.n_y):
+                self.outcome_probabilities[z+x+(a0,)+(y,)] = self.outcome_probabilities[z+x+(a1,)+(-(y+1),)]
 
     def calc_a_closeness(self, a0, a1, x):
         return np.sum((self.y_coefficients[a0] - self.y_coefficients[a1]))**2
