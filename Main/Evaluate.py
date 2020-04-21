@@ -43,11 +43,12 @@ if __name__ == '__main__':
     plot_lines = ['-', '--', ':', '-.']
     plot_mean_treatment_effect = True
     plot_treatment_efficiency = False
+    plot_delta_efficiency = True
     plot_search_time = False
     plot_strictly_better = False
     plot_delta_grid_search = False
     fixed_scale = False
-    plotbools = [plot_mean_treatment_effect, plot_treatment_efficiency, plot_search_time, plot_strictly_better]
+    plotbools = [plot_mean_treatment_effect, plot_treatment_efficiency, plot_delta_efficiency, plot_search_time, plot_strictly_better]
     main_start = time.time()
 
     # Generate the data
@@ -227,7 +228,7 @@ if __name__ == '__main__':
             plt.legend(loc='lower right')
             plt.show(block=False)
 
-    if plot_treatment_efficiency:
+    if plot_delta_efficiency:
         # Calculate % of population at max - treatment_slack treatment over time
         best_founds_efficiency = np.zeros((n_algorithms, n_a + 1))
         for i_alg, alg in enumerate(algorithms):
