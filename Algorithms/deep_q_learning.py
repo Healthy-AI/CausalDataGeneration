@@ -1,5 +1,4 @@
 #Source: https://towardsdatascience.com/why-going-from-implementing-q-learning-to-deep-q-learning-can-be-difficult-36e7ea1648af
-from collections import deque
 import numpy as np
 import tensorflow as tf
 from Algorithms.help_functions import *
@@ -64,8 +63,7 @@ class Network(object):
     def model(self, inputs):
         """Given a state vector, return the Q values of actions."""
 
-        h = dense(inputs, self.weights[0], self.biases[0], tf.nn.relu)
-        h_s = [h]
+        h_s = [dense(inputs, self.weights[0], self.biases[0], tf.nn.relu)]
         h_indices = np.arange(1, len(self.hidden_size))
         for i in h_indices:
             h = dense(h_s[i-1], self.weights[i], self.biases[i], tf.nn.relu)
@@ -88,13 +86,15 @@ class Network(object):
 class Memory(object):
     """Memory buffer for Experience Replay."""
 
-    def __init__(self):
+    def __init__(self, size):
         """Initialize a buffer containing max_size experiences."""
-        self.buffer = deque()
+        self.buffer = []*size
+        self.i = 0
 
     def add(self, experience):
         """Add an experience to the buffer."""
-        self.buffer.append(experience)
+        self.buffer[self.i] = experience
+        self.i += 1
 
     def sample(self, batch_size):
         """Sample a batch of experiences from the buffer."""
@@ -124,7 +124,8 @@ class DeepQLearning(object):
                  constraint,
                  target_update_freq=1000,
                  discount=1,
-                 batch_size=16):
+                 batch_size=16,
+                 n_batch_trainings=10000):
         """Set parameters, initialize network."""
         action_space_size = n_a + 1
         state_space_size = n_x + n_a
@@ -138,10 +139,6 @@ class DeepQLearning(object):
         # training parameters
         self.target_update_freq = target_update_freq
         self.discount = discount
-        self.batch_size = batch_size
-
-        # replay memory
-        self.memory = Memory()
 
         self.name = 'Deep Q-learning'
         self.label = 'DQL'
@@ -153,6 +150,11 @@ class DeepQLearning(object):
         self.data = data
         self.test_data = test_data
         self.constraint = constraint
+        self.n_batch_trainings = n_batch_trainings
+        self.batch_size = batch_size
+
+        # replay memory
+        self.memory = Memory(len(self.data['x'])*2)
 
     def add_to_memory(self, state, last_reward, last_state, last_action):
         """Observe state and rewards, select action.
@@ -176,7 +178,6 @@ class DeepQLearning(object):
         qvalues = self.target_network.model(inputs)
         temp_qvalues = list(qvalues[0])
         temp_h_state = state[self.n_x:]
-        #assert not np.any(np.isnan(temp_qvalues))
         for i in range(len(temp_h_state)):
             if temp_h_state[i] != -1:
                 temp_qvalues[i] = -np.inf
@@ -184,7 +185,7 @@ class DeepQLearning(object):
             if is_forbidden:
                 temp_qvalues[i] = -np.inf
         action = np.squeeze(np.argmax(temp_qvalues))
-        assert np.max(temp_qvalues) != -np.inf
+        #assert np.max(temp_qvalues) != -np.inf
         return action
 
     def update_target_network(self):
@@ -209,7 +210,10 @@ class DeepQLearning(object):
         actions_one_hot = np.eye(self.action_space_size)[actions]
 
         next_qvalues = np.squeeze(self.target_network.model(next_inputs))
-        targets = rewards + self.discount * np.amax(next_qvalues, axis=-1)
+        target_actions = np.argmax(next_qvalues, axis=-1)
+        target_actions_one_hot = np.eye(self.action_space_size)[target_actions]
+        online_q_values = np.squeeze(self.online_network.model(next_inputs))
+        targets = rewards + self.discount * tf.reduce_sum(online_q_values * target_actions_one_hot, axis=1) #np.amax(next_qvalues, axis=-1)
 
         self.online_network.train_step(inputs, targets, actions_one_hot)
 
@@ -217,8 +221,7 @@ class DeepQLearning(object):
         x_s = self.data['x']
         histories = self.data['h']
         n_interventions = len(x_s)
-        n_batch_trainings = 10001
-        print("Adding {} interventions to memory".format(n_interventions))
+        print("Adding {} interventions to memory".format(n_interventions*2))
         for i in range(n_interventions):
             x = x_s[i]
             history = histories[i]
@@ -226,22 +229,22 @@ class DeepQLearning(object):
             last_action, outcome = history[-1]
             h_state = history_to_state(history[:-1], self.n_a)
             last_reward = self.get_reward(last_action, h_state, x)
-            state = self.create_state(x, h_state)
-            next_state = state.copy()
-            next_state[self.action_index(last_action)] = outcome
-            self.add_to_memory(next_state, last_reward, state, last_action)
+            last_state = self.create_state(x, h_state)
+            state = last_state.copy()
+            state[self.action_index(last_action)] = outcome
+            self.add_to_memory(state, last_reward, last_state, last_action)
 
             last_action = self.stop_action
             h_state = history_to_state(history, self.n_a)
             last_reward = self.get_reward(last_action, h_state, x)
-            state = next_state
-            self.add_to_memory(next_state, last_reward, state, last_action)
+            last_state = state
+            self.add_to_memory(state, last_reward, last_state, last_action)
 
         print('Performing training')
         max_treatment_effect = 0
         min_search_time = self.n_a
         best_variables_copy = None
-        for i in range(n_batch_trainings):
+        for i in range(self.n_batch_trainings+1):
             self.train_network()
             if i % self.target_update_freq == 0:
                 self.update_target_network()
@@ -253,6 +256,7 @@ class DeepQLearning(object):
                         best_variables = self.target_network.trainable_variables
                         best_variables_copy = [tf.Variable(v) for v in best_variables]
                 print('DQN performance: mean treatment effect {}, mean search time {}'.format(mean_treatment_effect, mean_num_tests))
+        self.target_network.trainable_variables = best_variables_copy
         self.set_target_variables(best_variables_copy)
         print('Best time:', min_search_time)
 
@@ -265,7 +269,7 @@ class DeepQLearning(object):
         forbidden_actions_init = np.concatenate((forbidden_actions, [True]))
         action = self.policy(state, forbidden_actions=forbidden_actions_init)
         while action != self.stop_action and len(history) < self.n_a:
-            y[action] = int(y_fac[action])
+            y[action] = y_fac[action]
             history.append([action, y[action]])
             if y[action] == self.max_outcome:
                 break
@@ -293,7 +297,7 @@ class DeepQLearning(object):
     def get_reward(self, action, history, x):
         gamma = self.constraint.no_better_treatment_exist(history, x)
         if action == self.stop_action and gamma == 0:
-            return -10000000
+            return -100000000000
         elif action == self.stop_action and gamma == 1:
             return 0
         elif self.stop_action > action >= 0:

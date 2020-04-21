@@ -46,20 +46,3 @@ class Constraint:
     def lower_bound_constraint(self, estimated_probabilities):
         max_probability = np.max(estimated_probabilities)
         return max_probability
-
-    def history_to_compare_dict_alt(self, histories, xs):
-        state_dict = {}
-        for i, history in enumerate(histories):
-            x = xs[i]
-            for j in range(0, len(history)):
-                temp_history = history[:j]
-                history_hash = hash_history(x, temp_history, self.n_actions)
-                for k in range(1, len(history)-j+1):
-                    h = history[:j+k]
-                    try:
-                        state_dict[history_hash].append(h)
-                    except KeyError:
-                        state_dict[history_hash] = [h]
-        return state_dict
-
-
