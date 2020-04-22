@@ -42,7 +42,7 @@ if __name__ == '__main__':
     plot_markers = ['s', 'v', 'P', '1', '2', '3', '4']
     plot_lines = [(i, (1, 3, 1, 5)) for i in range(0, 8)]
     plot_mean_treatment_effect = True
-    old_plot_lines = ['-', '--', ':', '-.']
+    alt_plot_lines = ['-', '--', ':', '-.']
 
     plot_treatment_efficiency = False
     plot_delta_efficiency = False
@@ -270,7 +270,7 @@ if __name__ == '__main__':
         x_ticks = list(np.arange(1, n_a + 2))
         x_ticks[-1] = 'Done'
         for i_plot, alg in enumerate(algorithms):
-            plt.plot(x, best_founds_efficiency[i_plot], plot_markers[i_plot] + plot_colors[i_plot], linestyle=plot_lines[0], label=alg.label)
+            plt.plot(x, best_founds_efficiency[i_plot], plot_markers[i_plot] + plot_colors[i_plot] + alt_plot_lines[0], label=alg.label)
             plt.axvline(mean_num_tests[i_plot] - 1, 0, 1, color=plot_colors[i_plot])
         plt.xticks(x, x_ticks)
         plt.grid(True)
@@ -377,15 +377,15 @@ if __name__ == '__main__':
         for i_plot, alg in enumerate(algorithms):
             ln1 = ax1.plot(deltas, evaluations_delta[alg.name][outcome_name], plot_colors[i_plot],
                            label='{} {}'.format(alg.label, 'effect'))
-            ln2 = ax2.plot(deltas, evaluations_delta[alg.name][time_name], plot_colors[i_plot] + plot_lines[1],
+            ln2 = ax2.plot(deltas, evaluations_delta[alg.name][time_name], plot_colors[i_plot], alt_plot_lines[1],
                            label='{} {}'.format(alg.label, 'time'))
             lns.append(ln1)
             lns.append(ln2)
         average_max_treatment_effect = sum([max(data[-1]) for data in test_data]) / len(test_data)
         if delta_grid_search_percentage:
-            ax1.plot(deltas, np.ones(nr_deltas) * 1, plot_lines[3], label='MAX_POSS_AVG')
+            ax1.plot(deltas, np.ones(nr_deltas) * 1, alt_plot_lines[3], label='MAX_POSS_AVG')
         else:
-            ax1.plot(deltas, np.ones(nr_deltas) * average_max_treatment_effect, plot_lines[3], label='MAX_POSS_AVG')
+            ax1.plot(deltas, np.ones(nr_deltas) * average_max_treatment_effect, alt_plot_lines[3], label='MAX_POSS_AVG')
         plt.grid(True)
         lines1, labels1 = ax1.get_legend_handles_labels()
         lines2, labels2 = ax2.get_legend_handles_labels()
@@ -393,4 +393,4 @@ if __name__ == '__main__':
         plt.show(block=False)
 
     plt.show()
-print("Hello World!")
+print("Done!")
