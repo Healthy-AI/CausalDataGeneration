@@ -83,28 +83,8 @@ class QLearner:
             if len(action_candidates) == 1:
                 action = action_candidates[0]
             else:
-                if False:#self.statistics is not None:
-                    highest_expected_outcome = -1
-                    action = None
-                    for a in action_candidates:
-                        index = self.to_index([x, y, action])
-                        total_n_samples = np.sum(self.statistics[index])
-                        total_n_samples += (total_n_samples == 0).astype(int)
-                        probabilities = self.statistics[index]/total_n_samples
-                        expected_outcome = np.sum(probabilities*np.arange(0, self.n_y))
-                        if expected_outcome > highest_expected_outcome:
-                            highest_expected_outcome = expected_outcome
-                            action = a
-                else:
-                    print("Choosing action arbitrarily")
-                    for a in action_candidates:
-                        try:
-                            if y[a] == -1:
-                                action = a
-                                break
-                        except IndexError:
-                            action = self.stop_action
-                            break
+                print("Choosing action arbitrarily")
+                action = np.random.choice(action_candidates)
         return history
 
     def convert_to_sars(self):
