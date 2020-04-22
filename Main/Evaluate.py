@@ -27,8 +27,8 @@ if __name__ == '__main__':
     n_a = 5
     n_y = 3
     training_episodes = 750000
-    n_training_samples = 500
-    n_test_samples = 100
+    n_training_samples = 1000
+    n_test_samples = 300
     delta = 0.0
     epsilon = 0
     reward = -0.35
@@ -45,7 +45,7 @@ if __name__ == '__main__':
     old_plot_lines = ['-', '--', ':', '-.']
 
     plot_treatment_efficiency = False
-    plot_delta_efficiency = True
+    plot_delta_efficiency = False
     plot_search_time = False
     plot_strictly_better = False
     plot_delta_grid_search = False
@@ -56,20 +56,22 @@ if __name__ == '__main__':
 
     # Generate the data
     #dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
+    #dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
     #dist = DiscreteDistributionWithInformation(n_z, n_x, n_a, n_y, seed=seed)
+    '''
     dist.print_moderator_statistics()
     dist.print_covariate_statistics()
     dist.print_treatment_statistics()
     dist.print_detailed_treatment_statistics()
-    #dist = AntibioticsDatabase(n_x=4, antibiotic_limit=6, seed=seed)
     '''
+    #dist = AntibioticsDatabase(n_x=4, antibiotic_limit=6, seed=seed)
+    #'''
     dist = NewDistribution(seed=seed)
     #dist = NewDistributionSlightlyRandom(seed=seed)
     n_x = 1
     n_a = 3
     n_y = 3
-        '''
+    #'''
     '''
     dist = FredrikDistribution()
     n_x = 1
@@ -269,7 +271,7 @@ if __name__ == '__main__':
         x_ticks = list(np.arange(1, n_a + 2))
         x_ticks[-1] = 'Done'
         for i_plot, alg in enumerate(algorithms):
-            plt.plot(x, best_founds_efficiency[i_plot], plot_markers[i_plot] + plot_colors[i_plot] + plot_lines[0], label=alg.label)
+            plt.plot(x, best_founds_efficiency[i_plot], plot_markers[i_plot] + plot_colors[i_plot], linestyle=plot_lines[0], label=alg.label)
             plt.axvline(mean_num_tests[i_plot] - 1, 0, 1, color=plot_colors[i_plot])
         plt.xticks(x, x_ticks)
         plt.grid(True)

@@ -148,17 +148,15 @@ class DeepQLearning(object):
         self.n_x = n_x
         self.n_y = n_y
         self.max_outcome = n_y - 1
-        data_split_len = int(len(data)*0.8)
-        self.data = data
-        self.data['x'] = data['x'][:data_split_len]
-        self.data['h'] = data['h'][:data_split_len]
+        data_split_len = int(len(data['x'])*0.8)
+        self.approximator = FunctionApproximation(n_x, n_a, n_y, data)
+        self.data = {'x': data['x'][:data_split_len], 'h': data['h'][:data_split_len]}
         self.validation_data = data
         self.validation_data['x'] = data['x'][data_split_len:]
         self.validation_data['h'] = data['h'][data_split_len:]
         self.constraint = constraint
         self.n_batch_trainings = n_batch_trainings
         self.batch_size = batch_size
-        self.approximator = FunctionApproximation(n_x, n_a, n_y, self.data)
 
         # replay memory
         self.memory = Memory()
@@ -306,18 +304,24 @@ class DeepQLearning(object):
     def validation_data_conversion(self):
         x_s = self.validation_data['x']
         histories = self.validation_data['h']
+        patients = []
         for i in range(len(x_s)):
             x = x_s[i]
             history = histories[i]
-            y_fac = np.ones(len(self.n_a))*-1
+            y_fac = np.ones(self.n_a)*-1
             for intervention in history:
                 treatment, outcome = intervention
                 y_fac[treatment] = outcome
+            probs = self.approximator.prepare_calculation(x, history_to_state(history, self.n_a))
             for j in range(len(y_fac)):
                 if y_fac[j] == -1:
                     # estimate outcome
-                    probs = self.approximator.prepare_calculation(x, history)
-                    estimated_best_action = np.argmax(probs)
+                    estimated_outcome = np.random.choice(self.n_y, 1, p=probs[j])[0]
+                    y_fac[j] = estimated_outcome
+            z = -1
+            patient = (z, x, y_fac)
+            patients.append(patient)
+        self.validation_data = patients
 
     def get_reward(self, action, history, x):
         gamma = self.constraint.no_better_treatment_exist(history, x)
