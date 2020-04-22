@@ -66,8 +66,8 @@ class StatisticalApproximator(ProbabilityApproximator):
         return np.copy(all_histories)
 
     def calc_history_distance(self, history, other_history):
-        h_order = len(np.argwhere(history != -1))
-        oh_order = len(np.argwhere(other_history != -1))
+        h_order = len(np.argwhere(np.array(history) != -1))
+        oh_order = len(np.argwhere(np.array(other_history) != -1))
         diff = np.abs(h_order - oh_order)
         return diff
 
@@ -78,6 +78,12 @@ class StatisticalApproximator(ProbabilityApproximator):
     def kernel_laplace(self, current_state, historical_state):
         diff = self.calc_history_distance(current_state, historical_state)
         return np.exp(-diff)
+
+    def kernel_no_history(self, current_state, historical_state):
+        diff = self.calc_history_distance(current_state, historical_state)
+        if diff == 0:
+            return 1
+        return 0
 
     def get_probabilities(self, x, state, action):
         stats = self.statistics[tuple(np.hstack((x, state, action)))]

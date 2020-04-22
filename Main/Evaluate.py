@@ -22,14 +22,14 @@ from Database.antibioticsdatabase import AntibioticsDatabase
 if __name__ == '__main__':
     # Training values
     seed = None  # Used for both synthetic and real data
-    n_z = 3
+    n_z = 2
     n_x = 1
-    n_a = 3
+    n_a = 5
     n_y = 3
     training_episodes = 750000
-    n_training_samples = 15000
-    n_test_samples = 2000
-    delta = 0.20
+    n_training_samples = 10000
+    n_test_samples = 5000
+    delta = 0.30
     epsilon = 0
     reward = -0.35
     # for grid search
@@ -43,11 +43,11 @@ if __name__ == '__main__':
     plot_lines = ['-', '--', ':', '-.']
     plot_mean_treatment_effect = False
     plot_treatment_efficiency = False
-    plot_delta_efficiency = False
+    plot_delta_efficiency = True
     plot_search_time = False
     plot_strictly_better = False
-    plot_delta_grid_search = True
-    delta_grid_search_percentage = True
+    plot_delta_grid_search = False
+    delta_grid_search_percentage = False
     fixed_scale = False
     plotbools = [plot_mean_treatment_effect, plot_treatment_efficiency, plot_delta_efficiency, plot_search_time, plot_strictly_better]
     main_start = time.time()
@@ -67,7 +67,7 @@ if __name__ == '__main__':
     n_x = 1
     n_a = 3
     n_y = 3
-    '''
+        '''
     '''
     dist = FredrikDistribution()
     n_x = 1
@@ -144,7 +144,7 @@ if __name__ == '__main__':
         ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Dynamic Programming True", label="CDPT"),
         ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation,name="Constrained Dynamic Programming FuncApprox"),
-        NaiveGreedy(n_x, n_a, n_y, split_training_data),
+        #NaiveGreedy(n_x, n_a, n_y, split_training_data),
         NaiveDynamicProgramming(n_x, n_a, n_y, split_training_data, statistical_approximation, reward=reward)
         #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
@@ -382,7 +382,7 @@ if __name__ == '__main__':
         plt.grid(True)
         lines1, labels1 = ax1.get_legend_handles_labels()
         lines2, labels2 = ax2.get_legend_handles_labels()
-        plt.legend(lines1 + lines2, labels1 + labels2)
+        plt.legend(lines1 + lines2, labels1 + labels2, loc="lower left")
         plt.show(block=False)
 
     plt.show()
