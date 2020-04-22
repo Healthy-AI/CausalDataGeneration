@@ -26,8 +26,8 @@ if __name__ == '__main__':
     n_a = 5
     n_y = 5
     training_episodes = 750000
-    n_training_samples = 5000
-    n_test_samples = 1000
+    n_training_samples = 500
+    n_test_samples = 100
     delta = 0.0
     epsilon = 0
     reward = -0.25
@@ -39,7 +39,8 @@ if __name__ == '__main__':
     treatment_slack = 0     # Eg, how close to max must we be to be considered "good enough"
     plot_colors = ['k', 'r', 'b', 'g', 'm', 'c', 'y']
     plot_markers = ['s', 'v', 'P', '1', '2', '3', '4']
-    plot_lines = ['-', '--', ':', '-.']
+    #plot_lines = ['-.', '--', ':']
+    plot_lines = [(i, (1, 3, 1, 5)) for i in range(0, 8)]
     plot_mean_treatment_effect = True
     plot_treatment_efficiency = False
     plot_search_time = True
@@ -142,13 +143,13 @@ if __name__ == '__main__':
         ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation, name="Constrained Greedy FuncApprox"),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Dynamic Programming True", label="CDPT"),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
-        #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation,
-        #                              name="Constrained Dynamic Programming FuncApprox"),
+        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation,
+                                      name="Constrained Dynamic Programming FuncApprox"),
         NaiveGreedy(n_x, n_a, n_y, split_training_data),
         #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #OnlineQLearner(n_x, n_a, n_y, dist, constraint, learning_time=training_episodes),
-        DeepQLearning(n_x, n_a, n_y, split_training_data, test_data, constraint=constraintFuncApprox),
+        DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintFuncApprox),
     ]
 
     n_algorithms = len(algorithms)
@@ -217,15 +218,20 @@ if __name__ == '__main__':
             plt.ylabel('Mean treatment effect')
             plt.xlabel('Number of tried treatments')
             average_max_treatment_effect = sum([max(data[-1]) for data in test_data])/len(test_data)
+            mean_lines = np.linspace(0, 1, n_algorithms+1)
             for i_plot, alg in enumerate(algorithms):
-                plt.plot(x, max_mean_treatment_effects[i_plot], plot_markers[i_plot] + plot_colors[i_plot] + plot_lines[0])
-                plt.plot(x, mean_treatment_effects[i_plot], plot_markers[i_plot] + plot_colors[i_plot] + plot_lines[1], label=alg.label)
-                plt.fill_between(x, mean_treatment_effects[i_plot], max_mean_treatment_effects[i_plot], color=plot_colors[i_plot], alpha=0.1)
-                plt.axvline(mean_num_tests[i_plot]-1, 0, average_max_treatment_effect, color=plot_colors[i_plot])
+                plt.plot(x, max_mean_treatment_effects[i_plot],
+                         plot_markers[i_plot] + plot_colors[i_plot], linestyle=plot_lines[i_plot % len(plot_lines)], linewidth=4, label=alg.label)
+                plt.plot(x, max_mean_treatment_effects[i_plot], plot_colors[i_plot], linestyle='-', linewidth=2, alpha=0.3)
+                #plt.plot(x, mean_treatment_effects[i_plot], plot_markers[i_plot] + plot_colors[i_plot] + plot_lines[1])
+                #plt.fill_between(x, mean_treatment_effects[i_plot], max_mean_treatment_effects[i_plot], color=plot_colors[i_plot], alpha=0.1)
+                plt.axvline(mean_num_tests[i_plot]-1, ymin=mean_lines[i_plot], ymax=mean_lines[i_plot+1], color=plot_colors[i_plot])
+                plt.axvline(mean_num_tests[i_plot] - 1, ymin=0, ymax=1,
+                            color=plot_colors[i_plot], alpha=0.1)
 
             plt.grid(True)
             plt.xticks(x, x_ticks)
-            plt.plot(x, np.ones(len(x)) * average_max_treatment_effect, plot_lines[3], label='MAX_POSS_AVG')
+            plt.plot(x, np.ones(len(x)) * average_max_treatment_effect, linestyle=plot_lines[-1], label='MAX_POSS_AVG')
 
             plt.legend(loc='lower right')
             plt.show(block=False)
@@ -366,7 +372,7 @@ if __name__ == '__main__':
             lns.append(ln1)
             lns.append(ln2)
         average_max_treatment_effect = sum([max(data[-1]) for data in test_data]) / len(test_data)
-        ax1.plot(deltas, np.ones(nr_deltas) * average_max_treatment_effect, plot_lines[3], label='MAX_POSS_AVG')
+        ax1.plot(deltas, np.ones(nr_deltas) * average_max_treatment_effect, plot_lines[-1], label='MAX_POSS_AVG')
         plt.grid(True)
         lines1, labels1 = ax1.get_legend_handles_labels()
         lines2, labels2 = ax2.get_legend_handles_labels()
