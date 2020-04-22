@@ -21,11 +21,11 @@ from Database.antibioticsdatabase import AntibioticsDatabase
 
 if __name__ == '__main__':
     # Training values
-    seed = None  # Used for both synthetic and real data
+    seed = 103050  # Used for both synthetic and real data
     n_z = 2
     n_x = 1
-    n_a = 5
-    n_y = 3
+    n_a = 3
+    n_y = 2
     training_episodes = 750000
     n_training_samples = 1000
     n_test_samples = 300
@@ -112,13 +112,12 @@ if __name__ == '__main__':
                 #if seed is not None:
                 #    dd.io.save(filepath, data)
     else:
-        datasets = {'training': {'data': dist.get_data()}, 'test': {'data': dist.get_test_data(n_test_samples)}}
-
+        datasets = {'training': {'data': split_patients(dist.get_data())}, 'test': {'data': dist.get_test_data(n_test_samples)}}
         n_x = dist.n_x
         n_a = dist.n_a
         n_y = dist.n_y
 
-    split_training_data = split_patients(datasets['training']['data'])
+    split_training_data = datasets['training']['data']
     test_data = datasets['test']['data']
     #print("Initializing function approximator")
     #start = time.time()
@@ -394,4 +393,4 @@ if __name__ == '__main__':
         plt.show(block=False)
 
     plt.show()
-
+print("Hello World!")
