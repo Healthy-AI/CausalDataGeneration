@@ -33,7 +33,7 @@ class TrueApproximator(ProbabilityApproximator):
                 for y in range(self.dist.n_y):
                     if y > np.max(state):
                         probs[a] += self.calculate_probability(x, state, a, y)
-        return np.max(probs)
+        return probs
 
     def calculate_y_given_y_pr(self, x, outcome, action, history):
         idx = np.hstack([x, outcome, action, history.flatten()])

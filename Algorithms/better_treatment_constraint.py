@@ -16,6 +16,7 @@ class Constraint:
         self.init_similar_patients = {}
         self.n_outcomes = steps_y
         self.approximator = approximator
+        self.default_bound = self.upper_bound_constraint
 
     def no_better_treatment_exist(self, outcomes_state, x):
         dict_index = hash_state(x, outcomes_state)
@@ -32,7 +33,7 @@ class Constraint:
                 gamma = 1
             else:
                 estimated_probability = self.approximator.calculate_probability_constraint(x, outcomes_state)
-                probability_limit = self.upper_bound_constraint(estimated_probability)
+                probability_limit = self.default_bound(estimated_probability)
 
                 if probability_limit < self.delta:
                     gamma = 1
