@@ -1,7 +1,10 @@
 #Source: https://towardsdatascience.com/why-going-from-implementing-q-learning-to-deep-q-learning-can-be-difficult-36e7ea1648af
+from collections import deque
+
 import numpy as np
 import tensorflow as tf
 from Algorithms.help_functions import *
+from Algorithms.function_approximation import FunctionApproximation
 
 
 def dense(x, weights, bias, activation=tf.identity, **activation_kwargs):
@@ -37,6 +40,7 @@ class Network(object):
         self.hidden_size = hidden_size
 
         np.random.seed(41)
+        tf.random.set_seed(42)
 
         self.initialize_weights(weights_initializer, bias_initializer)
         self.optimizer = optimizer(**optimizer_kwargs)
@@ -86,15 +90,13 @@ class Network(object):
 class Memory(object):
     """Memory buffer for Experience Replay."""
 
-    def __init__(self, size):
+    def __init__(self):
         """Initialize a buffer containing max_size experiences."""
-        self.buffer = []*size
-        self.i = 0
+        self.buffer = deque()
 
     def add(self, experience):
         """Add an experience to the buffer."""
-        self.buffer[self.i] = experience
-        self.i += 1
+        self.buffer.append(experience)
 
     def sample(self, batch_size):
         """Sample a batch of experiences from the buffer."""
@@ -120,7 +122,6 @@ class DeepQLearning(object):
                  n_a,
                  n_y,
                  data,
-                 test_data,
                  constraint,
                  target_update_freq=1000,
                  discount=1,
@@ -140,21 +141,27 @@ class DeepQLearning(object):
         self.target_update_freq = target_update_freq
         self.discount = discount
 
-        self.name = 'Deep Q-learning'
-        self.label = 'DQL'
+        self.name = 'Constrained Deep Q-learning'
+        self.label = 'CDQL'
         self.n_a = n_a
         self.stop_action = n_a
         self.n_x = n_x
         self.n_y = n_y
         self.max_outcome = n_y - 1
-        self.data = data
-        self.test_data = test_data
+        data_split_len = int(len(data['x'])*0.8)
+        self.approximator = FunctionApproximation(n_x, n_a, n_y, data)
+        self.data = {'x': data['x'][:data_split_len], 'h': data['h'][:data_split_len]}
+        self.validation_data = data
+        self.validation_data['x'] = data['x'][data_split_len:]
+        self.validation_data['h'] = data['h'][data_split_len:]
         self.constraint = constraint
         self.n_batch_trainings = n_batch_trainings
         self.batch_size = batch_size
 
         # replay memory
-        self.memory = Memory(len(self.data['x'])*2)
+        self.memory = Memory()
+
+        self.validation_data_conversion()
 
     def add_to_memory(self, state, last_reward, last_state, last_action):
         """Observe state and rewards, select action.
@@ -280,8 +287,8 @@ class DeepQLearning(object):
     def evaluate_test(self):
         mean_num_tests = 0
         max_treatment_effect = 0
-        n_test_samples = len(self.test_data)
-        for patient in self.test_data:
+        n_test_samples = len(self.validation_data)
+        for patient in self.validation_data:
             treatments = self.evaluate(patient)
             mean_num_tests += len(treatments)
             best_found = 0
@@ -293,6 +300,28 @@ class DeepQLearning(object):
         max_treatment_effect /= n_test_samples
         mean_num_tests /= n_test_samples
         return max_treatment_effect, mean_num_tests
+
+    def validation_data_conversion(self):
+        x_s = self.validation_data['x']
+        histories = self.validation_data['h']
+        patients = []
+        for i in range(len(x_s)):
+            x = x_s[i]
+            history = histories[i]
+            y_fac = np.ones(self.n_a)*-1
+            for intervention in history:
+                treatment, outcome = intervention
+                y_fac[treatment] = outcome
+            probs = self.approximator.prepare_calculation(x, history_to_state(history, self.n_a))
+            for j in range(len(y_fac)):
+                if y_fac[j] == -1:
+                    # estimate outcome
+                    estimated_outcome = np.random.choice(self.n_y, 1, p=probs[j])[0]
+                    y_fac[j] = estimated_outcome
+            z = -1
+            patient = (z, x, y_fac)
+            patients.append(patient)
+        self.validation_data = patients
 
     def get_reward(self, action, history, x):
         gamma = self.constraint.no_better_treatment_exist(history, x)
