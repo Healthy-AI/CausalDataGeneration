@@ -1,4 +1,4 @@
-from Algorithms.q_learning import QLearner
+from OldAlgorithms.q_learning import QLearner
 import numpy as np
 import itertools
 

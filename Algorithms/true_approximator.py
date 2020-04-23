@@ -23,7 +23,7 @@ class TrueApproximator(ProbabilityApproximator):
         for y in range(self.dist.n_y):
             if y > best_outcome:
                 for a in range(self.dist.n_a):
-                    total_ev[a] += self.calculate_probability(x, outcome_state, a, y)
+                    total_ev[a] += self.calculate_probability(x, outcome_state, a, y) * y
         return total_ev
 
     def calculate_probability_constraint(self, x, state):
@@ -44,7 +44,7 @@ class TrueApproximator(ProbabilityApproximator):
         total_probability = 0
         if len(history) == 0:
             for z, _ in np.ndenumerate(np.zeros((2,) * self.dist.n_z)):
-                total_probability += self.calculate_y_given_z_pr(x, z, action, outcome) * self.dist.get_z_probability(z)
+                total_probability += self.calculate_y_given_z_pr(x, z, action, outcome) * self.dist.calc_z_given_x_probability(z, x)
         else:
             for z, _ in np.ndenumerate(np.zeros((2,) * self.dist.n_z)):
                 total_probability += self.calculate_z_given_history_pr(x, z, history) *\
@@ -57,7 +57,7 @@ class TrueApproximator(ProbabilityApproximator):
         idx = tuple(idx)
         if idx in self.y_h_dict:
             return self.y_h_dict[idx]
-        total_prob = self.dist.get_z_probability(z)
+        total_prob = self.dist.calc_z_given_x_probability(z, x)
         history = np.copy(history)
         for h in history:
             action, outcome = h
