@@ -123,6 +123,7 @@ class DeepQLearning(object):
                  n_y,
                  data,
                  constraint,
+                 approximator,
                  target_update_freq=1000,
                  discount=1,
                  batch_size=16,
@@ -149,7 +150,7 @@ class DeepQLearning(object):
         self.n_y = n_y
         self.max_outcome = n_y - 1
         data_split_len = int(len(data['x'])*0.8)
-        self.approximator = FunctionApproximation(n_x, n_a, n_y, data)
+        self.approximator = approximator
         self.data = {'x': data['x'][:data_split_len], 'h': data['h'][:data_split_len]}
         self.validation_data = data
         self.validation_data['x'] = data['x'][data_split_len:]
@@ -161,7 +162,7 @@ class DeepQLearning(object):
         # replay memory
         self.memory = Memory()
 
-        self.validation_data_conversion()
+        self.validation_data = self.training_to_validation_data(self.validation_data)
 
     def add_to_memory(self, state, last_reward, last_state, last_action):
         """Observe state and rewards, select action.
@@ -301,9 +302,9 @@ class DeepQLearning(object):
         mean_num_tests /= n_test_samples
         return max_treatment_effect, mean_num_tests
 
-    def validation_data_conversion(self):
-        x_s = self.validation_data['x']
-        histories = self.validation_data['h']
+    def training_to_validation_data(self, data):
+        x_s = data['x']
+        histories = data['h']
         patients = []
         for i in range(len(x_s)):
             x = x_s[i]
@@ -312,16 +313,17 @@ class DeepQLearning(object):
             for intervention in history:
                 treatment, outcome = intervention
                 y_fac[treatment] = outcome
-            probs = self.approximator.prepare_calculation(x, history_to_state(history, self.n_a))
-            for j in range(len(y_fac)):
-                if y_fac[j] == -1:
+            for treatment in range(len(y_fac)):
+                if y_fac[treatment] == -1:
                     # estimate outcome
-                    estimated_outcome = np.random.choice(self.n_y, 1, p=probs[j])[0]
-                    y_fac[j] = estimated_outcome
+                    probs = self.approximator.calculate_probabilities(x, history_to_state(history, self.n_a), treatment)
+                    estimated_outcome = np.random.choice(self.n_y, 1, p=probs)[0]
+                    y_fac[treatment] = estimated_outcome
             z = -1
             patient = (z, x, y_fac)
             patients.append(patient)
-        self.validation_data = patients
+        return patients
+
 
     def get_reward(self, action, history, x):
         gamma = self.constraint.no_better_treatment_exist(history, x)
