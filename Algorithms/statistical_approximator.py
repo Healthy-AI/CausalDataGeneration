@@ -23,6 +23,10 @@ class StatisticalApproximator(ProbabilityApproximator):
         probs = self.full_history_prior(x, history, action, kernel=self.default_kernel)
         return probs[outcome]
 
+    def calculate_probabilities(self, x, history, action):
+        probs = self.full_history_prior(x, history, action, kernel=self.default_kernel)
+        return probs
+
     def get_patient_statistics(self):
         histories = self.data['h']
         x_s = self.data['x']

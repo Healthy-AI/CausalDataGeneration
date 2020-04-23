@@ -13,6 +13,9 @@ class ProbabilityApproximator:
     def calculate_probability(self, x, history, action, outcome):
         pass
 
+    def calculate_probabilities(self, x, history, action):
+        pass
+
     def to_index(self, state):
         return tuple(np.hstack(state))
 

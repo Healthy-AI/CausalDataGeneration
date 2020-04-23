@@ -24,17 +24,19 @@ if __name__ == '__main__':
     epsilon = 0
     reward = -0.35
     # for grid search
-    nr_deltas = 10
+    nr_deltas = 3
     delta_limit = 1
 
     # Plot values
     treatment_slack = 0     # Eg, how close to max must we be to be considered "good enough"
     plot_colors = ['k', 'r', 'b', 'g', 'm', 'c', 'y']
     plot_markers = ['s', 'v', 'P', '1', '2', '3', '4']
-    plot_lines = ['-', '--', ':', '-.']
-    plot_mean_treatment_effect = False
+    plot_lines = [(i, (1, 4, 1, 4)) for i in range(0, 8)]
+    alt_plot_lines = ['-', '--', ':', '-.']
+
+    plot_mean_treatment_effect = True
     plot_treatment_efficiency = False
-    plot_delta_efficiency = True
+    plot_delta_efficiency = False
     plot_search_time = False
     plot_strictly_better = False
     plot_delta_grid_search = False
@@ -45,20 +47,22 @@ if __name__ == '__main__':
 
     # Generate the data
     #dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
+    #dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
     #dist = DiscreteDistributionWithInformation(n_z, n_x, n_a, n_y, seed=seed)
+    '''
     dist.print_moderator_statistics()
     dist.print_covariate_statistics()
     dist.print_treatment_statistics()
     dist.print_detailed_treatment_statistics()
-    #dist = AntibioticsDatabase(n_x=4, antibiotic_limit=6, seed=seed)
+    '''
+    dist = AntibioticsDatabase(n_x=1, antibiotic_limit=5, seed=seed)
     '''
     dist = NewDistribution(seed=seed)
     #dist = NewDistributionSlightlyRandom(seed=seed)
     n_x = 1
     n_a = 3
     n_y = 3
-        '''
+    '''
     '''
     dist = FredrikDistribution()
     n_x = 1
@@ -108,7 +112,7 @@ if __name__ == '__main__':
     test_data = datasets['test']['data']
     #print("Initializing function approximator")
     #start = time.time()
-    #function_approximation = FunctionApproximation(n_x, n_a, n_y, split_training_data)
+    function_approximation = FunctionApproximation(n_x, n_a, n_y, split_training_data)
     #print("Initializing {} took {:.3f} seconds".format(function_approximation.name, time.time()-start))
     print("Initializing statistical approximator")
     start = time.time()
@@ -141,7 +145,8 @@ if __name__ == '__main__':
         #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #OnlineQLearner(n_x, n_a, n_y, dist, constraint, learning_time=training_episodes),
-        #DeepQLearning(n_x, n_a, n_y, split_training_data, test_data, constraint=constraintFuncApprox),
+        #DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintFuncApprox,  approximator=function_approximation),
+        #DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintStat, approximator=statistical_approximation)
     ]
 
     n_algorithms = len(algorithms)
@@ -166,7 +171,7 @@ if __name__ == '__main__':
     print("Showing plots...")
     if plot_mean_treatment_effect or plot_search_time:
         # Calculate max mean treatment effect over population
-        max_mean_treatment_effects = np.zeros((n_algorithms, n_a + 1))
+        max_mean_treatment_effects = np.zeros((n_algorithms, n_a))
         for i_alg, alg in enumerate(algorithms):
             for i_sample in range(n_test_samples):
                 treatments = evaluations[alg.name][i_sample]
@@ -202,26 +207,28 @@ if __name__ == '__main__':
 
         if plot_mean_treatment_effect:
             # Plot mean treatment effect over population
-            x = np.arange(0, n_a+1)
-            x_ticks = list(np.arange(1, n_a+2))
-            x_ticks[-1] = 'Done'
+            x = np.arange(0, n_a)
+            x_ticks = list(np.arange(1, n_a+1))
             plt.figure()
-            plt.title('Treatment effect. d: {}'.format(delta))
+            plt.title('Treatment effect. delta: {}'.format(delta))
             plt.ylabel('Mean treatment effect')
             plt.xlabel('Number of tried treatments')
             average_max_treatment_effect = sum([max(data[-1]) for data in test_data])/len(test_data)
+            mean_lines = np.linspace(0, 1, n_algorithms+1)
             for i_plot, alg in enumerate(algorithms):
-                plt.plot(x, max_mean_treatment_effects[i_plot], plot_markers[i_plot] + plot_colors[i_plot] + plot_lines[0], label=alg.label)
-                if plot_treatment_efficiency:
-                    plt.plot(x, mean_treatment_effects[i_plot], plot_markers[i_plot] + plot_colors[i_plot] + plot_lines[1])
-                    plt.fill_between(x, mean_treatment_effects[i_plot], max_mean_treatment_effects[i_plot], color=plot_colors[i_plot], alpha=0.1)
-                plt.axvline(mean_num_tests[i_plot]-1, 0, average_max_treatment_effect, color=plot_colors[i_plot])
+                plt.plot(x, max_mean_treatment_effects[i_plot],
+                         plot_markers[i_plot] + plot_colors[i_plot], linestyle=plot_lines[i_plot % len(plot_lines)], linewidth=4, label=alg.label)
+                plt.plot(x, max_mean_treatment_effects[i_plot], plot_colors[i_plot], linestyle='-', linewidth=2, alpha=0.3)
+                #plt.plot(x, mean_treatment_effects[i_plot], plot_markers[i_plot] + plot_colors[i_plot] + plot_lines[1])
+                #plt.fill_between(x, mean_treatment_effects[i_plot], max_mean_treatment_effects[i_plot], color=plot_colors[i_plot], alpha=0.1)
+                plt.axvline(mean_num_tests[i_plot]-1, ymin=mean_lines[i_plot], ymax=mean_lines[i_plot+1], color=plot_colors[i_plot])
+                plt.axvline(mean_num_tests[i_plot] - 1, ymin=0, ymax=1,
+                            color=plot_colors[i_plot], alpha=0.1)
 
             plt.grid(True)
             plt.xticks(x, x_ticks)
-            if fixed_scale:
-                plt.gca().set_ylim([0, n_y-1])
-            plt.plot(x, np.ones(len(x)) * average_max_treatment_effect, plot_lines[3], label='MAX_POSS_AVG')
+            plt.plot(x, np.ones(len(x)) * average_max_treatment_effect, linestyle=plot_lines[-1], label='MAX_POSS_AVG')
+
 
             plt.legend(loc='lower right')
             plt.show(block=False)
@@ -255,7 +262,7 @@ if __name__ == '__main__':
         x_ticks = list(np.arange(1, n_a + 2))
         x_ticks[-1] = 'Done'
         for i_plot, alg in enumerate(algorithms):
-            plt.plot(x, best_founds_efficiency[i_plot], plot_markers[i_plot] + plot_colors[i_plot] + plot_lines[0], label=alg.label)
+            plt.plot(x, best_founds_efficiency[i_plot], plot_markers[i_plot] + plot_colors[i_plot] + alt_plot_lines[0], label=alg.label)
             plt.axvline(mean_num_tests[i_plot] - 1, 0, 1, color=plot_colors[i_plot])
         plt.xticks(x, x_ticks)
         plt.grid(True)
@@ -362,20 +369,26 @@ if __name__ == '__main__':
         for i_plot, alg in enumerate(algorithms):
             ln1 = ax1.plot(deltas, evaluations_delta[alg.name][outcome_name], plot_colors[i_plot],
                            label='{} {}'.format(alg.label, 'effect'))
-            ln2 = ax2.plot(deltas, evaluations_delta[alg.name][time_name], plot_colors[i_plot] + plot_lines[1],
+            ln2 = ax2.plot(deltas, evaluations_delta[alg.name][time_name], plot_colors[i_plot] + alt_plot_lines[1],
                            label='{} {}'.format(alg.label, 'time'))
             lns.append(ln1)
             lns.append(ln2)
         average_max_treatment_effect = sum([max(data[-1]) for data in test_data]) / len(test_data)
         if delta_grid_search_percentage:
-            ax1.plot(deltas, np.ones(nr_deltas) * 1, plot_lines[3], label='MAX_POSS_AVG')
+            ax1.plot(deltas, np.ones(nr_deltas) * 1, alt_plot_lines[3], label='MAX_POSS_AVG')
         else:
-            ax1.plot(deltas, np.ones(nr_deltas) * average_max_treatment_effect, plot_lines[3], label='MAX_POSS_AVG')
+            ax1.plot(deltas, np.ones(nr_deltas) * average_max_treatment_effect, alt_plot_lines[3], label='MAX_POSS_AVG')
         plt.grid(True)
+        box = ax1.get_position()
+        ax1.set_position([box.x0, box.y0, box.width * 1, box.height])
+
+        # Put a legend to the right of the current axis
+
         lines1, labels1 = ax1.get_legend_handles_labels()
         lines2, labels2 = ax2.get_legend_handles_labels()
-        plt.legend(lines1 + lines2, labels1 + labels2, loc="lower left")
+        plt.legend(lines1 + lines2, labels1 + labels2, bbox_to_anchor=(1.04, 0), loc='upper left')
+        #plt.legend(lines1 + lines2, labels1 + labels2, loc="lower left")
         plt.show(block=False)
 
     plt.show()
-print("Hello World!")
+print("Done!")
