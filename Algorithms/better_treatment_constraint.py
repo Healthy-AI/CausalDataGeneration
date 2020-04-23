@@ -4,7 +4,7 @@ import random
 
 
 class Constraint:
-    def __init__(self, data, n_actions, steps_y, approximator, prior_weight=2, z_value=1.96, delta=0, epsilon=0):
+    def __init__(self, data, n_actions, steps_y, approximator, prior_weight=2, z_value=1.96, delta=0, epsilon=0, bound='upper'):
         self.data = data
         self.n_actions = n_actions
         self.better_treatment_constraint_dict = {}
@@ -16,7 +16,10 @@ class Constraint:
         self.init_similar_patients = {}
         self.n_outcomes = steps_y
         self.approximator = approximator
-        self.default_bound = self.upper_bound_constraint
+        if bound == 'upper':
+            self.bound = self.upper_bound_constraint
+        elif bound == 'lower':
+            self.bound = self.lower_bound_constraint
 
     def no_better_treatment_exist(self, outcomes_state, x):
         dict_index = hash_state(x, outcomes_state)
@@ -33,7 +36,7 @@ class Constraint:
                 gamma = 1
             else:
                 estimated_probability = self.approximator.calculate_probability_constraint(x, outcomes_state)
-                probability_limit = self.default_bound(estimated_probability)
+                probability_limit = self.bound(estimated_probability)
 
                 if probability_limit < self.delta:
                     gamma = 1

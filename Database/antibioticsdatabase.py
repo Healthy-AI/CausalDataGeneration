@@ -24,7 +24,8 @@ class AntibioticsDatabase:
     def get_n_a(self):
         return min(self.antibiotic_counter, self.antibiotic_limit)
 
-    def get_data(self):
+    def get_data(self, ratio_training_data=0.5):
+        assert 0 < ratio_training_data < 1
         pw = base64.b64decode(b'aGVhbHRoeUFJ').decode("utf-8")
         conn = psycopg2.connect(database="mimic", user="postgres", password=pw)
         cur = conn.cursor()
@@ -42,7 +43,7 @@ class AntibioticsDatabase:
                 intervention = np.array([treatment, outcome])
                 try:
                     if treatment not in [intervention[0] for intervention in patients[subject_id][organism]]:
-                        if intervention[1] != self.max_outcome:
+                        if outcome != self.max_outcome:
                             patients[subject_id][organism].append(intervention)
                         else:
                             # Each patient are only allowed one treatment that gives max outcome
@@ -53,22 +54,30 @@ class AntibioticsDatabase:
                 except KeyError:
                     patients[subject_id] = {organism: [intervention]}
 
+        self.n_a = self.get_n_a()
+
         antibiotics_data = {'z': [], 'x': [], 'h': []}
+        test_data = []
         for subject_id, data in patients.items():
             for organism, history in data.items():
+                r = np.random.rand()
                 x = self.organism_to_x_dict[organism]
-                antibiotics_data['z'].append(-1)
-                antibiotics_data['x'].append(x)
-                antibiotics_data['h'].append(history)
+                if r < ratio_training_data:
+                    antibiotics_data['z'].append(-1)
+                    antibiotics_data['x'].append(x)
+                    antibiotics_data['h'].append(history)
+                elif len(history) > 1:
+                    test_data.append(self.get_test_data(x, history))
 
-        self.n_a = self.get_n_a()
+
         print("{} different antibiotics".format(self.n_a))
         self.n_training_samples = len(patients)
         print("{} patients".format(self.n_training_samples))
         self.antibiotics_training_data = antibiotics_data
+        print("{} patients in training data, {} in test data".format(len(antibiotics_data['x']), len(test_data)))
         print("{} organisms".format(self.x_counter))
         print("Organisms: {}".format(self.organism_to_x_dict.keys()))
-        return antibiotics_data
+        return antibiotics_data, test_data
 
     def antibiotic_to_treatment(self, antibiotic):
         if antibiotic in self.antibiotic_to_treatment_dict:
@@ -91,25 +100,14 @@ class AntibioticsDatabase:
             else:
                 return True
 
-    def get_test_data(self, nr_test_samples=0):
-        xs = self.antibiotics_training_data['x']
-        histories = self.antibiotics_training_data['h']
-        xs, histories = self.shuffle_histories(xs, histories)
-        xs = xs[:nr_test_samples]
-        histories = histories[:nr_test_samples]
+    def get_test_data(self, x, history):
+        z = -1
+        subject = [z, x, np.ones(self.n_a)*-1]
 
-        data = []
-        for i, history in enumerate(histories):
-            z = -1
-            x = xs[i]
-            subject = [z, x, np.ones(self.n_a)*-1]
-
-            for intervention in history:
-                treatment, outcome = intervention
-                subject[2][treatment] = outcome
-            data.append(np.array(subject))
-        self.antibiotics_test_data = np.array(data)
-        return self.antibiotics_test_data
+        for intervention in history:
+            treatment, outcome = intervention
+            subject[2][treatment] = outcome
+        return subject
 
     def shuffle_histories(self, xs, histories):
         patients = list(zip(xs, histories))

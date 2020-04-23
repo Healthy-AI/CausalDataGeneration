@@ -1,6 +1,9 @@
 from Algorithms.function_approximation import FunctionApproximation
 from Algorithms.naive_dynamic_programming import NaiveDynamicProgramming
 from Algorithms.constrained_dynamic_programming import ConstrainedDynamicProgramming
+from Algorithms.naive_greedy import NaiveGreedy
+from Algorithms.deep_q_learning import DeepQLearning
+from Algorithms.constrained_greedy import ConstrainedGreedy
 from Algorithms.true_approximator import TrueApproximator
 from DataGenerator.data_generator import *
 import time
@@ -12,19 +15,19 @@ from Database.antibioticsdatabase import AntibioticsDatabase
 
 if __name__ == '__main__':
     # Training values
-    seed = None  # Used for both synthetic and real data
+    seed = 1337  # Used for both synthetic and real data
     n_z = 2
     n_x = 1
     n_a = 5
     n_y = 3
     training_episodes = 750000
     n_training_samples = 10000
-    n_test_samples = 5000
-    delta = 0.1
+    n_test_samples = 2000
+    delta = 0.0
     epsilon = 0
     reward = -0.35
     # for grid search
-    nr_deltas = 3
+    nr_deltas = 4
     delta_limit = 1
 
     # Plot values
@@ -55,7 +58,7 @@ if __name__ == '__main__':
     dist.print_treatment_statistics()
     dist.print_detailed_treatment_statistics()
     '''
-    dist = AntibioticsDatabase(n_x=1, antibiotic_limit=5, seed=seed)
+    dist = AntibioticsDatabase(n_x=1, antibiotic_limit=4, seed=seed)
     '''
     dist = NewDistribution(seed=seed)
     #dist = NewDistributionSlightlyRandom(seed=seed)
@@ -103,10 +106,12 @@ if __name__ == '__main__':
                 #if seed is not None:
                 #    dd.io.save(filepath, data)
     else:
-        datasets = {'training': {'data': split_patients(dist.get_data())}, 'test': {'data': dist.get_test_data(n_test_samples)}}
+        training_data, test_data = dist.get_data()
+        datasets = {'training': {'data': split_patients(training_data)}, 'test': {'data': test_data}}
         n_x = dist.n_x
         n_a = dist.n_a
         n_y = dist.n_y
+        n_test_samples = len(test_data)
 
     split_training_data = datasets['training']['data']
     test_data = datasets['test']['data']
@@ -116,8 +121,7 @@ if __name__ == '__main__':
     #print("Initializing {} took {:.3f} seconds".format(function_approximation.name, time.time()-start))
     print("Initializing statistical approximator")
     start = time.time()
-    statistical_approximation = StatisticalApproximator(n_x, n_a, n_y, split_training_data, prior_mode='none')
-    function_approximation = FunctionApproximation(n_x, n_a, n_y, split_training_data)
+    #statistical_approximation = StatisticalApproximator(n_x, n_a, n_y, split_training_data, prior_mode='none')
     #print("Initializing {} took {:.3f} seconds".format(statistical_approximation.name, time.time() - start))
 
     true_approximation = TrueApproximator(dist)
@@ -125,8 +129,8 @@ if __name__ == '__main__':
     print("Initializing Constraint")
     start = time.time()
 
-    constraintStat = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximation, delta=delta, epsilon=epsilon)
-    constraintTrue = Constraint(split_training_data, n_a, n_y, approximator=true_approximation, delta=delta, epsilon=epsilon)
+    #constraintStat = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximation, delta=delta, epsilon=epsilon)
+    #constraintTrue = Constraint(split_training_data, n_a, n_y, approximator=true_approximation, delta=delta, epsilon=epsilon)
     constraintFuncApprox = Constraint(split_training_data, n_a, n_y, approximator=function_approximation, delta=delta, epsilon=epsilon)
 
     print("Initializing the constraint took {:.3f} seconds".format(time.time()-start))
@@ -135,18 +139,18 @@ if __name__ == '__main__':
         #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
         #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Constrained Greedy True", label="CGT"),
         #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
-        #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation, name="Constrained Greedy FuncApprox"),
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Dynamic Programming True", label="CDPT"),
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, function_approximation, name="Dynamic Programming Func", label="CDPF"),
+        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation, name="Constrained Greedy FuncApprox"),
+        #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Dynamic Programming True", label="CDPT"),
+        #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
+        #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, function_approximation, name="Dynamic Programming Func", label="CDPF"),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation,name="Constrained Dynamic Programming FuncApprox"),
         #NaiveGreedy(n_x, n_a, n_y, split_training_data),
         #NaiveDynamicProgramming(n_x, n_a, n_y, split_training_data, statistical_approximation, reward=reward)
         #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #OnlineQLearner(n_x, n_a, n_y, dist, constraint, learning_time=training_episodes),
-        #DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintFuncApprox,  approximator=function_approximation),
         #DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintStat, approximator=statistical_approximation)
+        DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintFuncApprox,  approximator=function_approximation),
     ]
 
     n_algorithms = len(algorithms)
@@ -221,7 +225,7 @@ if __name__ == '__main__':
                 plt.plot(x, max_mean_treatment_effects[i_plot], plot_colors[i_plot], linestyle='-', linewidth=2, alpha=0.3)
                 #plt.plot(x, mean_treatment_effects[i_plot], plot_markers[i_plot] + plot_colors[i_plot] + plot_lines[1])
                 #plt.fill_between(x, mean_treatment_effects[i_plot], max_mean_treatment_effects[i_plot], color=plot_colors[i_plot], alpha=0.1)
-                plt.axvline(mean_num_tests[i_plot]-1, ymin=mean_lines[i_plot], ymax=mean_lines[i_plot+1], color=plot_colors[i_plot])
+                plt.axvline(mean_num_tests[i_plot] - 1, ymin=mean_lines[i_plot], ymax=mean_lines[i_plot+1], color=plot_colors[i_plot])
                 plt.axvline(mean_num_tests[i_plot] - 1, ymin=0, ymax=1,
                             color=plot_colors[i_plot], alpha=0.1)
 
