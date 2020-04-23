@@ -18,8 +18,8 @@ if __name__ == '__main__':
     n_x = 1
     n_a = 5
     n_y = 3
-    n_training_samples = 30000
-    n_test_samples = 15000
+    n_training_samples = 100000
+    n_test_samples = 25000
     epsilon = 0
     delta = 0.0
     # for grid search
@@ -173,7 +173,7 @@ if __name__ == '__main__':
         plt.grid(True)
         lines1, labels1 = ax1.get_legend_handles_labels()
         lines2, labels2 = ax2.get_legend_handles_labels()
-        plt.legend(lines1 + lines2, labels1 + labels2, loc="lower left")
+        plt.legend(lines1 + lines2, labels1 + labels2, bbox_to_anchor=(1.04, 0), loc='upper left')
         plt.show(block=False)
 
     plt.show()

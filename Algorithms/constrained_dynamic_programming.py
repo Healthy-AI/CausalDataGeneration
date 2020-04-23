@@ -105,10 +105,13 @@ class ConstrainedDynamicProgramming(QLearner):
             else:
                 print("Choosing action greedily")
                 probs = np.zeros(self.n_a)
-                for a in action_candidates:
-                    for outcome in range(np.max(y)+1,self.n_y):
-                        probs[a] += self.approximator.calculate_probability(x, y, a, outcome)
-                action = np.argmax(probs)
+                if self.stop_action in action_candidates:
+                    action = self.stop_action
+                else:
+                    for a in action_candidates:
+                        for outcome in range(np.max(y)+1,self.n_y):
+                            probs[a] += self.approximator.calculate_probability(x, y, a, outcome)
+                    action = np.argmax(probs)
         return history
 
 
