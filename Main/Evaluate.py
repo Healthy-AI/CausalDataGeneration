@@ -33,17 +33,17 @@ if __name__ == '__main__':
     epsilon = 0
     reward = -0.35
     # for grid search
-    nr_deltas = 10
+    nr_deltas = 3
     delta_limit = 1
 
     # Plot values
     treatment_slack = 0     # Eg, how close to max must we be to be considered "good enough"
     plot_colors = ['k', 'r', 'b', 'g', 'm', 'c', 'y']
     plot_markers = ['s', 'v', 'P', '1', '2', '3', '4']
-    plot_lines = [(i, (1, 3, 1, 5)) for i in range(0, 8)]
-    plot_mean_treatment_effect = True
+    plot_lines = [(i, (1, 4, 1, 4)) for i in range(0, 8)]
     alt_plot_lines = ['-', '--', ':', '-.']
 
+    plot_mean_treatment_effect = True
     plot_treatment_efficiency = False
     plot_delta_efficiency = False
     plot_search_time = False
@@ -56,22 +56,22 @@ if __name__ == '__main__':
 
     # Generate the data
     #dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    #dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
+    dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
     #dist = DiscreteDistributionWithInformation(n_z, n_x, n_a, n_y, seed=seed)
-    '''
+    #'''
     dist.print_moderator_statistics()
     dist.print_covariate_statistics()
     dist.print_treatment_statistics()
     dist.print_detailed_treatment_statistics()
-    '''
-    #dist = AntibioticsDatabase(n_x=4, antibiotic_limit=6, seed=seed)
     #'''
+    #dist = AntibioticsDatabase(n_x=4, antibiotic_limit=6, seed=seed)
+    '''
     dist = NewDistribution(seed=seed)
     #dist = NewDistributionSlightlyRandom(seed=seed)
     n_x = 1
     n_a = 3
     n_y = 3
-    #'''
+    '''
     '''
     dist = FredrikDistribution()
     n_x = 1
@@ -142,18 +142,19 @@ if __name__ == '__main__':
     algorithms = [
         #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
         #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Constrained Greedy True", label="CGT"),
-        #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
-        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation, name="Constrained Greedy FuncApprox"),
+        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
+        #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation, name="Constrained Greedy FuncApprox"),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Dynamic Programming True", label="CDPT"),
-        #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation,
-                                      name="Constrained Dynamic Programming FuncApprox"),
+        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
+        #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation,
+        #                              name="Constrained Dynamic Programming FuncApprox"),
         NaiveGreedy(n_x, n_a, n_y, split_training_data),
         #NaiveDynamicProgramming(n_x, n_a, n_y, split_training_data, statistical_approximation, reward=reward)
         #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #OnlineQLearner(n_x, n_a, n_y, dist, constraint, learning_time=training_episodes),
-        DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintFuncApprox),
+        #DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintFuncApprox,  approximator=function_approximation),
+        DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintStat, approximator=statistical_approximation)
     ]
 
     n_algorithms = len(algorithms)
@@ -218,7 +219,7 @@ if __name__ == '__main__':
             x_ticks = list(np.arange(1, n_a+2))
             x_ticks[-1] = 'Done'
             plt.figure()
-            plt.title('Treatment effect. d: {}'.format(delta))
+            plt.title('Treatment effect. delta: {}'.format(delta))
             plt.ylabel('Mean treatment effect')
             plt.xlabel('Number of tried treatments')
             average_max_treatment_effect = sum([max(data[-1]) for data in test_data])/len(test_data)
@@ -377,7 +378,7 @@ if __name__ == '__main__':
         for i_plot, alg in enumerate(algorithms):
             ln1 = ax1.plot(deltas, evaluations_delta[alg.name][outcome_name], plot_colors[i_plot],
                            label='{} {}'.format(alg.label, 'effect'))
-            ln2 = ax2.plot(deltas, evaluations_delta[alg.name][time_name], plot_colors[i_plot], alt_plot_lines[1],
+            ln2 = ax2.plot(deltas, evaluations_delta[alg.name][time_name], plot_colors[i_plot] + alt_plot_lines[1],
                            label='{} {}'.format(alg.label, 'time'))
             lns.append(ln1)
             lns.append(ln2)

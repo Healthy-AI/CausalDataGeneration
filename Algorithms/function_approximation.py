@@ -88,8 +88,12 @@ class FunctionApproximation(ProbabilityApproximator):
         return probability_of_outcome_approximation
 
     def calculate_probability(self, x, history, action, outcome):
-        res = self.prepare_calculation(x, history, action)
-        return res[0][outcome]
+        probs = self.prepare_calculation(x, history, action)
+        return probs[0][outcome]
+
+    def calculate_probabilities(self, x, history, action):
+        probs = self.prepare_calculation(x, history, action)
+        return probs[0]
 
     def calculate_probability_greedy(self, state, best_outcome, use_expected_value=True):
         x, history = state
