@@ -103,6 +103,25 @@ class DiscreteDistribution(Distribution):
             pz *= self.Pz[i] ** z[i] * (1 - self.Pz[i]) ** (1 - z[i])
         return pz
 
+    def calc_x_given_z_probability(self, z, x):
+        x_weights = self.calc_x_weights(z)
+        px = 1
+        for i in range(self.n_x):
+            px *= x_weights[i] ** x[i] * (1 - x_weights[i]) ** (1 - x[i])
+        return px
+
+    def calc_x_probability(self, x):
+        px = 0
+        for z in itertools.product(range(2), repeat=self.n_z):
+            px += self.calc_x_given_z_probability(z, x) * self.get_z_probability(z)
+        return px
+
+    def calc_z_given_x_probability(self, z, x):
+        pz = self.get_z_probability(z)
+        px = self.calc_x_probability(x)
+        pxz = self.calc_x_given_z_probability(z, x)
+        return pxz * pz / px
+
     def print_moderator_statistics(self):
         print("Probabilities for Z:")
         total = 0
@@ -117,13 +136,7 @@ class DiscreteDistribution(Distribution):
         print("Probabilities for X:")
         total = 0
         for x in itertools.product(range(2), repeat=self.n_x):
-            tot_px = 0
-            for z in itertools.product(range(2), repeat=self.n_z):
-                px = 1
-                prob_vec_x = self.calc_x_weights(z)
-                for i in range(self.n_x):
-                    px *= prob_vec_x[i]**x[i] * (1-prob_vec_x[i])**(1-x[i])
-                tot_px += px * self.get_z_probability(z)
+            tot_px = self.calc_x_probability(x)
             total += tot_px
             print("{} : {:05.3f}".format(x, tot_px))
 
@@ -143,7 +156,7 @@ class DiscreteDistribution(Distribution):
                     py = np.copy(self.calc_y_weights(a, x, z))
                     assert np.isclose(np.sum(py), 1, atol=0.000001), \
                         "Probabilities of treatment {} don't add up to 1 for x: {}, z: {}, is {}".format(a, x, z, np.sum(py))
-                    py *= self.get_z_probability(z)
+                    py *= self.calc_z_given_x_probability(z, x)
                     tot_py += py
                 print("{:{width}}".format(str(x), width=self.n_x*3 + int(self.n_x == 1)), end='')
                 for i in range(self.n_y):

@@ -1,8 +1,5 @@
-from Algorithms.q_learning import *
+from OldAlgorithms.q_learning import *
 from Algorithms.better_treatment_constraint import *
-from Algorithms.help_functions import *
-import random
-import multiprocessing as mp
 
 
 class ConstrainedDynamicProgramming(QLearner):
@@ -76,8 +73,42 @@ class ConstrainedDynamicProgramming(QLearner):
     def set_constraint(self, constraint):
         self.constraint = constraint.no_better_treatment_exist
 
+    def evaluate(self, subject):
+        if self.q_table is None:
+            print("Run learn first!")
+            return
+        z, x, y_fac = subject
+        y = np.array([-1] * self.n_a)
+        history = []
+        state = np.array([x, y])
+        mask_unknown_actions = y_fac.copy().astype(float)
+        mask_unknown_actions[mask_unknown_actions != -1] = 0
+        mask_unknown_actions[mask_unknown_actions == -1] = -np.inf
+        mask_unknown_actions = np.append(mask_unknown_actions, 0)
+        action = np.argmax(self.q_table[self.to_index(state)]+mask_unknown_actions)
 
+        while action != self.n_a and len(history) < self.n_a:
+            y[action] = y_fac[action]
+            history.append([action, y[action]])
+            state = np.array([x, y])
 
+            action_candidates = np.argwhere(self.q_table[self.to_index(state)] ==
+                                            np.max(self.q_table[self.to_index(state)]+mask_unknown_actions)).flatten()
 
+            to_remove = []
+            for i, a in enumerate(action_candidates):
+                if a != self.stop_action and y[a] != -1:
+                    to_remove.append(i)
+            action_candidates = np.delete(action_candidates, to_remove)
+            if len(action_candidates) == 1:
+                action = action_candidates[0]
+            else:
+                print("Choosing action greedily")
+                probs = np.zeros(self.n_a)
+                for a in action_candidates:
+                    for outcome in range(np.max(y)+1,self.n_y):
+                        probs[a] += self.approximator.calculate_probability(x, y, a, outcome)
+                action = np.argmax(probs)
+        return history
 
 

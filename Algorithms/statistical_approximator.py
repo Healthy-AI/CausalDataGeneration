@@ -4,7 +4,7 @@ from Algorithms.help_functions import *
 
 
 class StatisticalApproximator(ProbabilityApproximator):
-    def __init__(self, n_x, n_a, n_y, data, epsilon=0):
+    def __init__(self, n_x, n_a, n_y, data, epsilon=0, prior_mode='gaussian'):
         super().__init__(n_x, n_a, n_y, data)
         self.statistics = self.get_patient_statistics()
         self.data = data
@@ -12,7 +12,12 @@ class StatisticalApproximator(ProbabilityApproximator):
         self.epsilon = epsilon
         self.type = type
         self.name = 'statistics approximator'
-        self.default_kernel = self.kernel_gaussian
+        if prior_mode == 'gaussian':
+            self.default_kernel = self.kernel_gaussian
+        elif prior_mode == 'none':
+            self.default_kernel = self.kernel_no_history
+        else:
+            self.default_kernel = self.kernel_laplace
 
     def calculate_probability(self, x, history, action, outcome):
         probs = self.full_history_prior(x, history, action, kernel=self.default_kernel)
@@ -38,9 +43,6 @@ class StatisticalApproximator(ProbabilityApproximator):
         return patient_statistics
 
     def calculate_probability_greedy(self, state, best_outcome, use_expected_value=True):
-        #prob_matrix = self.statistics[tuple(np.hstack(state))]
-        #return super(StatisticalApproximator, self).calculate_probability_greedy(prob_matrix, best_outcome, use_expected_value)
-
         x, history = state
         probs = np.zeros(self.n_a)
         for a in range(self.n_a):
@@ -100,8 +102,10 @@ class StatisticalApproximator(ProbabilityApproximator):
             probs = self.get_probabilities(x, h, action)
             if np.max(probs) != 0:
                 k = kernel(state, h)
-                total_probabilities += k * self.get_probabilities(x, h, action)
+                total_probabilities += k * probs
                 total_kernel += k
+        if np.max(total_probabilities) == 0:
+            return np.ones(self.n_y) / self.n_y
         return total_probabilities / total_kernel
 
     def calculate_probability_constraint(self, x, state):

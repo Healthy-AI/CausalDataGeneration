@@ -1,35 +1,26 @@
+from Algorithms.function_approximation import FunctionApproximation
 from Algorithms.naive_dynamic_programming import NaiveDynamicProgramming
-from Algorithms.naive_greedy import NaiveGreedy
-from Algorithms.q_learning import QLearner
-from Algorithms.q_learning_with_constraint import QLearnerConstrained
-from Algorithms.greedyShuffledHistory import GreedyShuffled
-from Algorithms.constrained_greedy import ConstrainedGreedy
 from Algorithms.constrained_dynamic_programming import ConstrainedDynamicProgramming
 from Algorithms.true_approximator import TrueApproximator
 from DataGenerator.data_generator import *
 import time
-import deepdish as dd
-import random
 from pathlib import Path
-from Algorithms.online_q_learning import OnlineQLearner
 from Algorithms.better_treatment_constraint import Constraint
-from Algorithms.function_approximation import FunctionApproximation
 from Algorithms.statistical_approximator import StatisticalApproximator
-from Algorithms.deep_q_learning import DeepQLearning
 from Database.antibioticsdatabase import AntibioticsDatabase
 
 
 if __name__ == '__main__':
     # Training values
-    seed = 103050  # Used for both synthetic and real data
+    seed = None  # Used for both synthetic and real data
     n_z = 2
     n_x = 1
-    n_a = 3
-    n_y = 2
+    n_a = 5
+    n_y = 3
     training_episodes = 750000
     n_training_samples = 10000
     n_test_samples = 5000
-    delta = 0.30
+    delta = 0.1
     epsilon = 0
     reward = -0.35
     # for grid search
@@ -121,7 +112,8 @@ if __name__ == '__main__':
     #print("Initializing {} took {:.3f} seconds".format(function_approximation.name, time.time()-start))
     print("Initializing statistical approximator")
     start = time.time()
-    statistical_approximation = StatisticalApproximator(n_x, n_a, n_y, split_training_data)
+    statistical_approximation = StatisticalApproximator(n_x, n_a, n_y, split_training_data, prior_mode='none')
+    function_approximation = FunctionApproximation(n_x, n_a, n_y, split_training_data)
     #print("Initializing {} took {:.3f} seconds".format(statistical_approximation.name, time.time() - start))
 
     true_approximation = TrueApproximator(dist)
@@ -131,7 +123,7 @@ if __name__ == '__main__':
 
     constraintStat = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximation, delta=delta, epsilon=epsilon)
     constraintTrue = Constraint(split_training_data, n_a, n_y, approximator=true_approximation, delta=delta, epsilon=epsilon)
-    #constraintFuncApprox = Constraint(split_training_data, n_a, n_y, approximator=function_approximation, delta=delta, epsilon=epsilon)
+    constraintFuncApprox = Constraint(split_training_data, n_a, n_y, approximator=function_approximation, delta=delta, epsilon=epsilon)
 
     print("Initializing the constraint took {:.3f} seconds".format(time.time()-start))
     print("Initializing algorithms")
@@ -142,9 +134,10 @@ if __name__ == '__main__':
         #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation, name="Constrained Greedy FuncApprox"),
         ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Dynamic Programming True", label="CDPT"),
         ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
+        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, function_approximation, name="Dynamic Programming Func", label="CDPF"),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation,name="Constrained Dynamic Programming FuncApprox"),
         #NaiveGreedy(n_x, n_a, n_y, split_training_data),
-        NaiveDynamicProgramming(n_x, n_a, n_y, split_training_data, statistical_approximation, reward=reward)
+        #NaiveDynamicProgramming(n_x, n_a, n_y, split_training_data, statistical_approximation, reward=reward)
         #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #OnlineQLearner(n_x, n_a, n_y, dist, constraint, learning_time=training_episodes),
