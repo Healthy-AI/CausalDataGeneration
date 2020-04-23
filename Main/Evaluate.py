@@ -56,15 +56,15 @@ if __name__ == '__main__':
 
     # Generate the data
     #dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
+    #dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
     #dist = DiscreteDistributionWithInformation(n_z, n_x, n_a, n_y, seed=seed)
-    #'''
+    '''
     dist.print_moderator_statistics()
     dist.print_covariate_statistics()
     dist.print_treatment_statistics()
     dist.print_detailed_treatment_statistics()
-    #'''
-    #dist = AntibioticsDatabase(n_x=4, antibiotic_limit=6, seed=seed)
+    '''
+    dist = AntibioticsDatabase(n_x=1, antibiotic_limit=5, seed=seed)
     '''
     dist = NewDistribution(seed=seed)
     #dist = NewDistributionSlightlyRandom(seed=seed)
@@ -142,10 +142,10 @@ if __name__ == '__main__':
     algorithms = [
         #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
         #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Constrained Greedy True", label="CGT"),
-        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
-        #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation, name="Constrained Greedy FuncApprox"),
+        #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
+        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation, name="Constrained Greedy FuncApprox"),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Dynamic Programming True", label="CDPT"),
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
+        #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation,
         #                              name="Constrained Dynamic Programming FuncApprox"),
         NaiveGreedy(n_x, n_a, n_y, split_training_data),
@@ -154,7 +154,7 @@ if __name__ == '__main__':
         #QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
         #OnlineQLearner(n_x, n_a, n_y, dist, constraint, learning_time=training_episodes),
         #DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintFuncApprox,  approximator=function_approximation),
-        DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintStat, approximator=statistical_approximation)
+        #DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintStat, approximator=statistical_approximation)
     ]
 
     n_algorithms = len(algorithms)
@@ -179,7 +179,7 @@ if __name__ == '__main__':
     print("Showing plots...")
     if plot_mean_treatment_effect or plot_search_time:
         # Calculate max mean treatment effect over population
-        max_mean_treatment_effects = np.zeros((n_algorithms, n_a + 1))
+        max_mean_treatment_effects = np.zeros((n_algorithms, n_a))
         for i_alg, alg in enumerate(algorithms):
             for i_sample in range(n_test_samples):
                 treatments = evaluations[alg.name][i_sample]
@@ -215,9 +215,8 @@ if __name__ == '__main__':
 
         if plot_mean_treatment_effect:
             # Plot mean treatment effect over population
-            x = np.arange(0, n_a+1)
-            x_ticks = list(np.arange(1, n_a+2))
-            x_ticks[-1] = 'Done'
+            x = np.arange(0, n_a)
+            x_ticks = list(np.arange(1, n_a+1))
             plt.figure()
             plt.title('Treatment effect. delta: {}'.format(delta))
             plt.ylabel('Mean treatment effect')
@@ -388,9 +387,15 @@ if __name__ == '__main__':
         else:
             ax1.plot(deltas, np.ones(nr_deltas) * average_max_treatment_effect, alt_plot_lines[3], label='MAX_POSS_AVG')
         plt.grid(True)
+        box = ax1.get_position()
+        ax1.set_position([box.x0, box.y0, box.width * 1, box.height])
+
+        # Put a legend to the right of the current axis
+
         lines1, labels1 = ax1.get_legend_handles_labels()
         lines2, labels2 = ax2.get_legend_handles_labels()
-        plt.legend(lines1 + lines2, labels1 + labels2, loc="lower left")
+        plt.legend(lines1 + lines2, labels1 + labels2, bbox_to_anchor=(1.04, 0), loc='upper left')
+        #plt.legend(lines1 + lines2, labels1 + labels2, loc="lower left")
         plt.show(block=False)
 
     plt.show()

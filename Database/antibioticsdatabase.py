@@ -19,6 +19,7 @@ class AntibioticsDatabase:
         self.name = 'Antibiotics'
         self.n_a = None
         self.n_y = 3
+        self.max_outcome = self.n_y-1
 
     def get_n_a(self):
         return min(self.antibiotic_counter, self.antibiotic_limit)
@@ -41,7 +42,14 @@ class AntibioticsDatabase:
                 intervention = np.array([treatment, outcome])
                 try:
                     if treatment not in [intervention[0] for intervention in patients[subject_id][organism]]:
-                        patients[subject_id][organism].append(intervention)
+                        if intervention[1] != self.max_outcome:
+                            patients[subject_id][organism].append(intervention)
+                        else:
+                            # Each patient are only allowed one treatment that gives max outcome
+                            best_outcome = np.max([i[1] for i in patients[subject_id][organism]])
+                            if best_outcome < self.max_outcome:
+                                patients[subject_id][organism].append(intervention)
+
                 except KeyError:
                     patients[subject_id] = {organism: [intervention]}
 
