@@ -19,7 +19,7 @@ if __name__ == '__main__':
     n_a = 5
     n_y = 3
     n_test_samples = 10000
-    data_limits = [100, 1000, 5000, 10000, 25000, 50000, 10000]
+    data_limits = [100, 1000, 5000, 10000, 25000, 50000, 100000]
     n_training_samples = np.max(data_limits)
     epsilon = 0
     delta = 0.2
@@ -96,7 +96,7 @@ if __name__ == '__main__':
             print("Finished {} for data amount {} in {} seconds".format(alg.name, len(training_data_set['x']), time.time() - start))
 
     # Plot mean treatment effect vs delta
-    fig, ax1 = plt.subplots()
+    fig, ax1 = plt.subplots(figsize=(10, 7))
     plt.title('Mean treatment effect/mean search time vs data amount')
     plt.xlabel('Data amount')
     ax2 = ax1.twinx()
