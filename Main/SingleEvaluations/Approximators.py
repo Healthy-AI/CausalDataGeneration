@@ -1,3 +1,4 @@
+from Algorithms.constrained_greedy import ConstrainedGreedy
 from Algorithms.function_approximation import FunctionApproximation
 from Algorithms.naive_dynamic_programming import NaiveDynamicProgramming
 from Algorithms.constrained_dynamic_programming import ConstrainedDynamicProgramming
@@ -15,14 +16,14 @@ if __name__ == '__main__':
     seed = 3162  # Used for both synthetic and real data
     n_z = 3
     n_x = 1
-    n_a = 3
+    n_a = 5
     n_y = 3
-    n_training_samples = 5000
-    n_test_samples = 5000
+    n_training_samples = 100000
+    n_test_samples = 25000
     epsilon = 0
     delta = 0.0
     # for grid search
-    nr_deltas = 3
+    nr_deltas = 40
     delta_limit = 1.0
 
     # Plot values
@@ -89,9 +90,8 @@ if __name__ == '__main__':
     start = time.time()
     statistical_approximationPrior = StatisticalApproximator(n_x, n_a, n_y, split_training_data, prior_mode='gaussian')
     statistical_approximationNone = StatisticalApproximator(n_x, n_a, n_y, split_training_data, prior_mode='none')
-    function_approximation = FunctionApproximation(n_x, n_a, n_y, split_training_data)
-
     true_approximation = TrueApproximator(dist)
+    function_approximation = FunctionApproximation(n_x, n_a, n_y, split_training_data)
 
     print("Initializing Constraint")
     start = time.time()
@@ -99,6 +99,7 @@ if __name__ == '__main__':
     constraintNone = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximationNone, delta=delta, epsilon=epsilon)
     constraintPrior = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximationPrior, delta=delta, epsilon=epsilon)
     constraintFunc = Constraint(split_training_data, n_a, n_y, approximator=function_approximation, delta=delta, epsilon=epsilon)
+    constraintTrue = Constraint(split_training_data, n_a, n_y, approximator=true_approximation, delta=delta, epsilon=epsilon)
 
     print("Initializing the constraint took {:.3f} seconds".format(time.time()-start))
     print("Initializing algorithms")
@@ -106,6 +107,10 @@ if __name__ == '__main__':
         ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintNone, statistical_approximationNone, name="Dynamic Programming Uniform Prior", label="CDP_U"),
         ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintPrior, statistical_approximationPrior, name="Dynamic Programming Historical Prior", label="CDP_H"),
         ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintFunc, function_approximation, name="Dynamic Programming Function Approximation", label="CDP_F"),
+        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Dynamic Programming True", label="CDP_T"),
+        #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintNone, statistical_approximationNone, name="Greedy Uniform Prior", label="CG_U"),
+        #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintPrior, statistical_approximationPrior, name="Greedy Historical Prior", label="CG_H"),
+        #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintFunc, function_approximation, name="Greedy Function Approximation", label="CG_F"),
     ]
 
     n_algorithms = len(algorithms)
@@ -168,7 +173,7 @@ if __name__ == '__main__':
         plt.grid(True)
         lines1, labels1 = ax1.get_legend_handles_labels()
         lines2, labels2 = ax2.get_legend_handles_labels()
-        plt.legend(lines1 + lines2, labels1 + labels2, loc="lower left")
+        plt.legend(lines1 + lines2, labels1 + labels2, bbox_to_anchor=(1.04, 0), loc='upper left')
         plt.show(block=False)
 
     plt.show()

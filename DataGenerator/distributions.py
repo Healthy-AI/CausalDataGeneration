@@ -75,6 +75,23 @@ class DiscreteDistribution(Distribution):
         probs = probs / den
         return self.random.choice(self.n_a, p=probs)
 
+    def evaluate(self, subject):
+        z, x, y_fac = subject
+        mask_unknown_actions = y_fac.copy().astype(float)
+        mask_unknown_actions[mask_unknown_actions != -1] = 0
+        mask_unknown_actions[mask_unknown_actions == -1] = -np.inf
+        mask_unknown_actions = np.append(mask_unknown_actions, 0)
+        history = []
+        action = self.draw_a(history, x, None)
+
+        while action != self.n_a and len(history) < self.n_a:
+            outcome = y_fac[action]
+            history.append([action, outcome])
+            if outcome >= self.n_y - 1:
+                break
+            action = self.draw_a(history, x, None)
+        return history
+
     def calc_a_closeness(self, a0, a1, x):
         cc = np.exp(self.Py[a0][0:self.n_x+1].T.dot(np.concatenate(([1], x)))) / sum(np.exp(self.Py[a0][0:self.n_x+1].T.dot(np.concatenate(([1], x)))))
         dd = np.exp(self.Py[a1][0:self.n_x+1].T.dot(np.concatenate(([1], x)))) / sum(np.exp(self.Py[a1][0:self.n_x+1].T.dot(np.concatenate(([1], x)))))
