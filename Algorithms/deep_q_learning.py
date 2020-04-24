@@ -127,7 +127,7 @@ class DeepQLearning(object):
                  target_update_freq=1000,
                  discount=1,
                  batch_size=16,
-                 n_batch_trainings=10000):
+                 n_batch_trainings=3000):
         """Set parameters, initialize network."""
         action_space_size = n_a + 1
         state_space_size = n_x + n_a

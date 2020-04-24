@@ -24,7 +24,7 @@ class AntibioticsDatabase:
     def get_n_a(self):
         return min(self.antibiotic_counter, self.antibiotic_limit)
 
-    def get_data(self, ratio_training_data=0.5):
+    def get_data(self, ratio_training_data=0.95):
         assert 0 < ratio_training_data < 1
         pw = base64.b64decode(b'aGVhbHRoeUFJ').decode("utf-8")
         conn = psycopg2.connect(database="mimic", user="postgres", password=pw)
