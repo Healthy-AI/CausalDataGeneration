@@ -1,10 +1,11 @@
+from Algorithms.constrained_greedy import ConstrainedGreedy
 from Algorithms.function_approximation import FunctionApproximation
 from Algorithms.naive_dynamic_programming import NaiveDynamicProgramming
 from Algorithms.constrained_dynamic_programming import ConstrainedDynamicProgramming
 from Algorithms.naive_greedy import NaiveGreedy
 from Algorithms.deep_q_learning import DeepQLearning
-from Algorithms.constrained_greedy import ConstrainedGreedy
 from Algorithms.true_approximator import TrueApproximator
+from Algorithms.true_constraint import TrueConstraint
 from DataGenerator.data_generator import *
 import time
 from pathlib import Path
@@ -21,8 +22,8 @@ if __name__ == '__main__':
     n_y = 3
     training_episodes = 750000
     n_training_samples = 30000
-    n_test_samples = 3000
-    delta = 0.0
+    n_test_samples = 15000
+    delta = 0.15
     epsilon = 0
     reward = -0.35
     # for grid search
@@ -36,8 +37,9 @@ if __name__ == '__main__':
     plot_lines = [(i, (1, 4, 1, 4)) for i in range(0, 8)]
     alt_plot_lines = ['-', '--', ':', '-.']
 
-    plot_mean_treatment_effect = False
-    plot_treatment_efficiency = False
+
+    plot_mean_treatment_effect = True
+    plot_treatment_efficiency = True
     plot_delta_efficiency = False
     plot_search_time = False
     plot_strictly_better = False
@@ -49,16 +51,17 @@ if __name__ == '__main__':
     main_start = time.time()
 
     # Generate the data
-    # dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
+
+    #dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
     dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    # dist = DiscreteDistributionWithInformation(n_z, n_x, n_a, n_y, seed=seed)
+    #dist = DiscreteDistributionWithInformation(n_z, n_x, n_a, n_y, seed=seed)
     #'''
     dist.print_moderator_statistics()
     dist.print_covariate_statistics()
     dist.print_treatment_statistics()
     dist.print_detailed_treatment_statistics()
     #'''
-    #dist = AntibioticsDatabase(n_x=1, antibiotic_limit=4, seed=seed)
+    #dist = AntibioticsDatabase(n_x=1, antibiotic_limit=5, seed=seed)
     '''
     dist = NewDistribution(seed=seed)
     #dist = NewDistributionSlightlyRandom(seed=seed)
@@ -126,6 +129,7 @@ if __name__ == '__main__':
     statistical_approximation = StatisticalApproximator(n_x, n_a, n_y, split_training_data, prior_mode='none')
     # print("Initializing {} took {:.3f} seconds".format(statistical_approximation.name, time.time() - start))
 
+
     true_approximation = TrueApproximator(dist)
 
     print("Initializing Constraint")
@@ -166,6 +170,7 @@ if __name__ == '__main__':
         # DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintStat, approximator=statistical_approximation)
         # DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintFuncApprox,
         #              approximator=function_approximation),
+
     ]
 
     n_algorithms = len(algorithms)
