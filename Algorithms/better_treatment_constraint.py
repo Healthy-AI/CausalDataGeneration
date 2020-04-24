@@ -16,9 +16,9 @@ class Constraint:
         self.init_similar_patients = {}
         self.n_outcomes = steps_y
         self.approximator = approximator
-        if bound == 'upper':
+        if str.lower(bound) == 'upper':
             self.bound = self.upper_bound_constraint
-        elif bound == 'lower':
+        elif str.lower(bound) == 'lower':
             self.bound = self.lower_bound_constraint
 
     def no_better_treatment_exist(self, outcomes_state, x):

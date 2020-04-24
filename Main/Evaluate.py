@@ -12,53 +12,53 @@ from Algorithms.better_treatment_constraint import Constraint
 from Algorithms.statistical_approximator import StatisticalApproximator
 from Database.antibioticsdatabase import AntibioticsDatabase
 
-
 if __name__ == '__main__':
     # Training values
-    seed = 1337  # Used for both synthetic and real data
-    n_z = 2
+    seed = 90821  # Used for both synthetic and real data
+    n_z = 3
     n_x = 1
     n_a = 5
     n_y = 3
     training_episodes = 750000
-    n_training_samples = 10000
-    n_test_samples = 2000
+    n_training_samples = 30000
+    n_test_samples = 3000
     delta = 0.0
     epsilon = 0
     reward = -0.35
     # for grid search
-    nr_deltas = 4
+    nr_deltas = 40
     delta_limit = 1
 
     # Plot values
-    treatment_slack = 0     # Eg, how close to max must we be to be considered "good enough"
+    treatment_slack = 0  # Eg, how close to max must we be to be considered "good enough"
     plot_colors = ['k', 'r', 'b', 'g', 'm', 'c', 'y']
     plot_markers = ['s', 'v', 'P', '1', '2', '3', '4']
     plot_lines = [(i, (1, 4, 1, 4)) for i in range(0, 8)]
     alt_plot_lines = ['-', '--', ':', '-.']
 
-    plot_mean_treatment_effect = True
+    plot_mean_treatment_effect = False
     plot_treatment_efficiency = False
     plot_delta_efficiency = False
     plot_search_time = False
     plot_strictly_better = False
-    plot_delta_grid_search = False
+    plot_delta_grid_search = True
     delta_grid_search_percentage = False
     fixed_scale = False
-    plotbools = [plot_mean_treatment_effect, plot_treatment_efficiency, plot_delta_efficiency, plot_search_time, plot_strictly_better]
+    plotbools = [plot_mean_treatment_effect, plot_treatment_efficiency, plot_delta_efficiency, plot_search_time,
+                 plot_strictly_better]
     main_start = time.time()
 
     # Generate the data
-    #dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    #dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    #dist = DiscreteDistributionWithInformation(n_z, n_x, n_a, n_y, seed=seed)
-    '''
+    # dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
+    dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
+    # dist = DiscreteDistributionWithInformation(n_z, n_x, n_a, n_y, seed=seed)
+    #'''
     dist.print_moderator_statistics()
     dist.print_covariate_statistics()
     dist.print_treatment_statistics()
     dist.print_detailed_treatment_statistics()
-    '''
-    dist = AntibioticsDatabase(n_x=1, antibiotic_limit=4, seed=seed)
+    #'''
+    #dist = AntibioticsDatabase(n_x=1, antibiotic_limit=4, seed=seed)
     '''
     dist = NewDistribution(seed=seed)
     #dist = NewDistributionSlightlyRandom(seed=seed)
@@ -74,8 +74,10 @@ if __name__ == '__main__':
     '''
 
     if type(dist) != AntibioticsDatabase:
-        training = {'name': 'training', 'samples': n_training_samples, 'func': generate_data, 'split': True, 'database': False}
-        test = {'name': 'test', 'samples': n_test_samples, 'func': generate_test_data, 'split': False, 'database': False}
+        training = {'name': 'training', 'samples': n_training_samples, 'func': generate_data, 'split': True,
+                    'database': False}
+        test = {'name': 'test', 'samples': n_test_samples, 'func': generate_test_data, 'split': False,
+                'database': False}
         datasets = {'training': training, 'test': test}
 
         for key, dataset in datasets.items():
@@ -101,9 +103,9 @@ if __name__ == '__main__':
                     data = generate_data_func(dist, n_samples)
                 if dataset['split']:
                     data = split_patients(data)
-                print("Generating samples took {:.3f} seconds".format(time.time()-start))
+                print("Generating samples took {:.3f} seconds".format(time.time() - start))
                 dataset['data'] = data
-                #if seed is not None:
+                # if seed is not None:
                 #    dd.io.save(filepath, data)
     else:
         training_data, test_data = dist.get_data()
@@ -115,42 +117,55 @@ if __name__ == '__main__':
 
     split_training_data = datasets['training']['data']
     test_data = datasets['test']['data']
-    #print("Initializing function approximator")
-    #start = time.time()
+    # print("Initializing function approximator")
+    # start = time.time()
     function_approximation = FunctionApproximation(n_x, n_a, n_y, split_training_data)
-    #print("Initializing {} took {:.3f} seconds".format(function_approximation.name, time.time()-start))
+    # print("Initializing {} took {:.3f} seconds".format(function_approximation.name, time.time()-start))
     print("Initializing statistical approximator")
     start = time.time()
-    #statistical_approximation = StatisticalApproximator(n_x, n_a, n_y, split_training_data, prior_mode='none')
-    #print("Initializing {} took {:.3f} seconds".format(statistical_approximation.name, time.time() - start))
+    statistical_approximation = StatisticalApproximator(n_x, n_a, n_y, split_training_data, prior_mode='none')
+    # print("Initializing {} took {:.3f} seconds".format(statistical_approximation.name, time.time() - start))
 
     true_approximation = TrueApproximator(dist)
 
     print("Initializing Constraint")
     start = time.time()
 
-    #constraintStat = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximation, delta=delta, epsilon=epsilon)
-    #constraintTrue = Constraint(split_training_data, n_a, n_y, approximator=true_approximation, delta=delta, epsilon=epsilon)
-    constraintFuncApprox = Constraint(split_training_data, n_a, n_y, approximator=function_approximation, delta=delta, epsilon=epsilon)
+    constraintStatUpper = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximation, delta=delta,
+                                     epsilon=epsilon, bound='upper')
+    constraintStatLower = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximation, delta=delta,
+                                     epsilon=epsilon, bound='lower')
+    # constraintTrue = Constraint(split_training_data, n_a, n_y, approximator=true_approximation, delta=delta, epsilon=epsilon)
+    constraintFuncApprox = Constraint(split_training_data, n_a, n_y, approximator=function_approximation, delta=delta,
+                                      epsilon=epsilon)
 
-    print("Initializing the constraint took {:.3f} seconds".format(time.time()-start))
+    print("Initializing the constraint took {:.3f} seconds".format(time.time() - start))
     print("Initializing algorithms")
     algorithms = [
-        #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
-        #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Constrained Greedy True", label="CGT"),
-        #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
-        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation, name="Constrained Greedy FuncApprox"),
-        #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Dynamic Programming True", label="CDPT"),
-        #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
-        #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, function_approximation, name="Dynamic Programming Func", label="CDPF"),
-        #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation,name="Constrained Dynamic Programming FuncApprox"),
-        #NaiveGreedy(n_x, n_a, n_y, split_training_data),
-        #NaiveDynamicProgramming(n_x, n_a, n_y, split_training_data, statistical_approximation, reward=reward)
-        #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
-        #QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
-        #OnlineQLearner(n_x, n_a, n_y, dist, constraint, learning_time=training_episodes),
-        #DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintStat, approximator=statistical_approximation)
-        DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintFuncApprox,  approximator=function_approximation),
+        # GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
+        # ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Constrained Greedy True", label="CGT"),
+         ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStatUpper, statistical_approximation,
+                           name='Constrained Greedy Upper', label='CGU'),
+         ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStatLower, statistical_approximation,
+                           name='Constrained Greedy Lower', label='CGL'),
+        # ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation,
+        #                  name="Constrained Greedy FuncApprox"),
+        # ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Dynamic Programming True", label="CDPT"),
+        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStatUpper, statistical_approximation,
+                                      name='Constrained Dynamic Programming Upper', label='CDPU'),
+        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStatLower, statistical_approximation,
+                                      name='Constrained Dynamic Programming Lower', label='CDPL'),
+
+        # ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, function_approximation, name="Dynamic Programming Func", label="CDPF"),
+        # ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation,name="Constrained Dynamic Programming FuncApprox"),
+        # NaiveGreedy(n_x, n_a, n_y, split_training_data),
+        # NaiveDynamicProgramming(n_x, n_a, n_y, split_training_data, statistical_approximation, reward=reward)
+        # QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
+        # QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
+        # OnlineQLearner(n_x, n_a, n_y, dist, constraint, learning_time=training_episodes),
+        # DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintStat, approximator=statistical_approximation)
+        # DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintFuncApprox,
+        #              approximator=function_approximation),
     ]
 
     n_algorithms = len(algorithms)
@@ -160,7 +175,7 @@ if __name__ == '__main__':
             start = time.time()
             print("\tTraining %s..." % alg.name)
             alg.learn()
-            print("\tTraining the %s algorithm took {:.3f} seconds".format(time.time()-start) % alg.name)
+            print("\tTraining the %s algorithm took {:.3f} seconds".format(time.time() - start) % alg.name)
 
         # Evaluate the algorithms
         evaluations = {}
@@ -170,7 +185,7 @@ if __name__ == '__main__':
             for i in range(n_test_samples):
                 alg_evals.append(alg.evaluate(test_data[i]))
             evaluations[alg.name] = alg_evals
-        print("Running Evaluate took {:.3f} seconds".format(time.time()-main_start))
+        print("Running Evaluate took {:.3f} seconds".format(time.time() - main_start))
 
     print("Showing plots...")
     if plot_mean_treatment_effect or plot_search_time:
@@ -188,9 +203,8 @@ if __name__ == '__main__':
                     max_mean_treatment_effects[i_alg][i_treatment] += best_found
         max_mean_treatment_effects /= n_test_samples
 
-
         # Calculate mean treatment effect over population
-        mean_treatment_effects = np.zeros((n_algorithms, n_a + 1))      # Overshoot by 1 to get all max values at last step
+        mean_treatment_effects = np.zeros((n_algorithms, n_a + 1))  # Overshoot by 1 to get all max values at last step
         mean_num_tests = np.zeros(n_algorithms)
 
         for i_sample in range(n_test_samples):
@@ -212,27 +226,29 @@ if __name__ == '__main__':
         if plot_mean_treatment_effect:
             # Plot mean treatment effect over population
             x = np.arange(0, n_a)
-            x_ticks = list(np.arange(1, n_a+1))
+            x_ticks = list(np.arange(1, n_a + 1))
             plt.figure()
             plt.title('Treatment effect. delta: {}'.format(delta))
             plt.ylabel('Mean treatment effect')
             plt.xlabel('Number of tried treatments')
-            average_max_treatment_effect = sum([max(data[-1]) for data in test_data])/len(test_data)
-            mean_lines = np.linspace(0, 1, n_algorithms+1)
+            average_max_treatment_effect = sum([max(data[-1]) for data in test_data]) / len(test_data)
+            mean_lines = np.linspace(0, 1, n_algorithms + 1)
             for i_plot, alg in enumerate(algorithms):
                 plt.plot(x, max_mean_treatment_effects[i_plot],
-                         plot_markers[i_plot] + plot_colors[i_plot], linestyle=plot_lines[i_plot % len(plot_lines)], linewidth=4, label=alg.label)
-                plt.plot(x, max_mean_treatment_effects[i_plot], plot_colors[i_plot], linestyle='-', linewidth=2, alpha=0.3)
-                #plt.plot(x, mean_treatment_effects[i_plot], plot_markers[i_plot] + plot_colors[i_plot] + plot_lines[1])
-                #plt.fill_between(x, mean_treatment_effects[i_plot], max_mean_treatment_effects[i_plot], color=plot_colors[i_plot], alpha=0.1)
-                plt.axvline(mean_num_tests[i_plot] - 1, ymin=mean_lines[i_plot], ymax=mean_lines[i_plot+1], color=plot_colors[i_plot])
+                         plot_markers[i_plot] + plot_colors[i_plot], linestyle=plot_lines[i_plot % len(plot_lines)],
+                         linewidth=4, label=alg.label)
+                plt.plot(x, max_mean_treatment_effects[i_plot], plot_colors[i_plot], linestyle='-', linewidth=2,
+                         alpha=0.3)
+                # plt.plot(x, mean_treatment_effects[i_plot], plot_markers[i_plot] + plot_colors[i_plot] + plot_lines[1])
+                # plt.fill_between(x, mean_treatment_effects[i_plot], max_mean_treatment_effects[i_plot], color=plot_colors[i_plot], alpha=0.1)
+                plt.axvline(mean_num_tests[i_plot] - 1, ymin=mean_lines[i_plot], ymax=mean_lines[i_plot + 1],
+                            color=plot_colors[i_plot])
                 plt.axvline(mean_num_tests[i_plot] - 1, ymin=0, ymax=1,
                             color=plot_colors[i_plot], alpha=0.1)
 
             plt.grid(True)
             plt.xticks(x, x_ticks)
             plt.plot(x, np.ones(len(x)) * average_max_treatment_effect, linestyle=plot_lines[-1], label='MAX_POSS_AVG')
-
 
             plt.legend(loc='lower right')
             plt.show(block=False)
@@ -266,7 +282,8 @@ if __name__ == '__main__':
         x_ticks = list(np.arange(1, n_a + 2))
         x_ticks[-1] = 'Done'
         for i_plot, alg in enumerate(algorithms):
-            plt.plot(x, best_founds_efficiency[i_plot], plot_markers[i_plot] + plot_colors[i_plot] + alt_plot_lines[0], label=alg.label)
+            plt.plot(x, best_founds_efficiency[i_plot], plot_markers[i_plot] + plot_colors[i_plot] + alt_plot_lines[0],
+                     label=alg.label)
             plt.axvline(mean_num_tests[i_plot] - 1, 0, 1, color=plot_colors[i_plot])
         plt.xticks(x, x_ticks)
         plt.grid(True)
@@ -286,7 +303,7 @@ if __name__ == '__main__':
         rects = plt.bar(x_bars, mean_num_tests)
         for rect in rects:
             h = rect.get_height()
-            plt.text(rect.get_x() + rect.get_width()/2., 0.90*h, "%f" % h, ha="center", va="bottom")
+            plt.text(rect.get_x() + rect.get_width() / 2., 0.90 * h, "%f" % h, ha="center", va="bottom")
         plt.show(block=False)
 
     if plot_strictly_better:
@@ -321,10 +338,10 @@ if __name__ == '__main__':
         for i_alg, alg in enumerate(algorithms):
             x_bars.append(alg.name)
         x_bars = [label.replace(" ", '\n') for label in x_bars]
-        rects = plt.bar(x_bars, (strictly_better_samples/n_test_samples)*100)
+        rects = plt.bar(x_bars, (strictly_better_samples / n_test_samples) * 100)
         for rect in rects:
             h = rect.get_height()
-            plt.text(rect.get_x() + rect.get_width()/2., 0.90*h, "%f" % h, ha="center", va="bottom")
+            plt.text(rect.get_x() + rect.get_width() / 2., 0.90 * h, "%f" % h, ha="center", va="bottom")
         plt.show(block=False)
 
     if plot_delta_grid_search:
@@ -356,8 +373,8 @@ if __name__ == '__main__':
                     else:
                         total_outcome += best_outcome
                     total_time += search_time
-                mean_outcome = total_outcome/n_test_samples
-                mean_time = total_time/n_test_samples
+                mean_outcome = total_outcome / n_test_samples
+                mean_time = total_time / n_test_samples
                 evaluations_delta[alg.name][outcome_name].append(mean_outcome)
                 evaluations_delta[alg.name][time_name].append(mean_time)
         print("Running Evaluate (and training) over delta took {:.3f} seconds".format(time.time() - main_start))
@@ -371,7 +388,7 @@ if __name__ == '__main__':
         ax2.set_ylabel('Mean search time')
         lns = []
         for i_plot, alg in enumerate(algorithms):
-            ln1 = ax1.plot(deltas, evaluations_delta[alg.name][outcome_name], plot_colors[i_plot],
+            ln1 = ax1.plot(deltas, evaluations_delta[alg.name][outcome_name], plot_colors[i_plot] + alt_plot_lines[0],
                            label='{} {}'.format(alg.label, 'effect'))
             ln2 = ax2.plot(deltas, evaluations_delta[alg.name][time_name], plot_colors[i_plot] + alt_plot_lines[1],
                            label='{} {}'.format(alg.label, 'time'))
@@ -391,7 +408,7 @@ if __name__ == '__main__':
         lines1, labels1 = ax1.get_legend_handles_labels()
         lines2, labels2 = ax2.get_legend_handles_labels()
         plt.legend(lines1 + lines2, labels1 + labels2, bbox_to_anchor=(1.04, 0), loc='upper left')
-        #plt.legend(lines1 + lines2, labels1 + labels2, loc="lower left")
+        # plt.legend(lines1 + lines2, labels1 + labels2, loc="lower left")
         plt.show(block=False)
 
     plt.show()

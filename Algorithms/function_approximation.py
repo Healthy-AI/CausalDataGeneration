@@ -105,4 +105,4 @@ class FunctionApproximation(ProbabilityApproximator):
         probability_of_outcome_approximation = self.prepare_calculation(x, state)
         max_outcome = max(state)
         return super(FunctionApproximation, self).calculate_probability_greedy(
-            probability_of_outcome_approximation, max_outcome, use_expected_value=True)
+            probability_of_outcome_approximation, max_outcome, use_expected_value=False)
