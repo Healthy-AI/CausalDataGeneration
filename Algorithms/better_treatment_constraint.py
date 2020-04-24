@@ -31,6 +31,9 @@ class Constraint:
             elif np.count_nonzero(np.array(outcomes_state) == -1) == 0:
                 # If we have tried all treatments, stop
                 gamma = 1
+            elif np.count_nonzero(np.array(outcomes_state) == -1) == self.n_actions:
+                # If we tried nothing, we can't stop yet
+                gamma = 0
             else:
                 estimated_probability = self.approximator.calculate_probability_constraint(x, outcomes_state)
                 probability_limit = self.default_bound(estimated_probability)

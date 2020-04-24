@@ -18,7 +18,7 @@ if __name__ == '__main__':
     n_x = 1
     n_a = 5
     n_y = 3
-    n_training_samples = 100000
+    n_training_samples = 50000
     n_test_samples = 25000
     epsilon = 0
     delta = 0.0
@@ -151,7 +151,7 @@ if __name__ == '__main__':
         print("Running Evaluate (and training) over delta took {:.3f} seconds".format(time.time() - main_start))
 
         # Plot mean treatment effect vs delta
-        fig, ax1 = plt.subplots()
+        fig, ax1 = plt.subplots(figsize=(10, 7))
         plt.title('Mean treatment effect/mean search time vs delta')
         plt.xlabel('delta')
         ax2 = ax1.twinx()
