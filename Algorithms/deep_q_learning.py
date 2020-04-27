@@ -127,7 +127,7 @@ class DeepQLearning(object):
                  target_update_freq=1000,
                  discount=1,
                  batch_size=16,
-                 n_batch_trainings=10000):
+                 n_batch_trainings=3000):
         """Set parameters, initialize network."""
         action_space_size = n_a + 1
         state_space_size = n_x + n_a
@@ -256,7 +256,7 @@ class DeepQLearning(object):
             self.train_network()
             if i % self.target_update_freq == 0:
                 self.update_target_network()
-                mean_treatment_effect, mean_num_tests = self.evaluate_test()
+                mean_treatment_effect, mean_num_tests = self.evaluate_validation()
                 if mean_treatment_effect >= max_treatment_effect:
                     if mean_num_tests < min_search_time or mean_treatment_effect > max_treatment_effect:
                         max_treatment_effect = mean_treatment_effect
@@ -285,18 +285,14 @@ class DeepQLearning(object):
             action = self.policy(state, forbidden_actions=forbidden_actions)
         return history
 
-    def evaluate_test(self):
+    def evaluate_validation(self):
         mean_num_tests = 0
         max_treatment_effect = 0
         n_test_samples = len(self.validation_data)
         for patient in self.validation_data:
-            treatments = self.evaluate(patient)
-            mean_num_tests += len(treatments)
-            best_found = 0
-            for i_treatment in range(len(treatments)):
-                effect = treatments[i_treatment][1]
-                if effect > best_found:
-                    best_found = effect
+            history = self.evaluate(patient)
+            mean_num_tests += len(history)
+            best_found = np.max([intervention[1] for intervention in history])
             max_treatment_effect += best_found
         max_treatment_effect /= n_test_samples
         mean_num_tests /= n_test_samples
