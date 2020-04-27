@@ -3,6 +3,7 @@ from Algorithms.function_approximation import FunctionApproximation
 from Algorithms.naive_dynamic_programming import NaiveDynamicProgramming
 from Algorithms.constrained_dynamic_programming import ConstrainedDynamicProgramming
 from Algorithms.true_approximator import TrueApproximator
+from Algorithms.true_constraint import TrueConstraint
 from DataGenerator.data_generator import *
 import time
 from pathlib import Path
@@ -18,7 +19,7 @@ if __name__ == '__main__':
     n_x = 1
     n_a = 5
     n_y = 3
-    n_training_samples = 50000
+    n_training_samples = 100000
     n_test_samples = 25000
     epsilon = 0
     delta = 0.0
@@ -99,7 +100,7 @@ if __name__ == '__main__':
     constraintNone = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximationNone, delta=delta, epsilon=epsilon)
     constraintPrior = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximationPrior, delta=delta, epsilon=epsilon)
     constraintFunc = Constraint(split_training_data, n_a, n_y, approximator=function_approximation, delta=delta, epsilon=epsilon)
-    constraintTrue = Constraint(split_training_data, n_a, n_y, approximator=true_approximation, delta=delta, epsilon=epsilon)
+    constraintTrue = TrueConstraint(dist, approximator=true_approximation, delta=delta, epsilon=epsilon)
 
     print("Initializing the constraint took {:.3f} seconds".format(time.time()-start))
     print("Initializing algorithms")
