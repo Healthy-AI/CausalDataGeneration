@@ -87,7 +87,7 @@ class DiscreteDistribution(Distribution):
         while action != self.n_a and len(history) < self.n_a:
             outcome = y_fac[action]
             history.append([action, outcome])
-            if outcome >= self.n_y - 1:
+            if outcome >= self.n_y - 1 or len(history) >= self.n_a:
                 break
             action = self.draw_a(history, x, None)
         return history

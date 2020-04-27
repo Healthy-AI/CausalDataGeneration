@@ -13,16 +13,17 @@ from Database.antibioticsdatabase import AntibioticsDatabase
 
 if __name__ == '__main__':
     # Training values
-    seed = 72991  # Used for both synthetic and real data
-    n_z = 3
+    #seed = 72991  # Used for both synthetic and real data
+    seed = 284912491  # Used for both synthetic and real data
+    n_z = 2
     n_x = 1
     n_a = 5
     n_y = 3
-    n_test_samples = 10000
-    data_limits = [100, 1000, 5000, 10000, 25000, 50000, 100000]
+    n_test_samples = 2000
+    data_limits = [10, 25, 50, 75, 100, 250, 500, 750, 1000, 2500, 5000, 7500, 10000, 12500, 15000, 17500, 20000, 25000, 50000]
     n_training_samples = np.max(data_limits)
     epsilon = 0
-    delta = 0.2
+    delta = 0.3
 
     # Plot values
     treatment_slack = 0     # Eg, how close to max must we be to be considered "good enough"
@@ -40,11 +41,18 @@ if __name__ == '__main__':
     dist.print_treatment_statistics()
     dist.print_detailed_treatment_statistics()
 
+    print("Generating test data set")
     test_data = generate_test_data(dist, n_test_samples)
 
     data_sets = []
+    print("Generating training data set {}".format(n_training_samples))
+    main_data = generate_data(dist, n_training_samples)
     for i in range(len(data_limits)):
-        data_sets.append(split_patients(generate_data(dist, data_limits[i])))
+        d_tmp = {}
+        d_tmp['x'] = np.copy(main_data['x'][0:data_limits[i]])
+        d_tmp['h'] = np.copy(main_data['h'][0:data_limits[i]])
+        d_tmp['z'] = np.copy(main_data['z'][0:data_limits[i]])
+        data_sets.append(split_patients(d_tmp))
 
     true_approximation = TrueApproximator(dist)
     evaluations_data_amount = {}
@@ -66,10 +74,10 @@ if __name__ == '__main__':
         print("Initializing the constraint took {:.3f} seconds".format(time.time()-start))
         print("Initializing algorithms")
         algorithms = [
-            ConstrainedDynamicProgramming(n_x, n_a, n_y, training_data_set, constraintNone, statistical_approximationNone, name="Dynamic Programming Uniform Prior", label="CDP_U"),
-            ConstrainedDynamicProgramming(n_x, n_a, n_y, training_data_set, constraintPrior, statistical_approximationPrior, name="Dynamic Programming Historical Prior", label="CDP_H"),
-            ConstrainedDynamicProgramming(n_x, n_a, n_y, training_data_set, constraintFunc, function_approximation, name="Dynamic Programming Function Approximation", label="CDP_F"),
-            ConstrainedDynamicProgramming(n_x, n_a, n_y, training_data_set, constraintTrue, true_approximation, name="Dynamic Programming True", label="CDP_T"),
+            ConstrainedDynamicProgramming(n_x, n_a, n_y, training_data_set, constraintNone, statistical_approximationNone, name="CDP_U", label="CDP_U"),
+            ConstrainedDynamicProgramming(n_x, n_a, n_y, training_data_set, constraintPrior, statistical_approximationPrior, name="CDP_H", label="CDP_H"),
+            ConstrainedGreedy(n_x, n_a, n_y, training_data_set, constraintPrior, statistical_approximationPrior, name="CG_H"),
+            ConstrainedDynamicProgramming(n_x, n_a, n_y, training_data_set, constraintTrue, true_approximation, name="CDP_T", label="CDP_T"),
         ]
 
         n_algorithms = len(algorithms)
@@ -97,7 +105,7 @@ if __name__ == '__main__':
 
     # Plot mean treatment effect vs delta
     fig, ax1 = plt.subplots(figsize=(10, 7))
-    plt.title('Mean treatment effect/mean search time vs data amount')
+    plt.title('Mean treatment effect/mean search time vs data amount (delta: {})'.format(delta))
     plt.xlabel('Data amount')
     ax2 = ax1.twinx()
     ax1.set_ylabel('Mean treatment effect')

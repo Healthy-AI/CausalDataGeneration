@@ -103,7 +103,6 @@ class ConstrainedDynamicProgramming(QLearner):
             if len(action_candidates) == 1:
                 action = action_candidates[0]
             else:
-                print("Choosing action greedily")
                 probs = np.zeros(self.n_a)
                 if self.stop_action in action_candidates:
                     action = self.stop_action
