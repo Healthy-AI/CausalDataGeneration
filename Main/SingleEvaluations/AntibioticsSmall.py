@@ -184,7 +184,6 @@ if __name__ == '__main__':
             print("Evaluating {}".format(alg.name))
             for i in range(n_test_samples):
                 alg_evals.append(alg.evaluate(test_data[i]))
-                print(i)
             evaluations[alg.name] = alg_evals
         print("Running Evaluate took {:.3f} seconds".format(time.time() - main_start))
 

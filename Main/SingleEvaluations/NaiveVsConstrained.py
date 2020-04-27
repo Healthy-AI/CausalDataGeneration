@@ -50,7 +50,11 @@ if __name__ == '__main__':
     plotbools = [plot_mean_treatment_effect, plot_treatment_efficiency, plot_delta_efficiency, plot_search_time,
                  plot_strictly_better]
     main_start = time.time()
-    for seed in seeds:
+
+    n_algorithms = 4
+    mean_n_tests_results = np.zeros((n_tests, n_algorithms))
+    efficiency_results = np.zeros((n_tests, n_algorithms))
+    for i, seed in enumerate(seeds):
         # Generate the data
         # dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
         dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
@@ -62,7 +66,6 @@ if __name__ == '__main__':
         dist.print_detailed_treatment_statistics()
         #'''
         #dist = AntibioticsDatabase(n_x=2, antibiotic_limit=6, seed=seed)
-
 
         if type(dist) != AntibioticsDatabase:
             training = {'name': 'training', 'samples': n_training_samples, 'func': generate_data, 'split': True,
@@ -133,30 +136,13 @@ if __name__ == '__main__':
         print("Initializing the constraint took {:.3f} seconds".format(time.time() - start))
         print("Initializing algorithms")
         algorithms = [
-            # GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
-            # ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Constrained Greedy True", label="CGT"),
             ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStatUpper, statistical_approximation,
                                name='Constrained Greedy', label='CG'),
-            # ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStatLower, statistical_approximation,
-            #                   name='Constrained Greedy Lower', label='CGL'),
-            #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation,
-            #                  name="Constrained Greedy FuncApprox"),
-            # ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Dynamic Programming True", label="CDPT"),
             ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStatUpper, statistical_approximation,
                                           name='Constrained Dynamic Programming Upper', label='CDPU'),
-            #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStatLower, statistical_approximation,
-            #                              name='Constrained Dynamic Programming Lower', label='CDPL'),
-
-            # ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, function_approximation, name="Dynamic Programming Func", label="CDPF"),
-            # ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation,name="Constrained Dynamic Programming FuncApprox"),
             NaiveGreedy(n_x, n_a, n_y, split_training_data),
             NaiveDynamicProgramming(n_x, n_a, n_y, split_training_data, statistical_approximation, reward=reward)
-            # QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
-            # QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
-            # OnlineQLearner(n_x, n_a, n_y, dist, constraint, learning_time=training_episodes),
-            #DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintStatUpper, approximator=statistical_approximation)
-            # DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintFuncApprox,
-            #              approximator=function_approximation),
+
         ]
 
         n_algorithms = len(algorithms)
@@ -172,77 +158,10 @@ if __name__ == '__main__':
         for alg in algorithms:
             alg_evals = []
             print("Evaluating {}".format(alg.name))
-            for i in range(n_test_samples):
-                alg_evals.append(alg.evaluate(test_data[i]))
-                print(i)
+            for j in range(n_test_samples):
+                alg_evals.append(alg.evaluate(test_data[j]))
             evaluations[alg.name] = alg_evals
         print("Running Evaluate took {:.3f} seconds".format(time.time() - main_start))
-
-        print("Showing plots...")
-        if plot_mean_treatment_effect or plot_search_time:
-            # Calculate max mean treatment effect over population
-            max_mean_treatment_effects = np.zeros((n_algorithms, n_a))
-            for i_alg, alg in enumerate(algorithms):
-                for i_sample in range(n_test_samples):
-                    treatments = evaluations[alg.name][i_sample]
-                    best_found = 0
-                    for i_treatment in range(len(max_mean_treatment_effects[i_alg])):
-                        if i_treatment < len(treatments):
-                            effect = treatments[i_treatment][1]
-                            if effect > best_found:
-                                best_found = effect
-                        max_mean_treatment_effects[i_alg][i_treatment] += best_found
-            max_mean_treatment_effects /= n_test_samples
-
-            # Calculate mean treatment effect over population
-            mean_treatment_effects = np.zeros((n_algorithms, n_a + 1))  # Overshoot by 1 to get all max values at last step
-            mean_num_tests = np.zeros(n_algorithms)
-
-            for i_sample in range(n_test_samples):
-                for i_alg, alg in enumerate(algorithms):
-                    treatments = evaluations[alg.name][i_sample]
-                    mean_num_tests[i_alg] += len(treatments)
-                    best_found = 0
-                    for i_treatment in range(len(mean_treatment_effects[i_alg])):
-                        if i_treatment >= len(treatments):
-                            effect = best_found
-                        else:
-                            effect = treatments[i_treatment][1]
-                        if effect > best_found:
-                            best_found = effect
-                        mean_treatment_effects[i_alg][i_treatment] += effect
-            mean_treatment_effects /= n_test_samples
-            mean_num_tests /= n_test_samples
-
-            if plot_mean_treatment_effect:
-                # Plot mean treatment effect over population
-                x = np.arange(0, n_a)
-                x_ticks = list(np.arange(1, n_a + 1))
-                plt.figure()
-                plt.title('Treatment effect. delta: {}'.format(delta))
-                plt.ylabel('Mean treatment effect')
-                plt.xlabel('Number of tried treatments')
-                average_max_treatment_effect = sum([max(data[-1]) for data in test_data]) / len(test_data)
-                mean_lines = np.linspace(0, 1, n_algorithms + 1)
-                for i_plot, alg in enumerate(algorithms):
-                    plt.plot(x, max_mean_treatment_effects[i_plot],
-                             plot_markers[i_plot] + plot_colors[i_plot], linestyle=plot_lines[i_plot % len(plot_lines)],
-                             linewidth=4, label=alg.label)
-                    plt.plot(x, max_mean_treatment_effects[i_plot], plot_colors[i_plot], linestyle='-', linewidth=2,
-                             alpha=0.3)
-                    # plt.plot(x, mean_treatment_effects[i_plot], plot_markers[i_plot] + plot_colors[i_plot] + plot_lines[1])
-                    # plt.fill_between(x, mean_treatment_effects[i_plot], max_mean_treatment_effects[i_plot], color=plot_colors[i_plot], alpha=0.1)
-                    plt.axvline(mean_num_tests[i_plot] - 1, ymin=mean_lines[i_plot], ymax=mean_lines[i_plot + 1],
-                                color=plot_colors[i_plot])
-                    plt.axvline(mean_num_tests[i_plot] - 1, ymin=0, ymax=1,
-                                color=plot_colors[i_plot], alpha=0.1)
-
-                plt.grid(True)
-                plt.xticks(x, x_ticks)
-                plt.plot(x, np.ones(len(x)) * average_max_treatment_effect, linestyle=plot_lines[-1], label='MAX_POSS_AVG')
-
-                plt.legend(loc='lower right')
-                plt.show(block=False)
 
         # Calculate % of population at max - treatment_slack treatment over time
         best_founds_efficiency = np.zeros((n_algorithms, n_a + 1))
@@ -262,6 +181,10 @@ if __name__ == '__main__':
                         best_founds_efficiency[i_alg][i_treatment] += 1
         best_founds_efficiency /= n_test_samples
         mean_num_tests /= n_test_samples
-
+        efficiency_results[i] = best_founds_efficiency
+        mean_n_tests_results[i] = mean_num_tests
+    print([alg.name for alg in algorithms])
+    print(mean_n_tests_results)
+    print(efficiency_results)
 
 print("Done!")
