@@ -16,10 +16,10 @@ from Database.antibioticsdatabase import AntibioticsDatabase
 
 if __name__ == '__main__':
     # Training values
-    seed = 284912491  # Used for both synthetic and real data
+    seed = None  # Used for both synthetic and real data
     n_z = 2
     n_x = 1
-    n_a = 3
+    n_a = 5
     n_y = 3
     training_episodes = 5000
     n_training_samples = 15000
@@ -44,7 +44,7 @@ if __name__ == '__main__':
     plot_delta_efficiency = True
     plot_search_time = False
     plot_strictly_better = False
-    plot_delta_grid_search = True
+    plot_delta_grid_search = False
     delta_grid_search_percentage = False
     fixed_scale = False
     plotbools = [plot_mean_treatment_effect, plot_treatment_efficiency, plot_delta_efficiency, plot_search_time,
@@ -147,14 +147,14 @@ if __name__ == '__main__':
     algorithms = [
 
         #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
-        #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Constrained Greedy True", label="CGT"),
+        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Constrained Greedy True", label="CGT"),
         #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
         #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation, name="Constrained Greedy FuncApprox"),
         ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Dynamic Programming True", label="CDPT"),
         ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, function_approximation, name="Dynamic Programming Func", label="CDPF"),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation,name="Constrained Dynamic Programming FuncApprox"),
-        #NaiveGreedy(n_x, n_a, n_y, split_training_data),
+        NaiveGreedy(n_x, n_a, n_y, split_training_data),
         #DistAlgWrapper(dist, name="Distribution", label="dist"),
         #NaiveDynamicProgramming(n_x, n_a, n_y, split_training_data, statistical_approximation, reward=reward)
         #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),

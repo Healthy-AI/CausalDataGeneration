@@ -18,12 +18,13 @@ class NaiveGreedy:
         histories = self.data['h']
         covariates = self.data['x']
         for i, history in enumerate(histories):
-            covariate = covariates[i]
-            treatment0 = history[0]
-            if treatment0[1] == self.max_outcome:
-                self.max_outcome_statistics[tuple(np.hstack((covariate, treatment0[0], 0)))] += 1
-            else:
-                self.max_outcome_statistics[tuple(np.hstack((covariate, treatment0[0], 1)))] += 1
+            if len(history) == 1:
+                covariate = covariates[i]
+                treatment0 = history[0]
+                if treatment0[1] == self.max_outcome:
+                    self.max_outcome_statistics[tuple(np.hstack((covariate, treatment0[0], 0)))] += 1
+                else:
+                    self.max_outcome_statistics[tuple(np.hstack((covariate, treatment0[0], 1)))] += 1
 
     def evaluate(self, patient):
         z, x, y_fac = patient
