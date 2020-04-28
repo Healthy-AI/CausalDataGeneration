@@ -116,7 +116,8 @@ class StatisticalApproximator(ProbabilityApproximator):
         best_outcome = np.max(state)
         full_probabilities = np.zeros((self.n_a, self.n_y))
         for a in range(self.n_a):
-            full_probabilities[a] = self.full_history_prior(x, state, a, self.default_kernel)
+            if state[a] == -1:
+                full_probabilities[a] = self.full_history_prior(x, state, a, self.default_kernel)
         better_probabilities = np.zeros(self.n_a)
         for a in range(self.n_a):
             total = 0

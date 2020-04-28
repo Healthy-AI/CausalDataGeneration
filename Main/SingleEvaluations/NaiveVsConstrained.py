@@ -2,6 +2,7 @@ from Algorithms.naive_dynamic_programming import NaiveDynamicProgramming
 from Algorithms.constrained_dynamic_programming import ConstrainedDynamicProgramming
 from Algorithms.naive_greedy import NaiveGreedy
 from Algorithms.constrained_greedy import ConstrainedGreedy
+from Algorithms.true_approximator import TrueApproximator
 from DataGenerator.data_generator import *
 import time
 from Algorithms.better_treatment_constraint import Constraint
@@ -22,7 +23,7 @@ if __name__ == '__main__':
     n_test_samples = 1500
     delta = 0.3
     epsilon = 0
-    reward = -0.35
+    reward = -0.25
     # for grid search
 
     # Plot values
@@ -44,16 +45,17 @@ if __name__ == '__main__':
                  plot_strictly_better]
     main_start = time.time()
 
-    n_algorithms = 4
+    n_algorithms = 5
     mean_n_tests_results = np.zeros((n_algorithms, n_tests))
     efficiency_results = np.zeros((n_algorithms, n_tests))
     for i, seed in enumerate(seeds):
+        main_start = time.time()
         # Generate the data
         dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-        dist.print_moderator_statistics()
-        dist.print_covariate_statistics()
-        dist.print_treatment_statistics()
-        dist.print_detailed_treatment_statistics()
+        #dist.print_moderator_statistics()
+        #dist.print_covariate_statistics()
+        #dist.print_treatment_statistics()
+        #dist.print_detailed_treatment_statistics()
 
         print("Generating data")
         training_data = generate_data(dist, n_training_samples)
@@ -63,6 +65,7 @@ if __name__ == '__main__':
 
         print("Initializing statistical approximator")
         statistical_approximation = StatisticalApproximator(n_x, n_a, n_y, split_training_data, prior_mode='gaussian')
+        true_approximation = TrueApproximator(dist)
         # print("Initializing {} took {:.3f} seconds".format(statistical_approximation.name, time.time() - start))
 
         print("Initializing Constraint")
@@ -70,12 +73,14 @@ if __name__ == '__main__':
 
         constraintStatUpper = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximation, delta=delta,
                                          epsilon=epsilon, bound='upper')
+        constraintTrue = Constraint(split_training_data, n_a, n_y, approximator=true_approximation, delta=delta, epsilon=epsilon)
 
         print("Initializing the constraint took {:.3f} seconds".format(time.time() - start))
         print("Initializing algorithms")
         algorithms = [
             ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStatUpper, statistical_approximation, name='Constrained Greedy', label='CG'),
-            ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStatUpper, statistical_approximation, name='Constrained Dynamic Programming Upper', label='CDPU'),
+            ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStatUpper, statistical_approximation, name='Constrained Dynamic Programming', label='CDPU'),
+            ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Constrained Dynamic Programming True", label="CDPT"),
             NaiveGreedy(n_x, n_a, n_y, split_training_data),
             NaiveDynamicProgramming(n_x, n_a, n_y, split_training_data, statistical_approximation, reward=reward)
         ]

@@ -17,6 +17,12 @@ class TrueApproximator(ProbabilityApproximator):
         h_list = np.array(h_list)
         return self.calculate_y_given_y_pr(x, outcome, action, h_list)
 
+    def calculate_probabilities(self, x, history, action):
+        outcomes = np.zeros(self.n_y)
+        for y in range(self.n_y):
+            outcomes[y] = self.calculate_probability(x, history, action, y)
+        return outcomes
+
     def calculate_probability_greedy(self, state, best_outcome):
         total_ev = np.zeros(self.dist.n_a)
         x, outcome_state = state
