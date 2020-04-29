@@ -19,8 +19,8 @@ if __name__ == '__main__':
     n_x = 1
     n_a = 5
     n_y = 3
-    n_training_samples = 100000
-    n_test_samples = 25000
+    n_training_samples = 25000
+    n_test_samples = 5000
     epsilon = 0
     delta = 0.0
     # for grid search
@@ -101,6 +101,7 @@ if __name__ == '__main__':
     constraintPrior = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximationPrior, delta=delta, epsilon=epsilon)
     constraintFunc = Constraint(split_training_data, n_a, n_y, approximator=function_approximation, delta=delta, epsilon=epsilon)
     constraintTrue = TrueConstraint(dist, approximator=true_approximation, delta=delta, epsilon=epsilon)
+    constraintTrue = Constraint(split_training_data, n_a, n_y, approximator=true_approximation, delta=delta, epsilon=epsilon)
 
     print("Initializing the constraint took {:.3f} seconds".format(time.time()-start))
     print("Initializing algorithms")

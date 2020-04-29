@@ -13,7 +13,7 @@ class TrueConstraint(Constraint):
 
     def no_better_treatment_exist(self, current_outcomes, x):
         prob = self.calculate_total_probability_of_better(x, current_outcomes)
-        if prob < self.delta:
+        if prob <= self.delta:
             return 1
         return 0
 

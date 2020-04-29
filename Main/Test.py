@@ -14,7 +14,7 @@ n_z = 3
 n_x = 1
 n_a = 5
 n_y = 3
-n_training_samples = 150000
+n_training_samples = 500000
 delta = 0.3
 dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
 dist.print_treatment_statistics()
