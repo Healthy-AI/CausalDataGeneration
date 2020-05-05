@@ -2,7 +2,7 @@ from Algorithms.probability_approximator import ProbabilityApproximator
 import numpy as np
 
 
-class TrueApproximator(ProbabilityApproximator):
+class ExactApproximator(ProbabilityApproximator):
     def __init__(self, dist):
         super().__init__(0, 0, 0, None)
         self.dist = dist

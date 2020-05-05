@@ -4,7 +4,7 @@ from Algorithms.constrained_dynamic_programming import ConstrainedDynamicProgram
 from Algorithms.naive_greedy import NaiveGreedy
 from Algorithms.deep_q_learning import DeepQLearning
 from Algorithms.constrained_greedy import ConstrainedGreedy
-from Algorithms.true_approximator import TrueApproximator
+from Algorithms.exact_approximator import ExactApproximator
 from DataGenerator.data_generator import *
 import time
 from pathlib import Path
@@ -126,7 +126,7 @@ if __name__ == '__main__':
     #statistical_approximation = StatisticalApproximator(n_x, n_a, n_y, split_training_data, prior_mode='none')
     # print("Initializing {} took {:.3f} seconds".format(statistical_approximation.name, time.time() - start))
 
-    true_approximation = TrueApproximator(dist)
+    true_approximation = ExactApproximator(dist)
 
     print("Initializing Constraint")
     start = time.time()

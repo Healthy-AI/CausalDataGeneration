@@ -4,7 +4,7 @@ from Algorithms.better_treatment_constraint import Constraint
 from Algorithms.constrained_dynamic_programming import ConstrainedDynamicProgramming
 from Algorithms.help_functions import hash_state
 from Algorithms.statistical_approximator import StatisticalApproximator
-from Algorithms.true_approximator import TrueApproximator
+from Algorithms.exact_approximator import ExactApproximator
 from DataGenerator.data_generator import generate_data, split_patients, generate_test_data
 from DataGenerator.distributions import DiscreteDistributionWithInformation, DiscreteDistributionWithSmoothOutcomes
 import numpy as np
@@ -23,7 +23,7 @@ dist.print_detailed_treatment_statistics()
 split_training_data = split_patients(generate_data(dist, n_training_samples))
 
 sa = StatisticalApproximator(n_x, n_a, n_y, split_training_data, prior_mode='gaussian')
-ta = TrueApproximator(dist)
+ta = ExactApproximator(dist)
 print("Init constraints")
 csa = Constraint(n_x, n_a, n_y, approximator=sa, delta=delta)
 cta = Constraint(n_x, n_a, n_y, approximator=ta, delta=delta)

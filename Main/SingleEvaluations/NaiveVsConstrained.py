@@ -2,7 +2,7 @@ from Algorithms.naive_dynamic_programming import NaiveDynamicProgramming
 from Algorithms.constrained_dynamic_programming import ConstrainedDynamicProgramming
 from Algorithms.naive_greedy import NaiveGreedy
 from Algorithms.constrained_greedy import ConstrainedGreedy
-from Algorithms.true_approximator import TrueApproximator
+from Algorithms.exact_approximator import ExactApproximator
 from DataGenerator.data_generator import *
 import time
 from Algorithms.better_treatment_constraint import Constraint
@@ -65,7 +65,7 @@ if __name__ == '__main__':
 
         print("Initializing statistical approximator")
         statistical_approximation = StatisticalApproximator(n_x, n_a, n_y, split_training_data, prior_mode='gaussian')
-        true_approximation = TrueApproximator(dist)
+        true_approximation = ExactApproximator(dist)
         # print("Initializing {} took {:.3f} seconds".format(statistical_approximation.name, time.time() - start))
 
         print("Initializing Constraint")
