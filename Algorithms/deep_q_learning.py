@@ -4,7 +4,6 @@ from collections import deque
 import numpy as np
 import tensorflow as tf
 from Algorithms.help_functions import *
-from Algorithms.function_approximation import FunctionApproximation
 
 
 def dense(x, weights, bias, activation=tf.identity, **activation_kwargs):
@@ -91,7 +90,7 @@ class Memory(object):
     """Memory buffer for Experience Replay."""
 
     def __init__(self):
-        """Initialize a buffer containing max_size experiences."""
+        """Initialize buffer."""
         self.buffer = deque()
 
     def add(self, experience):
@@ -184,7 +183,7 @@ class DeepQLearning(object):
 
         inputs = np.expand_dims(state, 0)
         qvalues = self.target_network.model(inputs)
-        temp_qvalues = list(qvalues[0])
+        temp_qvalues = list(np.squeeze(qvalues))
         temp_h_state = state[self.n_x:]
         for i in range(len(temp_h_state)):
             if temp_h_state[i] != -1:
@@ -193,7 +192,6 @@ class DeepQLearning(object):
             if is_forbidden:
                 temp_qvalues[i] = -np.inf
         action = np.squeeze(np.argmax(temp_qvalues))
-        #assert np.max(temp_qvalues) != -np.inf
         return action
 
     def update_target_network(self):
@@ -204,8 +202,9 @@ class DeepQLearning(object):
         self.set_target_variables(variables_copy)
 
     def set_target_variables(self, variables):
-        self.target_network.weights = variables[:int(len(variables) / 2)]
-        self.target_network.biases = variables[int(len(variables) / 2):]
+        split_index = int(len(variables) / 2)
+        self.target_network.weights = variables[:split_index]
+        self.target_network.biases = variables[split_index:]
 
     def train_network(self):
         """Update online network weights."""
@@ -311,15 +310,15 @@ class DeepQLearning(object):
                 y_fac[treatment] = outcome
             for treatment in range(len(y_fac)):
                 if y_fac[treatment] == -1:
+                    state = history_to_state(history, self.n_a)
                     # estimate outcome
-                    probs = self.approximator.calculate_probabilities(x, history_to_state(history, self.n_a), treatment)
-                    estimated_outcome = np.random.choice(self.n_y, 1, p=probs)[0]
+                    probs = self.approximator.calculate_probabilities(x, state, treatment)
+                    estimated_outcome = np.squeeze(np.random.choice(self.n_y, 1, p=probs))
                     y_fac[treatment] = estimated_outcome
             z = -1
             patient = (z, x, y_fac)
             patients.append(patient)
         return patients
-
 
     def get_reward(self, action, history, x):
         gamma = self.constraint.no_better_treatment_exist(history, x)
