@@ -4,6 +4,7 @@ import time
 from Algorithms.constrained_dynamic_programming import generate_data, split_patients
 from DataGenerator.distributions import DiscreteDistributionWithSmoothOutcomes
 from Main.SingleEvaluations import DeltaSweepSettings, DataAmountSettings
+from Main.SingleEvaluations.PlotSweepData import plot_sweep_data
 
 if __name__ == '__main__':
     settings = DataAmountSettings
@@ -17,9 +18,6 @@ if __name__ == '__main__':
 
     # Setup
     seeds = [x for x in range(starting_seed, starting_seed + n_data_sets)]
-    plot_colors = ['k', 'r', 'b', 'g', 'm', 'c', 'y']
-    plot_markers = ['s', 'v', 'P', '1', '2', '3', '4']
-    plot_lines = ['-', '--', ':', '-.']
     n_training_samples_array = np.geomspace(10, n_training_samples_max, n_data_set_sizes).astype(int)
 
     # Quick hack to get n_algorithms
@@ -41,7 +39,7 @@ if __name__ == '__main__':
                      'z': np.copy(unsplit_training_data['z'][0:n_training_samples_array[i_size]])}
             training_data = split_patients(d_tmp)
 
-            algorithms = setup_algorithms(training_data, dist, delta)git
+            algorithms = setup_algorithms(training_data, dist, delta)
             for alg in algorithms:
                 start = time.time()
                 print("Training {}".format(alg.name))
@@ -61,46 +59,5 @@ if __name__ == '__main__':
                 times[i_data_set][i_size][i_alg] = total_time / n_test_samples
     np.save("saved_values/" + file_name_prefix + "values", values)
     np.save("saved_values/" + file_name_prefix + "times", times)
-    values_mean = np.sum(values, 0) / n_data_sets
-    times_mean = np.sum(times, 0) / n_data_sets
-    values_var = np.zeros((n_data_set_sizes, n_algorithms))
-    times_var = np.zeros((n_data_set_sizes, n_algorithms))
-    for i_size in range(n_data_set_sizes):
-        for i_alg in range(n_algorithms):
-            v_var = 0
-            t_var = 0
-            for i_data_set in range(n_data_sets):
-                v_var += (values_mean[i_size][i_alg] - values[i_data_set][i_size][i_alg]) ** 2
-                t_var += (times_mean[i_size][i_alg] - times[i_data_set][i_size][i_alg]) ** 2
-            values_var[i_size][i_alg] = v_var / (n_data_sets - 1)
-            times_var[i_size][i_alg] = t_var / (n_data_sets - 1)
-
-    # Plot mean treatment effect vs delta
-    fig, ax1 = plt.subplots(figsize=(10, 7))
-    plt.title('Mean treatment value/Mean search time vs data set size (delta: {})'.format(delta))
-    plt.xlabel('Data set size')
-    ax2 = ax1.twinx()
-    ax1.set_ylabel('Mean treatment value')
-    ax2.set_ylabel('Mean search time')
-    lns = []
-    for i_alg in range(n_algorithms):
-        ln1 = ax1.plot(n_training_samples_array, values_mean[:, i_alg], plot_colors[i_alg],
-                       label='{} {}'.format(algs[i_alg].label, 'effect'))
-        ln2 = ax2.plot(n_training_samples_array, times_mean[:, i_alg], plot_colors[i_alg] + plot_lines[1],
-                       label='{} {}'.format(algs[i_alg].label, 'time'))
-        lns.append(ln1)
-        lns.append(ln2)
-        if plot_var:
-            ln1v = ax1.fill_between(n_training_samples_array, values_mean[:, i_alg] - values_var[:, i_alg], values_mean[:, i_alg] + values_var[:, i_alg],
-                                    facecolor=plot_colors[i_alg], alpha=0.3)
-            ln2v = ax2.fill_between(n_training_samples_array, times_mean[:, i_alg] - times_var[:, i_alg], times_mean[:, i_alg] + times_var[:, i_alg],
-                                    facecolor=plot_colors[i_alg], alpha=0.3)
-            lns.append(ln1v)
-            lns.append(ln2v)
-    plt.grid(True)
-    lines1, labels1 = ax1.get_legend_handles_labels()
-    lines2, labels2 = ax2.get_legend_handles_labels()
-    lgd = plt.legend(lines1 + lines2, labels1 + labels2, bbox_to_anchor=(1.04, 0), loc='upper left')
-    plt.xscale('log')
-    plt.savefig("saved_values/" + file_name_prefix + "_plot.png", bbox_extra_artists=(lgd,), bbox_inches='tight')
+    plot_sweep_data(values, times, settings, plot_var)
     print("Total time for delta sweep was {:.3f} seconds".format(time.time() - main_start))
