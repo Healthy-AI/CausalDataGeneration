@@ -58,7 +58,7 @@ if __name__ == '__main__':
     dist.print_treatment_statistics()
     dist.print_detailed_treatment_statistics()
     '''
-    dist = AntibioticsDatabase(n_x=2, antibiotic_limit=5, seed=seed)
+    dist = AntibioticsDatabase(n_x=8, antibiotic_limit=50, seed=seed)
     '''
     dist = NewDistribution(seed=seed)
     #dist = NewDistributionSlightlyRandom(seed=seed)
@@ -126,7 +126,7 @@ if __name__ == '__main__':
     statistical_approximation = StatisticalApproximator(n_x, n_a, n_y, split_training_data, prior_mode='gaussian')
     # print("Initializing {} took {:.3f} seconds".format(statistical_approximation.name, time.time() - start))
 
-    true_approximation = TrueApproximator(dist)
+    #true_approximation = TrueApproximator(dist)
 
     print("Initializing Constraint")
     start = time.time()
@@ -136,8 +136,8 @@ if __name__ == '__main__':
    # constraintStatLower = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximation, delta=delta,
    #                                  epsilon=epsilon, bound='lower')
     # constraintTrue = Constraint(split_training_data, n_a, n_y, approximator=true_approximation, delta=delta, epsilon=epsilon)
-    constraintFuncApprox = Constraint(split_training_data, n_a, n_y, approximator=function_approximation, delta=delta,
-                                      epsilon=epsilon)
+    #constraintFuncApprox = Constraint(split_training_data, n_a, n_y, approximator=function_approximation, delta=delta,
+    #                                  epsilon=epsilon)
 
     print("Initializing the constraint took {:.3f} seconds".format(time.time() - start))
     print("Initializing algorithms")
@@ -149,6 +149,8 @@ if __name__ == '__main__':
         #                   name='Constrained Greedy Lower', label='CGL'),
         #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation,
         #                  name="Constrained Greedy FuncApprox"),
+        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStatUpper, statistical_approximation),
+
         NaiveGreedy(n_x, n_a, n_y, split_training_data),
         #DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintStatUpper, approximator=statistical_approximation)
         # DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintFuncApprox,
