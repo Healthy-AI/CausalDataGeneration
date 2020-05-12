@@ -2,7 +2,7 @@ from Algorithms.constrained_greedy import ConstrainedGreedy
 from Algorithms.function_approximation import FunctionApproximation
 from Algorithms.naive_dynamic_programming import NaiveDynamicProgramming
 from Algorithms.constrained_dynamic_programming import ConstrainedDynamicProgramming
-from Algorithms.true_approximator import TrueApproximator
+from Algorithms.exact_approximator import ExactApproximator
 from DataGenerator.data_generator import *
 import time
 from pathlib import Path
@@ -54,7 +54,7 @@ if __name__ == '__main__':
         d_tmp['z'] = np.copy(main_data['z'][0:data_limits[i]])
         data_sets.append(split_patients(d_tmp))
 
-    true_approximation = TrueApproximator(dist)
+    true_approximation = ExactApproximator(dist)
     evaluations_data_amount = {}
     time_name = 'time'
     outcome_name = 'outcome'

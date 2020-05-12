@@ -1,5 +1,5 @@
 from Algorithms.better_treatment_constraint import Constraint
-from Algorithms.true_approximator import TrueApproximator
+from Algorithms.exact_approximator import ExactApproximator
 from DataGenerator.distributions import DiscreteDistributionWithSmoothOutcomes
 import numpy as np
 
