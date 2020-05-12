@@ -32,6 +32,7 @@ if __name__ == '__main__':
     for i_data_set in range(n_data_sets):
         print("Starting set {}".format(i_data_set))
         dist, unsplit_training_data, test_data = setup_data_sets(n_z, n_x, n_a, n_y, n_training_samples_max, n_test_samples, seeds[i_data_set])
+        saved_table = None
         for i_size in range(n_data_set_sizes):
             print("Evaluating data set size = {}".format(n_training_samples_array[i_size]))
             d_tmp = {'x': np.copy(unsplit_training_data['x'][0:n_training_samples_array[i_size]]),
@@ -43,7 +44,14 @@ if __name__ == '__main__':
             for alg in algorithms:
                 start = time.time()
                 print("Training {}".format(alg.name))
-                alg.learn()
+                if alg.name == "Dynamic Programming True":
+                    if saved_table is None:
+                        alg.learn()
+                        saved_table = alg.q_table
+                    else:
+                        alg.q_table = saved_table
+                else:
+                    alg.learn()
                 print("Training {} took {:.3f} seconds".format(alg.name, time.time() - start))
             for i_alg in range(n_algorithms):
                 print("Evaluating algorithm {}".format(algorithms[i_alg].name))

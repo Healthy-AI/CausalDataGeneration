@@ -44,8 +44,8 @@ def setup_algorithms(training_data, dist, delta):
 def load_settings():
     starting_seed = 10342
     n_data_sets = 10
-    n_data_set_sizes = 25
-    delta = 0.3
+    n_data_set_sizes = 30
+    delta = 0.5
     n_z = 3
     n_x = 1
     n_a = 5
