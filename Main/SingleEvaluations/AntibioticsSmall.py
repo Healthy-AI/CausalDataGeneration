@@ -11,6 +11,7 @@ from pathlib import Path
 from Algorithms.better_treatment_constraint import Constraint
 from Algorithms.statistical_approximator import StatisticalApproximator
 from Database.antibioticsdatabase import AntibioticsDatabase
+from Algorithms.doctor import Doctor
 
 if __name__ == '__main__':
     # Training values
@@ -39,7 +40,7 @@ if __name__ == '__main__':
     plot_mean_treatment_effect = True
     plot_treatment_efficiency = False
     plot_delta_efficiency = False
-    plot_search_time = False
+    plot_search_time = True
     plot_strictly_better = False
     plot_delta_grid_search = False
     delta_grid_search_percentage = False
@@ -58,7 +59,7 @@ if __name__ == '__main__':
     dist.print_treatment_statistics()
     dist.print_detailed_treatment_statistics()
     '''
-    dist = AntibioticsDatabase(n_x=8, antibiotic_limit=50, seed=seed)
+    dist = AntibioticsDatabase(n_x=1, antibiotic_limit=50, seed=seed)
     '''
     dist = NewDistribution(seed=seed)
     #dist = NewDistributionSlightlyRandom(seed=seed)
@@ -114,6 +115,7 @@ if __name__ == '__main__':
         n_a = dist.n_a
         n_y = dist.n_y
         n_test_samples = len(test_data)
+        doctor_evals = dist.doctor_evals
 
     split_training_data = datasets['training']['data']
     test_data = datasets['test']['data']
@@ -136,8 +138,8 @@ if __name__ == '__main__':
    # constraintStatLower = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximation, delta=delta,
    #                                  epsilon=epsilon, bound='lower')
     # constraintTrue = Constraint(split_training_data, n_a, n_y, approximator=true_approximation, delta=delta, epsilon=epsilon)
-    #constraintFuncApprox = Constraint(split_training_data, n_a, n_y, approximator=function_approximation, delta=delta,
-    #                                  epsilon=epsilon)
+    constraintFuncApprox = Constraint(split_training_data, n_a, n_y, approximator=function_approximation, delta=delta,
+                                      epsilon=epsilon)
 
     print("Initializing the constraint took {:.3f} seconds".format(time.time() - start))
     print("Initializing algorithms")
@@ -147,14 +149,17 @@ if __name__ == '__main__':
                            name='Constrained Greedy', label='CG'),
         # ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStatLower, statistical_approximation,
         #                   name='Constrained Greedy Lower', label='CGL'),
-        #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation,
-        #                  name="Constrained Greedy FuncApprox"),
+        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation,
+                          name="Constrained Greedy FuncApprox", label="CG_F"),
         ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStatUpper, statistical_approximation),
+        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintFuncApprox,
+                                      function_approximation, name="Constrained Dynamic Programming FuncApprox", label="CDP_F"),
 
-        NaiveGreedy(n_x, n_a, n_y, split_training_data),
+        #NaiveGreedy(n_x, n_a, n_y, split_training_data),
         #DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintStatUpper, approximator=statistical_approximation)
         # DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintFuncApprox,
         #              approximator=function_approximation),
+        Doctor(doctor_evals)
     ]
 
     n_algorithms = len(algorithms)

@@ -49,6 +49,8 @@ class AntibioticsDatabase:
         for test in self.allowed_tests:
             self.add_treatment_to_dict(test)
 
+        self.doctor_evals = []
+
     def get_n_a(self):
         return min(self.antibiotic_counter, self.antibiotic_limit)
 
@@ -100,6 +102,9 @@ class AntibioticsDatabase:
                             input_patients[hadm_id] = {organism: [intervention]}
 
         self.remove_input_patients(input_patients)
+        #self.remove_training_data_from_test(input_patients, patients)
+        input_patients, patients = self.split_training_to_test(input_patients)
+
         self.n_a = len(self.allowed_tests.keys())
 
         #self.plot_outcome_histogram(microbiology_test_data)
@@ -111,6 +116,7 @@ class AntibioticsDatabase:
             for organism, history in microbiology_test_data.items():
                 x = self.organism_to_x_dict[organism]
                 test_data.append(self.get_test_data(x, history))
+                self.doctor_evals.append(history)
 
         for hadm_id, organism_and_history in input_patients.items():
             for organism, history in organism_and_history.items():
@@ -126,6 +132,19 @@ class AntibioticsDatabase:
         print("{} organisms".format(self.x_counter))
         print("Organisms: {}".format(self.organism_to_x_dict.keys()))
         return antibiotics_data, test_data
+
+    def split_training_to_test(self, training, split=0.5):
+        hadm_ids = list(training.keys())
+        np.random.shuffle(hadm_ids)
+        split_index = int(len(hadm_ids)*split)
+        training_set = dict(list(training.items())[:split_index])
+        test_set = dict(list(training.items())[split_index:])
+        return training_set, test_set
+
+    def remove_training_data_from_test(self, training, test):
+        for hadm_id in training.keys():
+            if hadm_id in test:
+                del test[hadm_id]
 
     def remove_patients(self, patients):
         allowed_treatments_list = list(self.allowed_tests.keys())
