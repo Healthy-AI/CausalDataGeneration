@@ -12,6 +12,8 @@ from Algorithms.better_treatment_constraint import Constraint
 from Algorithms.statistical_approximator import StatisticalApproximator
 from Database.antibioticsdatabase import AntibioticsDatabase
 from Algorithms.doctor import Doctor
+from Algorithms.emulated_doctor import EmulatedDoctor
+from Algorithms.doctor_approximator import DoctorApproximator
 
 if __name__ == '__main__':
     # Training values
@@ -115,7 +117,7 @@ if __name__ == '__main__':
         n_a = dist.n_a
         n_y = dist.n_y
         n_test_samples = len(test_data)
-        doctor_evals = dist.doctor_evals
+        doctor_data = dist.doctor_data
 
     split_training_data = datasets['training']['data']
     test_data = datasets['test']['data']
@@ -126,6 +128,7 @@ if __name__ == '__main__':
     print("Initializing statistical approximator")
     start = time.time()
     statistical_approximation = StatisticalApproximator(n_x, n_a, n_y, split_training_data, prior_mode='gaussian')
+    doctor_approximation = DoctorApproximator(n_x, n_a, n_y, split_training_data)
     # print("Initializing {} took {:.3f} seconds".format(statistical_approximation.name, time.time() - start))
 
 
@@ -136,8 +139,8 @@ if __name__ == '__main__':
 
     constraintStatUpper = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximation, delta=delta,
                                      epsilon=epsilon, bound='upper')
-   # constraintStatLower = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximation, delta=delta,
-   #                                  epsilon=epsilon, bound='lower')
+    constraintStatLower = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximation, delta=delta,
+                                     epsilon=epsilon, bound='lower')
     # constraintTrue = Constraint(split_training_data, n_a, n_y, approximator=true_approximation, delta=delta, epsilon=epsilon)
     constraintFuncApprox = Constraint(split_training_data, n_a, n_y, approximator=function_approximation, delta=delta,
                                       epsilon=epsilon)
@@ -148,19 +151,21 @@ if __name__ == '__main__':
         # ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Constrained Greedy True", label="CGT"),
         ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStatUpper, statistical_approximation,
                            name='Constrained Greedy', label='CG'),
-        # ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStatLower, statistical_approximation,
-        #                   name='Constrained Greedy Lower', label='CGL'),
-        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation,
-                          name="Constrained Greedy FuncApprox", label="CG_F"),
+        #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStatLower, statistical_approximation,
+        #                   name='Constrained Greedy Lower', label='CG_L'),
+        #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation,
+        #                  name="Constrained Greedy FuncApprox", label="CG_F"),
         ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStatUpper, statistical_approximation),
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintFuncApprox,
-                                      function_approximation, name="Constrained Dynamic Programming FuncApprox", label="CDP_F"),
+        #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStatUpper,
+        #                              function_approximation, name="Constrained Dynamic Programming FuncApprox", label="CDP_F"),
 
         #NaiveGreedy(n_x, n_a, n_y, split_training_data),
+        NaiveDynamicProgramming(n_x, n_a, n_y, split_training_data, statistical_approximation, reward=reward),
         #DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintStatUpper, approximator=statistical_approximation)
         # DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintFuncApprox,
         #              approximator=function_approximation),
-        Doctor(doctor_evals)
+        Doctor(doctor_data),
+        EmulatedDoctor(n_x, n_a, n_y, doctor_data, approximator=doctor_approximation)
     ]
 
     n_algorithms = len(algorithms)

@@ -2,9 +2,7 @@ import psycopg2
 import numpy as np
 import base64
 from Database.treatment_to_test import treatment_to_test
-from Database.colormaps import colormaps
 from matplotlib import pyplot as plt
-from matplotlib.colors import LinearSegmentedColormap
 
 
 class AntibioticsDatabase:
@@ -49,7 +47,7 @@ class AntibioticsDatabase:
         for test in self.allowed_tests:
             self.add_treatment_to_dict(test)
 
-        self.doctor_evals = []
+        self.doctor_data = []
 
     def get_n_a(self):
         return min(self.antibiotic_counter, self.antibiotic_limit)
@@ -103,7 +101,7 @@ class AntibioticsDatabase:
 
         self.remove_input_patients(input_patients)
         #self.remove_training_data_from_test(input_patients, patients)
-        input_patients, patients = self.split_training_to_test(input_patients)
+        input_patients, patients = self.split_training_to_test(input_patients, patients)
 
         self.n_a = len(self.allowed_tests.keys())
 
@@ -112,11 +110,11 @@ class AntibioticsDatabase:
 
         antibiotics_data = {'z': [], 'x': [], 'h': []}
         test_data = []
+
         for hadm_id, microbiology_test_data in patients.items():
             for organism, history in microbiology_test_data.items():
                 x = self.organism_to_x_dict[organism]
                 test_data.append(self.get_test_data(x, history))
-                self.doctor_evals.append(history)
 
         for hadm_id, organism_and_history in input_patients.items():
             for organism, history in organism_and_history.items():
@@ -130,16 +128,42 @@ class AntibioticsDatabase:
         self.antibiotics_training_data = antibiotics_data
         print("{} patients in training data, {} in test data".format(len(antibiotics_data['x']), len(test_data)))
         print("{} organisms".format(self.x_counter))
-        print("Organisms: {}".format(self.organism_to_x_dict.keys()))
+        print("Organisms: {}".format(list(self.organism_to_x_dict.keys())))
         return antibiotics_data, test_data
 
-    def split_training_to_test(self, training, split=0.5):
-        hadm_ids = list(training.keys())
-        np.random.shuffle(hadm_ids)
-        split_index = int(len(hadm_ids)*split)
-        training_set = dict(list(training.items())[:split_index])
-        test_set = dict(list(training.items())[split_index:])
-        return training_set, test_set
+    def split_training_to_test(self, training, test, split=0.7):
+        hadm_ids = np.array(list(training.keys()))
+        training_samples = int(len(hadm_ids)*split)
+        test_samples = int(len(hadm_ids)*(1 - split))
+        tr_s = [True]*training_samples
+        te_s = [False]*test_samples
+        is_training_sample = tr_s + te_s
+        self.random.shuffle(is_training_sample)
+        test_set = {}
+        training_set = {}
+        i = 0
+        for hadm_id, organism_and_history in training.items():
+            if is_training_sample[i]:
+                training_set[hadm_id] = organism_and_history
+            else:
+                test_set[hadm_id] = organism_and_history
+            i += 1
+
+        doctor_data = {'z': [], 'x': [], 'h': []}
+        for hadm_id, organism_and_history in test_set.items():
+            for organism, history in organism_and_history.items():
+                x = self.organism_to_x_dict[organism]
+                doctor_data['z'].append(hadm_id)
+                doctor_data['x'].append(x)
+                doctor_data['h'].append(history)
+        self.doctor_data = doctor_data
+
+        new_test_set = {}
+        test_hadm_ids = np.ma.masked_array(hadm_ids, mask=is_training_sample)
+        test_hadm_ids = test_hadm_ids[test_hadm_ids.mask == False]
+        for hadm_id in test_hadm_ids:
+            new_test_set[hadm_id] = test[hadm_id]
+        return training_set, new_test_set
 
     def remove_training_data_from_test(self, training, test):
         for hadm_id in training.keys():
