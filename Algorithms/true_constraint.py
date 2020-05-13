@@ -29,7 +29,7 @@ class TrueConstraint(Constraint):
             for a_next in possible_actions:
                 next_step_probs[a_next] = self.calculate_probability_of_better(x, current_outcomes, a_next)
 
-            self.probability_matrix[state] = np.max(next_step_probs)
+            self.probability_matrix[state] = np.mean(next_step_probs)
             prob = self.probability_matrix[state]
         return prob
 
