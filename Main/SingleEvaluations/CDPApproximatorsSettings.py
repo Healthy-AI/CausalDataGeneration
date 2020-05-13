@@ -56,6 +56,6 @@ def load_settings():
     n_y = 3
     n_training_samples = 7000
     n_test_samples = 2000
-    file_name_prefix = "Approximators_7ksamples_"
+    file_name_prefix = "CDPApproximators_7ksamples_"
 
     return starting_seed, n_data_sets, n_deltas, n_z, n_x, n_a, n_y, n_training_samples, n_test_samples, file_name_prefix
