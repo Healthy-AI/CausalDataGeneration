@@ -5,12 +5,13 @@ import numpy as np
 import time
 from Algorithms.constrained_dynamic_programming import generate_data, split_patients
 from DataGenerator.distributions import DiscreteDistributionWithSmoothOutcomes
-from Main.SingleEvaluations import DeltaSweepSettings, GApproximatorsSettings, CDPApproximatorsSettings
+from Main.SingleEvaluations import DeltaSweepSettings, GApproximatorsSettings, CDPApproximatorsSettings, \
+    TrueApproxSettings
 from Main.SingleEvaluations.PlotSweepDelta import plot_sweep_delta
 
 
 def get_settings():
-    return DeltaSweepSettings
+    return TrueApproxSettings
 
 def do_work(i_data_set, n_algorithms):
     settings = get_settings()
@@ -37,6 +38,9 @@ def do_work(i_data_set, n_algorithms):
             for i_sample in range(len(test_data)):
                 interventions = algorithms[i_alg].evaluate(test_data[i_sample])
                 total_time += len(interventions)
+                if len(interventions) == 0:
+                    print(test_data[i_sample])
+                    print(interventions)
                 best_outcome = max([treatment[1] for treatment in interventions])
                 if best_outcome == np.max(test_data[i_sample][2]):
                     n_at_max += 1

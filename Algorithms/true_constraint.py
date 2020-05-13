@@ -20,7 +20,7 @@ class TrueConstraint(Constraint):
     def calculate_total_probability_of_better(self, x, current_outcomes):
         state = tuple(np.hstack((x, current_outcomes)))
         if np.max(current_outcomes) == -1:
-            prob = 1
+            prob = np.inf
         elif self.probability_matrix[state] != -1:
             prob = self.probability_matrix[state]
         else:
