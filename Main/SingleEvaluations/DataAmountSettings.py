@@ -43,7 +43,7 @@ def setup_algorithms(training_data, dist, delta):
 
 def load_settings():
     starting_seed = 10342
-    n_data_sets = 10
+    n_data_sets = 20
     n_data_set_sizes = 30
     delta = 0.5
     n_z = 3
@@ -52,6 +52,6 @@ def load_settings():
     n_y = 3
     n_training_samples_max = 50000
     n_test_samples = 3000
-    file_name_prefix = "DataSweep_50k_"
+    file_name_prefix = "DataSweep_50k20set_"
 
     return starting_seed, n_data_sets, delta, n_data_set_sizes, n_z, n_x, n_a, n_y, n_training_samples_max, n_test_samples, file_name_prefix

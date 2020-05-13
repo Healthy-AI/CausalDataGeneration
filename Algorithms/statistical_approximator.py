@@ -79,11 +79,12 @@ class StatisticalApproximator(ProbabilityApproximator):
 
     def kernel_gaussian(self, current_state, historical_state):
         diff = self.calc_history_distance(current_state, historical_state)
-        return np.exp(-diff**2)
+        k = np.exp(-(diff-1)**2) / (self.calc_history_distance(current_state, np.zeros(len(current_state))) * 2 ** (self.calc_history_distance(current_state, historical_state) - 1))
+        return k
 
     def kernel_laplace(self, current_state, historical_state):
         diff = self.calc_history_distance(current_state, historical_state)
-        return np.exp(-diff)
+        return np.exp(-(diff-1))
 
     def kernel_no_history(self, current_state, historical_state):
         diff = self.calc_history_distance(current_state, historical_state)
@@ -101,16 +102,22 @@ class StatisticalApproximator(ProbabilityApproximator):
     def full_history_prior(self, x, state, action, kernel):
         histories = self.generate_all_possible_histories(state)
         total_probabilities = np.zeros(self.n_y)
+        total_probabilities_prior = np.zeros(self.n_y)
         total_kernel = 0
         for h in histories:
-            probs = self.get_probabilities(x, h, action)
-            if np.max(probs) != 0:
-                k = kernel(state, h)
-                total_probabilities += k * probs
-                total_kernel += k
-        if np.max(total_probabilities) == 0:
-            return np.ones(self.n_y) / self.n_y
-        return total_probabilities / total_kernel
+            if np.all(h == state):
+                total_probabilities += self.statistics[tuple(np.hstack((x, state, action)))]
+            else:
+                probs = self.get_probabilities(x, h, action)
+                if np.max(probs) != 0:
+                    k = kernel(state, h)
+                    total_probabilities_prior += k * probs
+                    total_kernel += k
+        if total_kernel > 0:
+            total_probabilities_prior *= 4 / total_kernel
+        elif np.sum(total_probabilities + total_probabilities_prior) == 0:
+            total_probabilities_prior += 1
+        return (total_probabilities + total_probabilities_prior) / np.sum(total_probabilities + total_probabilities_prior)
 
     def calculate_probability_constraint(self, x, state):
         best_outcome = np.max(state)
