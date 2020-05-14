@@ -110,7 +110,7 @@ class DiscreteDistribution(Distribution):
         probs = self.calc_y_weights(a, x, z)
         y = self.random.choice(self.n_y, p=probs)
         done = False
-        if y >= self.n_y - 1 and self.random.random() < 0.9:
+        if (y >= self.n_y - 1 and self.random.random() < 0.9) or self.random.random() < 0.1:
             done = True
         return y, done
 

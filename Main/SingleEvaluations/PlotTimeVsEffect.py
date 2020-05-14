@@ -1,8 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.scale import LogScale
 
 from DataGenerator.data_generator import split_patients, generate_data, DiscreteDistributionWithSmoothOutcomes
-from Main.SingleEvaluations import DeltaSweepSettings_small
+from Main.SingleEvaluations import DeltaSweepSettings_small, TrueApproxSettings
 
 
 def plot_time_vs_effect(values, times, settings):
@@ -25,16 +26,16 @@ def plot_time_vs_effect(values, times, settings):
 
     fig, ax1 = plt.subplots(figsize=(6, 4))
     for i_alg in range(n_algorithms):
-        ax1.plot(zipped_mean[0, 0], zipped_mean[0, 1], plot_colors[i_alg] + plot_markers[i_alg] + plot_lines[0],
+        ax1.plot(zipped_mean[i_alg, 0], zipped_mean[i_alg, 1], plot_colors[i_alg] + plot_markers[i_alg] + plot_lines[0],
                        label='{}'.format(algs[i_alg].label))
-    ax1.grid(True)
     ax1.invert_xaxis()
     ax1.legend()
+    ax1.grid(True)
     plt.savefig("saved_values/" + file_name_prefix + "_time_vs_effect.png")
 
 
 if __name__ == '__main__':
-    settings = DeltaSweepSettings_small
+    settings = TrueApproxSettings
     starting_seed, n_data_sets, n_deltas, n_z, n_x, n_a, n_y, n_training_samples, n_test_samples, file_name_prefix = settings.load_settings()
     values = np.load('saved_values/' + file_name_prefix + "values.npy")
     times = np.load('saved_values/' + file_name_prefix + "times.npy")
