@@ -47,9 +47,9 @@ def plot_sweep_data(values, times, settings, plot_var=False, split_plot=True):
     ax2.set_ylabel('Mean search time')
     lns = []
     for i_alg in range(n_algorithms):
-        ln1 = ax1.plot(n_training_samples_array, values_mean[:, i_alg], plot_colors[i_alg],
+        ln1 = ax1.plot(n_training_samples_array, values_mean[:, i_alg], plot_colors[i_alg] + plot_markers[i_alg] + plot_lines[0],
                        label='{} {}'.format(algs[i_alg].label, 'effect'))
-        ln2 = ax2.plot(n_training_samples_array, times_mean[:, i_alg], plot_colors[i_alg] + plot_lines[1],
+        ln2 = ax2.plot(n_training_samples_array, times_mean[:, i_alg], plot_colors[i_alg] + plot_markers[i_alg] + plot_lines[1],
                        label='{} {}'.format(algs[i_alg].label, 'time'))
         lns.append(ln1)
         lns.append(ln2)

@@ -17,7 +17,6 @@ def plot_sweep_delta(values, times, settings, plot_var=False, split_plot=True):
     starting_seed, n_data_sets, n_deltas, n_z, n_x, n_a, n_y, n_training_samples, n_test_samples, file_name_prefix = load_settings()
     tmp_dist = DiscreteDistributionWithSmoothOutcomes(3, 1, 5, 3)
     algs = setup_algorithms(split_patients(generate_data(tmp_dist, 10)), tmp_dist, 0.1)
-    file_name_prefix = file_name_prefix
     n_algorithms = len(algs)
     deltas = np.linspace(0.0, 1.0, n_deltas)
 
