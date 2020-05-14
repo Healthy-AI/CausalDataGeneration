@@ -2,11 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from DataGenerator.data_generator import split_patients, generate_data
 from DataGenerator.distributions import DiscreteDistributionWithSmoothOutcomes
-from Main.SingleEvaluations import DeltaSweepSettings
+from Main.SingleEvaluations import DeltaSweepSettings, DeltaSweepSettings_small
 import Main.SingleEvaluations.DeltaSweepSettings
 
 
-def plot_sweep_delta(values, times, settings, plot_var=False):
+def plot_sweep_delta(values, times, settings, plot_var=False, split_plot=True):
     plot_colors = ['k', 'r', 'b', 'g', 'm', 'c', 'y']
     plot_markers = ['s', 'v', 'P', '1', '2', '3', '4']
     plot_lines = ['-', '--', ':', '-.']
@@ -36,17 +36,21 @@ def plot_sweep_delta(values, times, settings, plot_var=False):
             times_var[i_delta][i_alg] = t_var / (n_data_sets - 1)
 
     # Plot mean treatment effect vs delta
-    fig, ax1 = plt.subplots(figsize=(10, 7))
-    plt.title('Mean treatment effect/mean search time vs delta')
-    plt.xlabel('delta')
-    ax2 = ax1.twinx()
+    if not split_plot:
+        fig, ax1 = plt.subplots(figsize=(6, 4))
+        ax2 = ax1.twinx()
+    else:
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(6, 10))
+    ax1.set_title('Mean treatment effect/mean search time vs delta')
+    ax1.set_xlabel('Delta')
+    ax2.set_xlabel('Delta')
     ax1.set_ylabel('Mean treatment effect')
     ax2.set_ylabel('Mean search time')
     lns = []
     for i_alg in range(n_algorithms):
-        ln1 = ax1.plot(deltas, values_mean[:, i_alg], plot_colors[i_alg],
+        ln1 = ax1.plot(deltas, values_mean[:, i_alg], plot_colors[i_alg] + plot_markers[i_alg] + plot_lines[0],
                        label='{} {}'.format(algs[i_alg].label, 'effect'))
-        ln2 = ax2.plot(deltas, times_mean[:, i_alg], plot_colors[i_alg] + plot_lines[1],
+        ln2 = ax2.plot(deltas, times_mean[:, i_alg], plot_colors[i_alg] + plot_markers[i_alg] + plot_lines[1],
                        label='{} {}'.format(algs[i_alg].label, 'time'))
         lns.append(ln1)
         lns.append(ln2)
@@ -57,17 +61,19 @@ def plot_sweep_delta(values, times, settings, plot_var=False):
                                     facecolor=plot_colors[i_alg], alpha=0.3)
             lns.append(ln1v)
             lns.append(ln2v)
-    plt.grid(True)
+    ax1.grid(True)
+    ax2.grid(True)
     lines1, labels1 = ax1.get_legend_handles_labels()
     lines2, labels2 = ax2.get_legend_handles_labels()
-    lgd = plt.legend(lines1 + lines2, labels1 + labels2, bbox_to_anchor=(1.04, 0), loc='upper left')
-    plt.savefig("saved_values/" + file_name_prefix + "_plot.png", bbox_extra_artists=(lgd,), bbox_inches='tight')
+    ax1.legend(lines1, labels1, loc='upper right')
+    ax2.legend(lines2, labels2, loc='lower left')
+    plt.savefig("saved_values/" + file_name_prefix + "_plot.png")
 
 
 if __name__ == '__main__':
-    settings = DeltaSweepSettings
+    settings = DeltaSweepSettings_small
     starting_seed, n_data_sets, n_deltas, n_z, n_x, n_a, n_y, n_training_samples, n_test_samples, file_name_prefix = settings.load_settings()
     values = np.load('saved_values/' + file_name_prefix + "values.npy")
     times = np.load('saved_values/' + file_name_prefix + "times.npy")
 
-    plot_sweep_delta(values, times, settings, True)
+    plot_sweep_delta(values, times, settings, plot_var=True, split_plot=False)

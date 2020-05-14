@@ -6,8 +6,7 @@ import matplotlib.pylab as plt
 from Main.SingleEvaluations import DataAmountSettings
 
 
-def plot_sweep_data(values, times, settings, plot_var=False):
-
+def plot_sweep_data(values, times, settings, plot_var=False, split_plot=True):
     plot_colors = ['k', 'r', 'b', 'g', 'm', 'c', 'y']
     plot_markers = ['s', 'v', 'P', '1', '2', '3', '4']
     plot_lines = ['-', '--', ':', '-.']
@@ -35,10 +34,15 @@ def plot_sweep_data(values, times, settings, plot_var=False):
             values_var[i_size][i_alg] = v_var / (n_data_sets - 1)
             times_var[i_size][i_alg] = t_var / (n_data_sets - 1)
     # Plot mean treatment effect vs delta
-    fig, ax1 = plt.subplots(figsize=(10, 7))
-    plt.title('Mean treatment value/Mean search time vs data set size (delta: {})'.format(delta))
-    plt.xlabel('Data set size')
-    ax2 = ax1.twinx()
+    if not split_plot:
+        fig, ax1 = plt.subplots(figsize=(6, 4))
+        ax2 = ax1.twinx()
+    else:
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(6, 10))
+
+    ax1.title('Mean treatment value/Mean search time vs data set size (delta: {})'.format(delta))
+    ax1.set_xlabel('Data set size')
+    ax2.set_xlabel('Data set size')
     ax1.set_ylabel('Mean treatment value')
     ax2.set_ylabel('Mean search time')
     lns = []
@@ -56,12 +60,14 @@ def plot_sweep_data(values, times, settings, plot_var=False):
                                     facecolor=plot_colors[i_alg], alpha=0.3)
             lns.append(ln1v)
             lns.append(ln2v)
-    plt.grid(True)
+    ax1.grid(True)
+    ax2.grid(True)
     lines1, labels1 = ax1.get_legend_handles_labels()
     lines2, labels2 = ax2.get_legend_handles_labels()
-    lgd = plt.legend(lines1 + lines2, labels1 + labels2, bbox_to_anchor=(1.04, 0), loc='upper left')
+    ax1.legend(lines1, labels1, loc='upper right')
+    ax2.legend(lines2, labels2, loc='lower left')
     plt.xscale('log')
-    plt.savefig("saved_values/" + file_name_prefix + "_plot.png", bbox_extra_artists=(lgd,), bbox_inches='tight')
+    plt.savefig("saved_values/" + file_name_prefix + "_plot.png")
 
 
 if __name__ == '__main__':
@@ -70,4 +76,4 @@ if __name__ == '__main__':
     values = np.load("saved_values/" + file_name_prefix + "values.npy")
     times = np.load("saved_values/" + file_name_prefix + "times.npy")
 
-    plot_sweep_data(values, times, settings, False)
+    plot_sweep_data(values, times, settings, False, True)
