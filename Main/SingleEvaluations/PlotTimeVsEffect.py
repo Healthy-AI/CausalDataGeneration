@@ -33,13 +33,13 @@ def plot_time_vs_effect(values, times, settings):
     ax1.invert_xaxis()
     ax1.legend()
     plt.xlabel("Mean time")
-    plt.ylabel("")
+    plt.ylabel("Efficacy")
     ax1.grid(True)
     plt.savefig("saved_values/" + file_name_prefix + "_time_vs_effect.png")
 
 
 if __name__ == '__main__':
-    settings = CDPApproximatorsSettings
+    settings = TrueApproxSettings
     starting_seed, n_data_sets, n_deltas, n_z, n_x, n_a, n_y, n_training_samples, n_test_samples, file_name_prefix = settings.load_settings()
     values = np.load('saved_values/' + file_name_prefix + "values.npy")
     times = np.load('saved_values/' + file_name_prefix + "times.npy")

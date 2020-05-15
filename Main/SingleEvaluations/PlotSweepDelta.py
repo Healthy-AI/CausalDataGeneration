@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from DataGenerator.data_generator import split_patients, generate_data
 from DataGenerator.distributions import DiscreteDistributionWithSmoothOutcomes
-from Main.SingleEvaluations import DeltaSweepSettings, DeltaSweepSettings_small
+from Main.SingleEvaluations import DeltaSweepSettings, DeltaSweepSettings_small, TrueApproxSettings
 import Main.SingleEvaluations.DeltaSweepSettings
 
 
@@ -70,9 +70,9 @@ def plot_sweep_delta(values, times, settings, plot_var=False, split_plot=True):
 
 
 if __name__ == '__main__':
-    settings = DeltaSweepSettings_small
+    settings = TrueApproxSettings
     starting_seed, n_data_sets, n_deltas, n_z, n_x, n_a, n_y, n_training_samples, n_test_samples, file_name_prefix = settings.load_settings()
     values = np.load('saved_values/' + file_name_prefix + "values.npy")
     times = np.load('saved_values/' + file_name_prefix + "times.npy")
 
-    plot_sweep_delta(values, times, settings, plot_var=True, split_plot=False)
+    plot_sweep_delta(values, times, settings, plot_var=False, split_plot=True)
