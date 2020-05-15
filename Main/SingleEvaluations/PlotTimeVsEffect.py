@@ -29,7 +29,7 @@ def plot_time_vs_effect(values, times, settings):
     plt.rcParams["font.family"] = "serif"
     for i_alg in range(n_algorithms):
         ax1.plot(zipped_mean[i_alg, 0], zipped_mean[i_alg, 1], plot_colors[i_alg] + plot_markers[i_alg] + plot_lines[0],
-                       label='{}'.format(algs[i_alg].label))
+                       label='{}'.format(algs[i_alg].label), markevery=3)
     ax1.invert_xaxis()
     ax1.legend()
     plt.xlabel("Mean time")

@@ -7,7 +7,7 @@ from Algorithms.help_functions import *
 class FunctionApproximation(ProbabilityApproximator):
     def __init__(self, n_x, n_a, n_y, data):
         super().__init__(n_x, n_a, n_y, data)
-        self.model = RandomForestClassifier(n_jobs=-1)
+        self.model = RandomForestClassifier(n_jobs=1)
         self.name = 'Random forest approximator'
         self.xs = data['x']
         self.histories = data['h']

@@ -48,9 +48,9 @@ def plot_sweep_data(values, times, settings, plot_var=False, split_plot=True):
     lns = []
     for i_alg in range(n_algorithms):
         ln1 = ax1.plot(n_training_samples_array, values_mean[:, i_alg], plot_colors[i_alg] + plot_markers[i_alg] + plot_lines[0],
-                       label='{} {}'.format(algs[i_alg].label, 'effect'))
+                       label='{} {}'.format(algs[i_alg].label, 'effect'), markevery=3)
         ln2 = ax2.plot(n_training_samples_array, times_mean[:, i_alg], plot_colors[i_alg] + plot_markers[i_alg] + plot_lines[1],
-                       label='{} {}'.format(algs[i_alg].label, 'time'))
+                       label='{} {}'.format(algs[i_alg].label, 'time'), markevery=3)
         lns.append(ln1)
         lns.append(ln2)
         if plot_var:

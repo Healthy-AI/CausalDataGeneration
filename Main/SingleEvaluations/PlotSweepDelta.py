@@ -2,7 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from DataGenerator.data_generator import split_patients, generate_data
 from DataGenerator.distributions import DiscreteDistributionWithSmoothOutcomes
-from Main.SingleEvaluations import DeltaSweepSettings, DeltaSweepSettings_small, TrueApproxSettings
+from Main.SingleEvaluations import DeltaSweepSettings, DeltaSweepSettings_small, TrueApproxSettings, \
+    NaiveVsConstrainedSettings
 import Main.SingleEvaluations.DeltaSweepSettings
 
 
@@ -48,9 +49,9 @@ def plot_sweep_delta(values, times, settings, plot_var=False, split_plot=True):
     lns = []
     for i_alg in range(n_algorithms):
         ln1 = ax1.plot(deltas, values_mean[:, i_alg], plot_colors[i_alg] + plot_markers[i_alg] + plot_lines[0],
-                       label='{} {}'.format(algs[i_alg].label, 'effect'))
+                       label='{} {}'.format(algs[i_alg].label, 'effect'), markevery=3)
         ln2 = ax2.plot(deltas, times_mean[:, i_alg], plot_colors[i_alg] + plot_markers[i_alg] + plot_lines[1],
-                       label='{} {}'.format(algs[i_alg].label, 'time'))
+                       label='{} {}'.format(algs[i_alg].label, 'time'), markevery=3)
         lns.append(ln1)
         lns.append(ln2)
         if plot_var:
@@ -70,9 +71,9 @@ def plot_sweep_delta(values, times, settings, plot_var=False, split_plot=True):
 
 
 if __name__ == '__main__':
-    settings = TrueApproxSettings
+    settings = NaiveVsConstrainedSettings
     starting_seed, n_data_sets, n_deltas, n_z, n_x, n_a, n_y, n_training_samples, n_test_samples, file_name_prefix = settings.load_settings()
     values = np.load('saved_values/' + file_name_prefix + "values.npy")
     times = np.load('saved_values/' + file_name_prefix + "times.npy")
 
-    plot_sweep_delta(values, times, settings, plot_var=False, split_plot=True)
+    plot_sweep_delta(values, times, settings, plot_var=True, split_plot=True)
