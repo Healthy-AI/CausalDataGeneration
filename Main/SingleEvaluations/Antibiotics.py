@@ -73,7 +73,7 @@ if __name__ == '__main__':
     starting_seed, n_data_sets, delta, file_name_prefix = settings.load_settings()
 
     # Quick hack to get n_algorithms
-    tmp_dist = AntibioticsDatabase(1, 50)
+    tmp_dist = AntibioticsDatabase(AntibioticsSettings.n_x, 50, seed=90821)
     training_data, test_data = tmp_dist.get_data()
     training_data = training_data
     n_x = tmp_dist.n_x

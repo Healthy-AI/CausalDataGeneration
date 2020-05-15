@@ -2,6 +2,8 @@ import psycopg2
 import numpy as np
 import base64
 from Database.treatment_to_test import treatment_to_test
+from Database.sql_get_inputevents import get_inputevents
+from Database.sql_get_microbiologyevents import get_microbiologyevents
 from matplotlib import pyplot as plt
 
 
@@ -13,7 +15,7 @@ class AntibioticsDatabase:
         self.antibiotic_counter = 0
         self.n_x = n_x
         self.antibiotic_limit = antibiotic_limit
-        self.x_counter = 0
+        self.organism_counter = 0
         self.organism_to_x_dict = {}
         self.n_training_samples = None
         self.antibiotics_training_data = None
@@ -39,8 +41,8 @@ class AntibioticsDatabase:
         print('Antibiotics found as both treatment and test:', count_working, ', not found:', count_not_working)
         self.allowed_tests = {'CEFTAZIDIME': True, 'PIPERACILLIN/TAZO': True, 'CEFEPIME': True,
                                    'TOBRAMYCIN': True, 'GENTAMICIN': True, 'MEROPENEM': True}
-        self.allowed_organisms = {'ESCHERICHIA COLI': True, 'PSEUDOMONAS AERUGINOSA': True}
-
+        self.allowed_organisms = {'ESCHERICHIA COLI': True, 'PSEUDOMONAS AERUGINOSA': True, 'KLEBSIELLA PNEUMONIAE': True, 'PROTEUS MIRABILIS': True}
+        #self.allowed_organisms = almost_all_organisms
         for organism in self.allowed_organisms.keys():
             self.add_organism_too_dict(organism)
 
@@ -53,28 +55,38 @@ class AntibioticsDatabase:
         return min(self.antibiotic_counter, self.antibiotic_limit)
 
     def get_data(self):
-        self.cur.execute('SELECT hadm_id, org_name, ab_name, interpretation FROM microbiologyevents WHERE ab_name IS NOT NULL;')
+        #self.cur.execute('SELECT hadm_id, org_name, ab_name, interpretation FROM microbiologyevents WHERE ab_name IS NOT NULL;')
+        self.cur.execute(get_microbiologyevents)
         microbiology_test_data = self.cur.fetchall()
-        self.cur.execute("SELECT DISTINCT(label), hadm_id FROM inputevents_mv JOIN d_items ON inputevents_mv.itemid = d_items.itemid WHERE d_items.category like 'Antibiotics'")
-        used_antibiotics = self.cur.fetchall()
+
         patients = {}
+        patient_age_groups = {}
+
         self.random.shuffle(microbiology_test_data)
         for chartevent in microbiology_test_data:
             hadm_id = chartevent[0]
             organism = chartevent[1]
             treatment_name = chartevent[2]
             outcome = interpretation_to_outcome(chartevent[3])
+            age = chartevent[4]
+            age_group = chartevent[5]
             treatment = self.antibiotic_to_treatment(treatment_name)
             if organism in self.allowed_organisms and treatment_name in self.allowed_tests and outcome is not None:
+                x = self.create_x(organism, age_group)
                 intervention = np.array([treatment, outcome])
                 try:
                     if treatment not in [intervention[0] for intervention in patients[hadm_id][organism]]:
                         patients[hadm_id][organism].append(intervention)
                 except KeyError:
                     patients[hadm_id] = {organism: [intervention]}
+                    patient_age_groups[hadm_id] = age_group
 
         self.remove_patients(patients)
 
+        #self.cur.execute(get_inputevents)
+        self.cur.execute("SELECT DISTINCT(label), hadm_id FROM inputevents_mv JOIN d_items ON inputevents_mv.itemid = d_items.itemid WHERE d_items.category like 'Antibiotics'")
+
+        used_antibiotics = self.cur.fetchall()
         input_patients = {}
         for chartevent in used_antibiotics:
             hadm_id = chartevent[1]
@@ -113,12 +125,16 @@ class AntibioticsDatabase:
 
         for hadm_id, microbiology_test_data in patients.items():
             for organism, history in microbiology_test_data.items():
-                x = self.organism_to_x_dict[organism]
+                #x = self.organism_to_x_dict[organism]
+                age_group = patient_age_groups[hadm_id]
+                x = self.create_x(organism, age_group)
                 test_data.append(self.get_test_data(x, history))
 
         for hadm_id, organism_and_history in input_patients.items():
             for organism, history in organism_and_history.items():
-                x = self.organism_to_x_dict[organism]
+                #x = self.organism_to_x_dict[organism]
+                age_group = patient_age_groups[hadm_id]
+                x = self.create_x(organism, age_group)
                 antibiotics_data['z'].append(hadm_id)
                 antibiotics_data['x'].append(x)
                 antibiotics_data['h'].append(history)
@@ -127,9 +143,15 @@ class AntibioticsDatabase:
         print("{} different antibiotics".format(self.n_a))
         self.antibiotics_training_data = antibiotics_data
         print("{} patients in training data, {} in test data".format(len(antibiotics_data['x']), len(test_data)))
-        print("{} organisms".format(self.x_counter))
+        print("{} organisms".format(self.organism_counter))
         print("Organisms: {}".format(list(self.organism_to_x_dict.keys())))
         return antibiotics_data, test_data
+
+    def create_x(self, organism, age_group):
+        orgx = self.organism_to_x_dict[organism]
+        #x = np.concatenate((orgx, [age_group]))
+        x = orgx
+        return x
 
     def split_training_to_test(self, training, test, split=0.7):
         hadm_ids = np.array(list(training.keys()))
@@ -244,6 +266,8 @@ class AntibioticsDatabase:
             treatment_name = chartevent[2]
             treatment = self.antibiotic_to_treatment(treatment_name)
             #outcome = interpretation_to_outcome(chartevent[3])
+            if organism not in self.organism_to_x_dict:
+                self.add_organism_too_dict(organism)
             organism_id = self.binary_to_int(self.organism_to_x_dict[organism])
             if organism_id < self.n_a:
                 organisms_and_treatments[treatment, organism_id] += 1
@@ -254,12 +278,13 @@ class AntibioticsDatabase:
         fig.colorbar(cax)
         ax.set_xlabel('Organisms')
         ax.set_ylabel('Treatments')
+
         plt.show()
 
     def get_x_colors(self):
         colors = []
         cmap = plt.get_cmap('gist_ncar')
-        color_steps = np.linspace(0, 1, self.x_counter)
+        color_steps = np.linspace(0, 1, self.organism_counter)
         for i in color_steps:
             colors.append(cmap(i))
         return colors
@@ -291,9 +316,10 @@ class AntibioticsDatabase:
 
     def add_organism_too_dict(self, organism):
         if organism not in self.organism_to_x_dict:
-            conversion = '{}0:0{}b{}'.format('{', str(self.n_x), '}')
-            self.organism_to_x_dict[organism] = np.array([int(s) for s in list((conversion.format(self.x_counter)))])  # Convert to list of binary
-            self.x_counter += 1
+            conversion = '{}0:0{}b{}'.format('{', str(int(np.ceil(np.sqrt(len(self.allowed_organisms))))), '}')
+            binary = np.array([int(s) for s in list((conversion.format(self.organism_counter)))])  # Convert to list of binary
+            self.organism_to_x_dict[organism] = binary
+            self.organism_counter += 1
 
     def get_test_data(self, x, history):
         z = -1

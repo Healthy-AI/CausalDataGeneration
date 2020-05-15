@@ -7,7 +7,6 @@ class StatisticalApproximator(ProbabilityApproximator):
     def __init__(self, n_x, n_a, n_y, data, epsilon=0, prior_mode='gaussian'):
         super().__init__(n_x, n_a, n_y, data)
         self.statistics = self.get_patient_statistics()
-        self.data = data
         self.histories_to_compare = self.history_to_compare_dict(self.data['h'], self.data['x'])
         self.epsilon = epsilon
         self.type = type

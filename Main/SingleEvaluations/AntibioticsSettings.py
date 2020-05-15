@@ -14,7 +14,7 @@ from Algorithms.doctor_approximator import DoctorApproximator
 def setup_data_sets(seed):
     start = time.time()
     print("Generating training and test data")
-    dist = AntibioticsDatabase(n_x=1, antibiotic_limit=50, seed=seed)
+    dist = AntibioticsDatabase(n_x=n_x, antibiotic_limit=50, seed=seed)
     training_data, test_data = dist.get_data()
     training_data = split_patients(training_data)
 
@@ -41,13 +41,13 @@ def setup_algorithms(training_data, n_x, n_a, n_y, delta):
         #                   name='Constrained Greedy Lower', label='CG_L'),
         # ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation,
         #                  name="Constrained Greedy FuncApprox", label="CG_F"),
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, training_data, constraintStatUpper,
-                                      statistical_approximation),
+        #ConstrainedDynamicProgramming(n_x, n_a, n_y, training_data, constraintStatUpper,
+        #                              statistical_approximation),
         # ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStatUpper,
         #                              function_approximation, name="Constrained Dynamic Programming FuncApprox", label="CDP_F"),
 
         # NaiveGreedy(n_x, n_a, n_y, split_training_data),
-        NaiveDynamicProgramming(n_x, n_a, n_y, training_data, statistical_approximation, reward=-0.35),
+        #NaiveDynamicProgramming(n_x, n_a, n_y, training_data, statistical_approximation, reward=-0.35),
         Doctor(),
         EmulatedDoctor(n_x, n_a, n_y, training_data, approximator=doctor_approximation)
     ]
@@ -57,6 +57,10 @@ def setup_algorithms(training_data, n_x, n_a, n_y, delta):
 def load_settings():
     starting_seed = 90821  # Used for both synthetic and real data
     delta = 0.0
-    n_data_sets = 1
+    n_data_sets = 10
     file_name_prefix = 'antibioticsTest'
     return starting_seed, n_data_sets, delta, file_name_prefix
+
+
+n_x = 2
+
