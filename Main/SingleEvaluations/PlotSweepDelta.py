@@ -63,6 +63,7 @@ def plot_sweep_delta(values, times, settings, plot_var=False, split_plot=True):
             lns.append(ln2v)
     ax1.grid(True)
     ax2.grid(True)
+    plt.rcParams["font.family"] = "serif"
     lines1, labels1 = ax1.get_legend_handles_labels()
     lines2, labels2 = ax2.get_legend_handles_labels()
     ax1.legend(lines1, labels1, loc='upper right')

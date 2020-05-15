@@ -22,9 +22,9 @@ if __name__ == '__main__':
     n_a = 5
     n_y = 3
     training_episodes = 5000
-    n_training_samples = 1000
-    n_test_samples = 500
-    delta = 0.30
+    n_training_samples = 30000
+    n_test_samples = 5000
+    delta = 0.0
     epsilon = 0
     reward = -0.35
     # for grid search
@@ -39,8 +39,8 @@ if __name__ == '__main__':
     alt_plot_lines = ['-', '--', ':', '-.']
 
 
-    plot_mean_treatment_effect = True
-    plot_treatment_efficiency = True
+    plot_mean_treatment_effect = False
+    plot_treatment_efficiency = False
     plot_delta_efficiency = True
     plot_search_time = False
     plot_strictly_better = False
@@ -225,7 +225,9 @@ if __name__ == '__main__':
             x = np.arange(0, n_a)
             x_ticks = list(np.arange(1, n_a + 1))
             plt.figure()
-            plt.title('Treatment effect. delta: {}'.format(delta))
+            plt.rcParams["font.family"] = "serif"
+            plt.rcParams["font.size"] = 14
+            plt.title('Treatment effect, delta: {}'.format(delta))
             plt.ylabel('Mean treatment effect')
             plt.xlabel('Number of tried treatments')
             average_max_treatment_effect = sum([max(data[-1]) for data in test_data]) / len(test_data)
@@ -265,23 +267,28 @@ if __name__ == '__main__':
                         effect = treatments[i_treatment][1]
                         if effect > best_found:
                             best_found = effect
-                    if best_found == best_possible:
-                        best_founds_efficiency[i_alg][i_treatment] += 1
+                    if plot_treatment_efficiency:
+                        if best_found == best_possible:
+                            best_founds_efficiency[i_alg][i_treatment] += 1
+                    else:
+                        best_founds_efficiency[i_alg][i_treatment] += best_found
         best_founds_efficiency /= n_test_samples
         mean_num_tests /= n_test_samples
 
         # Plot mean treatment effect over population
         plt.figure()
-        plt.title('Treatment efficiency. d: {}'.format(delta))
-        plt.ylabel('Percentage of population at best possible treatment')
+        plt.rcParams["font.family"] = "serif"
+        plt.rcParams["font.size"] = 14
+        plt.title('Treatment efficacy, delta: {}'.format(delta))
+        plt.ylabel('Efficacy')
         plt.xlabel('Number of tried treatments')
         x = np.arange(0, n_a + 1)
         x_ticks = list(np.arange(1, n_a + 2))
         x_ticks[-1] = 'Done'
         for i_plot, alg in enumerate(algorithms):
-            plt.plot(x, best_founds_efficiency[i_plot], plot_markers[i_plot] + plot_colors[i_plot] + alt_plot_lines[0],
+            plt.plot(x, best_founds_efficiency[i_plot], plot_markers[i_plot] + plot_colors[i_plot] + alt_plot_lines[i_plot],
                      label=alg.label)
-            plt.axvline(mean_num_tests[i_plot] - 1, 0, 1, color=plot_colors[i_plot])
+            plt.axvline(mean_num_tests[i_plot] - 1, 0, 1, marker=plot_markers[i_plot], color=plot_colors[i_plot], linestyle=alt_plot_lines[i_plot])
         plt.xticks(x, x_ticks)
         plt.grid(True)
         plt.legend(loc='lower right')
