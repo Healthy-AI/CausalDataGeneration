@@ -5,12 +5,13 @@ import numpy as np
 import time
 from Algorithms.constrained_dynamic_programming import generate_data, split_patients
 from DataGenerator.distributions import DiscreteDistributionWithSmoothOutcomes
-from Main.SingleEvaluations import DeltaSweepSettings, GApproximatorsSettings, CDPApproximatorsSettings
+from Main.SingleEvaluations import DeltaSweepSettings, GApproximatorsSettings, CDPApproximatorsSettings, \
+    TrueApproxSettings, DeltaSweepSettings_small, NaiveVsConstrainedSettings
 from Main.SingleEvaluations.PlotSweepDelta import plot_sweep_delta
 
 
 def get_settings():
-    return DeltaSweepSettings
+    return NaiveVsConstrainedSettings
 
 def do_work(i_data_set, n_algorithms):
     settings = get_settings()

@@ -86,7 +86,6 @@ class ConstrainedDynamicProgramming(QLearner):
         mask_unknown_actions[mask_unknown_actions == -1] = -np.inf
         mask_unknown_actions = np.append(mask_unknown_actions, 0)
         action = np.argmax(self.q_table[self.to_index(state)]+mask_unknown_actions)
-
         while action != self.n_a and len(history) < self.n_a:
             y[action] = y_fac[action]
             history.append([action, y[action]])
