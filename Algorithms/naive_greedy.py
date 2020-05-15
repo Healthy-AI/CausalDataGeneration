@@ -2,7 +2,7 @@ import numpy as np
 
 
 class NaiveGreedy:
-    def __init__(self, n_x, n_a, n_y, data):
+    def __init__(self, n_x, n_a, n_y, data, name='Naive Greedy', label='NG'):
         self.n_x = n_x
         self.n_a = n_a
         self.n_y = n_y
@@ -10,8 +10,8 @@ class NaiveGreedy:
         self.data = data
         self.max_outcome_statistics = None
 
-        self.name = 'Naive Greedy'
-        self.label = 'NG'
+        self.name = name
+        self.label = label
 
     def learn(self):
         self.max_outcome_statistics = np.zeros((2,) * self.n_x + (self.n_a,) + (2,))
