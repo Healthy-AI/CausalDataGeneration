@@ -49,7 +49,7 @@ def setup_algorithms(training_data, dist, delta):
 
 
 def load_settings():
-    starting_seed = 3162
+    starting_seed = 80941
     n_data_sets = 10
     n_deltas = 40
     n_z = 3
@@ -58,6 +58,6 @@ def load_settings():
     n_y = 3
     n_training_samples = 7000
     n_test_samples = 2000
-    file_name_prefix = "CDPApproximators_7ksamples_"
+    file_name_prefix = "Naive_Vs_Constrained_"
 
     return starting_seed, n_data_sets, n_deltas, n_z, n_x, n_a, n_y, n_training_samples, n_test_samples, file_name_prefix
