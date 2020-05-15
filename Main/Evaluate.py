@@ -22,9 +22,9 @@ if __name__ == '__main__':
     n_a = 5
     n_y = 3
     training_episodes = 5000
-    n_training_samples = 5000
-    n_test_samples = 1000
-    delta = 0.4
+    n_training_samples = 1000
+    n_test_samples = 500
+    delta = 0.30
     epsilon = 0
     reward = -0.35
     # for grid search
@@ -39,8 +39,8 @@ if __name__ == '__main__':
     alt_plot_lines = ['-', '--', ':', '-.']
 
 
-    plot_mean_treatment_effect = False
-    plot_treatment_efficiency = False
+    plot_mean_treatment_effect = True
+    plot_treatment_efficiency = True
     plot_delta_efficiency = True
     plot_search_time = False
     plot_strictly_better = False
@@ -63,13 +63,12 @@ if __name__ == '__main__':
     dist.print_detailed_treatment_statistics()
     #'''
     #dist = AntibioticsDatabase(n_x=1, antibiotic_limit=5, seed=seed)
-    '''
+
     dist = NewDistribution(seed=seed)
     #dist = NewDistributionSlightlyRandom(seed=seed)
     n_x = 1
     n_a = 3
     n_y = 3
-    '''
     '''
     dist = FredrikDistribution()
     n_x = 1
@@ -148,10 +147,10 @@ if __name__ == '__main__':
     algorithms = [
         #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
         #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Constrained Greedy True", label="CGT"),
-        #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
+        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
         #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation, name="Constrained Greedy FuncApprox"),
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintTT, true_approximation, name="Dynamic Programming Exact", label="CDP_E"),
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintCT, statistical_approximation, name="Dynamic Programming True Stat", label="CDP_TS"),
+        #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintTT, true_approximation, name="Dynamic Programming Exact", label="CDP_E"),
+        #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintCT, statistical_approximation, name="Dynamic Programming True Stat", label="CDP_TS"),
         ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, function_approximation, name="Dynamic Programming Func", label="CDPF"),
