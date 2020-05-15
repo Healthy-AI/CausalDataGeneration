@@ -84,7 +84,6 @@ class AntibioticsDatabase:
                     print('Warning: more than one bacteria for hadm_id', hadm_id)
                 treatment_name = self.treatment_to_test[chartevent[0]]
                 treatment = self.antibiotic_to_treatment(treatment_name)
-                print(treatment_name, treatment)
                 for organism in patients[hadm_id].keys():
                     outcome = None
                     for inter in patients[hadm_id][organism]:
