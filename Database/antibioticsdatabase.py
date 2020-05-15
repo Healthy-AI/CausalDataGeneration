@@ -84,6 +84,7 @@ class AntibioticsDatabase:
                     print('Warning: more than one bacteria for hadm_id', hadm_id)
                 treatment_name = self.treatment_to_test[chartevent[0]]
                 treatment = self.antibiotic_to_treatment(treatment_name)
+                print(treatment_name, treatment)
                 for organism in patients[hadm_id].keys():
                     outcome = None
                     for inter in patients[hadm_id][organism]:
@@ -133,16 +134,18 @@ class AntibioticsDatabase:
 
     def split_training_to_test(self, training, test, split=0.7):
         hadm_ids = np.array(list(training.keys()))
-        training_samples = int(len(hadm_ids)*split)
-        test_samples = int(len(hadm_ids)*(1 - split))
+        training_samples = int(np.ceil(len(hadm_ids)*split))
+        test_samples = int(np.floor(len(hadm_ids)*(1 - split)))
         tr_s = [True]*training_samples
         te_s = [False]*test_samples
         is_training_sample = tr_s + te_s
+        print(len(is_training_sample), len(training))
         self.random.shuffle(is_training_sample)
         test_set = {}
         training_set = {}
         i = 0
         for hadm_id, organism_and_history in training.items():
+            #print(i, len(training))
             if is_training_sample[i]:
                 training_set[hadm_id] = organism_and_history
             else:

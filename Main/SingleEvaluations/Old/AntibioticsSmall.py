@@ -155,17 +155,17 @@ if __name__ == '__main__':
         #                   name='Constrained Greedy Lower', label='CG_L'),
         #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation,
         #                  name="Constrained Greedy FuncApprox", label="CG_F"),
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStatUpper, statistical_approximation),
+        #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStatUpper, statistical_approximation),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStatUpper,
         #                              function_approximation, name="Constrained Dynamic Programming FuncApprox", label="CDP_F"),
 
         #NaiveGreedy(n_x, n_a, n_y, split_training_data),
-        NaiveDynamicProgramming(n_x, n_a, n_y, split_training_data, statistical_approximation, reward=reward),
+        #NaiveDynamicProgramming(n_x, n_a, n_y, split_training_data, statistical_approximation, reward=reward),
         #DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintStatUpper, approximator=statistical_approximation)
         # DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintFuncApprox,
         #              approximator=function_approximation),
         Doctor(doctor_data),
-        EmulatedDoctor(n_x, n_a, n_y, doctor_data, approximator=doctor_approximation)
+        EmulatedDoctor(n_x, n_a, n_y, split_training_data, approximator=doctor_approximation)
     ]
 
     n_algorithms = len(algorithms)
@@ -219,8 +219,6 @@ if __name__ == '__main__':
                         effect = treatments[i_treatment][1]
                     if effect > best_found:
                         best_found = effect
-                    mean_treatment_effects[i_alg][i_treatment] += effect
-        mean_treatment_effects /= n_test_samples
         mean_num_tests /= n_test_samples
 
         if plot_mean_treatment_effect:
