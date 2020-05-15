@@ -11,6 +11,9 @@ from pathlib import Path
 from Algorithms.better_treatment_constraint import Constraint
 from Algorithms.statistical_approximator import StatisticalApproximator
 from Database.antibioticsdatabase import AntibioticsDatabase
+from Algorithms.doctor import Doctor
+from Algorithms.emulated_doctor import EmulatedDoctor
+from Algorithms.doctor_approximator import DoctorApproximator
 
 if __name__ == '__main__':
     # Training values
@@ -36,12 +39,12 @@ if __name__ == '__main__':
     plot_lines = [(i, (1, 4, 1, 4)) for i in range(0, 8)]
     alt_plot_lines = ['-', '--', ':', '-.']
 
-    plot_mean_treatment_effect = False
+    plot_mean_treatment_effect = True
     plot_treatment_efficiency = False
     plot_delta_efficiency = False
-    plot_search_time = False
+    plot_search_time = True
     plot_strictly_better = False
-    plot_delta_grid_search = True
+    plot_delta_grid_search = False
     delta_grid_search_percentage = False
     fixed_scale = False
     plotbools = [plot_mean_treatment_effect, plot_treatment_efficiency, plot_delta_efficiency, plot_search_time,
@@ -58,7 +61,7 @@ if __name__ == '__main__':
     dist.print_treatment_statistics()
     dist.print_detailed_treatment_statistics()
     '''
-    dist = AntibioticsDatabase(n_x=2, antibiotic_limit=6, seed=seed)
+    dist = AntibioticsDatabase(n_x=1, antibiotic_limit=50, seed=seed)
     '''
     dist = NewDistribution(seed=seed)
     #dist = NewDistributionSlightlyRandom(seed=seed)
@@ -114,6 +117,7 @@ if __name__ == '__main__':
         n_a = dist.n_a
         n_y = dist.n_y
         n_test_samples = len(test_data)
+        doctor_data = dist.doctor_data
 
     split_training_data = datasets['training']['data']
     test_data = datasets['test']['data']
@@ -123,18 +127,20 @@ if __name__ == '__main__':
     # print("Initializing {} took {:.3f} seconds".format(function_approximation.name, time.time()-start))
     print("Initializing statistical approximator")
     start = time.time()
-    statistical_approximation = StatisticalApproximator(n_x, n_a, n_y, split_training_data, prior_mode='none')
+    statistical_approximation = StatisticalApproximator(n_x, n_a, n_y, split_training_data, prior_mode='gaussian')
+    doctor_approximation = DoctorApproximator(n_x, n_a, n_y, split_training_data)
     # print("Initializing {} took {:.3f} seconds".format(statistical_approximation.name, time.time() - start))
 
-    true_approximation = ExactApproximator(dist)
+
+    #true_approximation = ExactApproximator(dist)
 
     print("Initializing Constraint")
     start = time.time()
 
     constraintStatUpper = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximation, delta=delta,
                                      epsilon=epsilon, bound='upper')
-   # constraintStatLower = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximation, delta=delta,
-   #                                  epsilon=epsilon, bound='lower')
+    constraintStatLower = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximation, delta=delta,
+                                     epsilon=epsilon, bound='lower')
     # constraintTrue = Constraint(split_training_data, n_a, n_y, approximator=true_approximation, delta=delta, epsilon=epsilon)
     constraintFuncApprox = Constraint(split_training_data, n_a, n_y, approximator=function_approximation, delta=delta,
                                       epsilon=epsilon)
@@ -142,30 +148,24 @@ if __name__ == '__main__':
     print("Initializing the constraint took {:.3f} seconds".format(time.time() - start))
     print("Initializing algorithms")
     algorithms = [
-        # GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
         # ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Constrained Greedy True", label="CGT"),
         ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStatUpper, statistical_approximation,
                            name='Constrained Greedy', label='CG'),
-        # ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStatLower, statistical_approximation,
-        #                   name='Constrained Greedy Lower', label='CGL'),
+        #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStatLower, statistical_approximation,
+        #                   name='Constrained Greedy Lower', label='CG_L'),
         #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation,
-        #                  name="Constrained Greedy FuncApprox"),
-        # ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Dynamic Programming True", label="CDPT"),
-        #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStatUpper, statistical_approximation,
-        #                              name='Constrained Dynamic Programming Upper', label='CDPU'),
-        #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStatLower, statistical_approximation,
-        #                              name='Constrained Dynamic Programming Lower', label='CDPL'),
+        #                  name="Constrained Greedy FuncApprox", label="CG_F"),
+        #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStatUpper, statistical_approximation),
+        #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStatUpper,
+        #                              function_approximation, name="Constrained Dynamic Programming FuncApprox", label="CDP_F"),
 
-        # ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, function_approximation, name="Dynamic Programming Func", label="CDPF"),
-        # ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation,name="Constrained Dynamic Programming FuncApprox"),
-        NaiveGreedy(n_x, n_a, n_y, split_training_data),
-        # NaiveDynamicProgramming(n_x, n_a, n_y, split_training_data, statistical_approximation, reward=reward)
-        # QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
-        # QLearnerConstrained(n_x, n_a, n_y, split_training_data, constraint, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
-        # OnlineQLearner(n_x, n_a, n_y, dist, constraint, learning_time=training_episodes),
-        DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintStatUpper, approximator=statistical_approximation)
+        #NaiveGreedy(n_x, n_a, n_y, split_training_data),
+        #NaiveDynamicProgramming(n_x, n_a, n_y, split_training_data, statistical_approximation, reward=reward),
+        #DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintStatUpper, approximator=statistical_approximation)
         # DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintFuncApprox,
         #              approximator=function_approximation),
+        Doctor(doctor_data),
+        EmulatedDoctor(n_x, n_a, n_y, split_training_data, approximator=doctor_approximation)
     ]
 
     n_algorithms = len(algorithms)
@@ -219,8 +219,6 @@ if __name__ == '__main__':
                         effect = treatments[i_treatment][1]
                     if effect > best_found:
                         best_found = effect
-                    mean_treatment_effects[i_alg][i_treatment] += effect
-        mean_treatment_effects /= n_test_samples
         mean_num_tests /= n_test_samples
 
         if plot_mean_treatment_effect:
@@ -375,6 +373,7 @@ if __name__ == '__main__':
                     total_time += search_time
                 mean_outcome = total_outcome / n_test_samples
                 mean_time = total_time / n_test_samples
+                print(mean_outcome, mean_time)
                 evaluations_delta[alg.name][outcome_name].append(mean_outcome)
                 evaluations_delta[alg.name][time_name].append(mean_time)
         print("Running Evaluate (and training) over delta took {:.3f} seconds".format(time.time() - main_start))
