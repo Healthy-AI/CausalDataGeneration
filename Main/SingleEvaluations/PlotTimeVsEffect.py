@@ -26,11 +26,14 @@ def plot_time_vs_effect(values, times, settings):
         zipped_mean[i_alg][1] = values_mean[:, i_alg]
 
     fig, ax1 = plt.subplots(figsize=(6, 4))
+    plt.rcParams["font.family"] = "serif"
     for i_alg in range(n_algorithms):
         ax1.plot(zipped_mean[i_alg, 0], zipped_mean[i_alg, 1], plot_colors[i_alg] + plot_markers[i_alg] + plot_lines[0],
                        label='{}'.format(algs[i_alg].label))
     ax1.invert_xaxis()
     ax1.legend()
+    plt.xlabel("Mean time")
+    plt.ylabel("")
     ax1.grid(True)
     plt.savefig("saved_values/" + file_name_prefix + "_time_vs_effect.png")
 
