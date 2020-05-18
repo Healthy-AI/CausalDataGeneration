@@ -4,7 +4,6 @@ from Algorithms.function_approximation import FunctionApproximation
 from Algorithms.naive_dynamic_programming import NaiveDynamicProgramming
 from Algorithms.constrained_dynamic_programming import ConstrainedDynamicProgramming
 from Algorithms.naive_greedy import NaiveGreedy
-from Algorithms.deep_q_learning import DeepQLearning
 from Algorithms.exact_approximator import ExactApproximator
 from Algorithms.true_constraint import TrueConstraint
 from DataGenerator.data_generator import *
@@ -64,11 +63,13 @@ if __name__ == '__main__':
     #'''
     #dist = AntibioticsDatabase(n_x=1, antibiotic_limit=5, seed=seed)
 
+    '''
     dist = NewDistribution(seed=seed)
     #dist = NewDistributionSlightlyRandom(seed=seed)
     n_x = 1
     n_a = 3
     n_y = 3
+    '''
     '''
     dist = FredrikDistribution()
     n_x = 1
@@ -155,7 +156,7 @@ if __name__ == '__main__':
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, function_approximation, name="Dynamic Programming Func", label="CDPF"),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation,name="Constrained Dynamic Programming FuncApprox"),
-        NaiveGreedy(n_x, n_a, n_y, statistical_approximation, n_y-1),
+        NaiveGreedy(n_x, n_a, n_y, statistical_approximation, n_a-1),
         #DistAlgWrapper(dist, name="Distribution", label="dist"),
         #NaiveDynamicProgramming(n_x, n_a, n_y, split_training_data, statistical_approximation, reward=reward)
         #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),

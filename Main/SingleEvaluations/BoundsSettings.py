@@ -5,6 +5,7 @@ from Algorithms.constrained_dynamic_programming import ConstrainedDynamicProgram
 from Algorithms.constrained_greedy import ConstrainedGreedy
 from Algorithms.exact_approximator import ExactApproximator
 from Algorithms.statistical_approximator import StatisticalApproximator
+from Algorithms.true_constraint import TrueConstraint
 from DataGenerator.data_generator import split_patients, generate_data, generate_test_data
 from DataGenerator.distributions import DiscreteDistributionWithSmoothOutcomes
 
@@ -28,12 +29,15 @@ def setup_algorithms(training_data, dist, delta):
 
     constraint_upper = Constraint(training_data, n_a, n_y, approximator=statistical_approximation_prior, delta=delta, bound='upper')
     constraint_lower = Constraint(training_data, n_a, n_y, approximator=statistical_approximation_prior, delta=delta, bound='lower')
+    constraint_exact = TrueConstraint(dist, approximator=statistical_approximation_prior, delta=delta)
 
     algorithms = [
         ConstrainedDynamicProgramming(n_x, n_a, n_y, training_data, constraint_upper, statistical_approximation_prior, name="Dynamic Programming Upper Bound", label="CDP_U"),
         ConstrainedDynamicProgramming(n_x, n_a, n_y, training_data, constraint_lower, statistical_approximation_prior, name="Dynamic Programming Lower bound", label="CDP_L"),
+        ConstrainedDynamicProgramming(n_x, n_a, n_y, training_data, constraint_exact, statistical_approximation_prior, name="Dynamic Programming Exact Bound", label="CDP_E"),
         ConstrainedGreedy(n_x, n_a, n_y, training_data, constraint_upper, statistical_approximation_prior, name="Greedy Upper Bound", label="CG_U"),
         ConstrainedGreedy(n_x, n_a, n_y, training_data, constraint_lower, statistical_approximation_prior, name="Greedy Lower Bound", label="CG_L"),
+        ConstrainedGreedy(n_x, n_a, n_y, training_data, constraint_exact, statistical_approximation_prior, name="Greedy Exact Bound", label="CG_E"),
     ]
 
     print("Setting up algorithms took {:.3f} seconds".format(time.time() - start))
