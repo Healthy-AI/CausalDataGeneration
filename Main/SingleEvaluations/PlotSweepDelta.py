@@ -10,7 +10,7 @@ import Main.SingleEvaluations.DeltaSweepSettings
 def plot_sweep_delta(values, times, settings, plot_var=False, split_plot=True):
     plot_colors = ['k', 'r', 'b', 'g', 'm', 'c', 'y']
     plot_markers = ['s', 'v', 'P', '1', '2', '3', '4']
-    plot_lines = ['-', '--', ':', '-.']
+    plot_lines = ['-', '--', ':', '-.', '-', '--', ':']
 
     # Extract settings
     load_settings = settings.load_settings
