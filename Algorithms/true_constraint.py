@@ -21,6 +21,8 @@ class TrueConstraint(Constraint):
         state = tuple(np.hstack((x, current_outcomes)))
         if np.max(current_outcomes) == -1:
             prob = np.inf
+        elif np.min(current_outcomes) != -1:
+            prob = 0
         elif self.probability_matrix[state] != -1:
             prob = self.probability_matrix[state]
         else:

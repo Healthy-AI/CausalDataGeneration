@@ -33,7 +33,7 @@ def setup_algorithms(training_data, dist, delta, train=True):
     algorithms = [
         ConstrainedDynamicProgramming(n_x, n_a, n_y, training_data, constraint_prior, statistical_approximation_prior, name="Constrained Dynamic Programming", label="CDP"),
         ConstrainedGreedy(n_x, n_a, n_y, training_data, constraint_prior, statistical_approximation_prior, name="Constrained Greedy", label="CG"),
-        NaiveGreedy(n_x, n_a, n_y, statistical_approximation_prior, round(delta * n_a), name='Naive Greedy', label='NG'),
+        NaiveGreedy(n_x, n_a, n_y, statistical_approximation_prior, round(delta * (n_a-1))+1, name='Naive Greedy', label='NG'),
         NaiveDynamicProgramming(n_x, n_a, n_y, training_data, statistical_approximation_prior, reward=-(delta+0.0001), name='Naive Dynamic Programming', label='NDP'),
     ]
 
