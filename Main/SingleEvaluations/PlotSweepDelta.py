@@ -3,14 +3,15 @@ import matplotlib.pyplot as plt
 from DataGenerator.data_generator import split_patients, generate_data
 from DataGenerator.distributions import DiscreteDistributionWithSmoothOutcomes
 from Main.SingleEvaluations import DeltaSweepSettings, DeltaSweepSettings_small, TrueApproxSettings, \
-    NaiveVsConstrainedSettings, GApproximatorsSettings
+    NaiveVsConstrainedSettings, BoundsSettings, CDPApproximatorsSettings, GApproximatorsSettings, \
+    GeneralDeltaSweepSettings
 import Main.SingleEvaluations.DeltaSweepSettings
 
 
 def plot_sweep_delta(values, times, settings, plot_var=False, split_plot=True):
     plot_colors = ['k', 'r', 'b', 'g', 'm', 'c', 'y']
     plot_markers = ['s', 'v', 'P', '1', '2', '3', '4']
-    plot_lines = ['-', '--', ':', '-.']
+    plot_lines = ['-', '--', ':', '-.', '-', '--', ':']
 
     # Extract settings
     load_settings = settings.load_settings
@@ -44,7 +45,7 @@ def plot_sweep_delta(values, times, settings, plot_var=False, split_plot=True):
     ax1.set_title('Mean treatment effect/mean search time vs delta')
     ax1.set_xlabel('Delta')
     ax2.set_xlabel('Delta')
-    ax1.set_ylabel('Mean treatment effect')
+    ax1.set_ylabel('Efficacy')
     ax2.set_ylabel('Mean search time')
     lns = []
     for i_alg in range(n_algorithms):
@@ -72,9 +73,10 @@ def plot_sweep_delta(values, times, settings, plot_var=False, split_plot=True):
 
 
 if __name__ == '__main__':
-    settings = GApproximatorsSettings
+
+    settings = GeneralDeltaSweepSettings
     starting_seed, n_data_sets, n_deltas, n_z, n_x, n_a, n_y, n_training_samples, n_test_samples, file_name_prefix = settings.load_settings()
     values = np.load('saved_values/' + file_name_prefix + "values.npy")
     times = np.load('saved_values/' + file_name_prefix + "times.npy")
 
-    plot_sweep_delta(values, times, settings, plot_var=True, split_plot=True)
+    plot_sweep_delta(values, times, settings, plot_var=False, split_plot=True)

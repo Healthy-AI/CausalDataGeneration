@@ -19,7 +19,7 @@ class NaiveGreedy:
     def evaluate(self, patient):
         z, x, y_fac = patient
         h = []
-        y = np.array((-1,)*self.n_y)
+        y = np.array((-1,)*self.n_a)
         best_outcome = 0
         while best_outcome < self.max_outcome and len(h) < self.max_steps:
             available_actions = np.argwhere(y == -1).flatten()

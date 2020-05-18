@@ -9,7 +9,7 @@ from Main.SingleEvaluations import DeltaSweepSettings, DataAmountSettings2
 from Main.SingleEvaluations.PlotSweepData import plot_sweep_data
 
 def get_settings():
-    return DataAmountSettings2
+    return DataAmountSettings
 
 def do_work(i_data_set, n_algorithms):
     settings = get_settings()
