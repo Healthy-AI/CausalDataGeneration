@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from DataGenerator.data_generator import split_patients, generate_data
 from DataGenerator.distributions import DiscreteDistributionWithSmoothOutcomes
 from Main.SingleEvaluations import DeltaSweepSettings, DeltaSweepSettings_small, TrueApproxSettings, \
-    NaiveVsConstrainedSettings
+    NaiveVsConstrainedSettings, GApproximatorsSettings
 import Main.SingleEvaluations.DeltaSweepSettings
 
 
@@ -16,7 +16,7 @@ def plot_sweep_delta(values, times, settings, plot_var=False, split_plot=True):
     load_settings = settings.load_settings
     setup_algorithms = settings.setup_algorithms
     starting_seed, n_data_sets, n_deltas, n_z, n_x, n_a, n_y, n_training_samples, n_test_samples, file_name_prefix = load_settings()
-    tmp_dist = DiscreteDistributionWithSmoothOutcomes(3, 1, 5, 3)
+    tmp_dist = DiscreteDistributionWithSmoothOutcomes(3, 5, 5, 3)
     algs = setup_algorithms(split_patients(generate_data(tmp_dist, 10)), tmp_dist, 0.1)
     n_algorithms = len(algs)
     deltas = np.linspace(0.0, 1.0, n_deltas)
@@ -72,7 +72,7 @@ def plot_sweep_delta(values, times, settings, plot_var=False, split_plot=True):
 
 
 if __name__ == '__main__':
-    settings = NaiveVsConstrainedSettings
+    settings = GApproximatorsSettings
     starting_seed, n_data_sets, n_deltas, n_z, n_x, n_a, n_y, n_training_samples, n_test_samples, file_name_prefix = settings.load_settings()
     values = np.load('saved_values/' + file_name_prefix + "values.npy")
     times = np.load('saved_values/' + file_name_prefix + "times.npy")

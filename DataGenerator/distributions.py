@@ -300,7 +300,7 @@ class DiscreteDistributionWithInformation(DiscreteDistribution):
                     print("Mirrored treatments {} and {} for x: {}, z: {}".format(a0, a1, x, z))
         '''
         # Reverse a treatment
-        x = tuple(np.random.binomial(1, 0.5, size=self.n_x))
+        x = tuple(self.random.binomial(1, 0.5, size=self.n_x))
         for z, _ in np.ndenumerate(np.zeros((2,)*self.n_z)):
             a0 = 0
             a1 = self.n_a - 1

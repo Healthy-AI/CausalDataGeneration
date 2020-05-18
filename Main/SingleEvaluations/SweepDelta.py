@@ -11,7 +11,7 @@ from Main.SingleEvaluations.PlotSweepDelta import plot_sweep_delta
 
 
 def get_settings():
-    return NaiveVsConstrainedSettings
+    return GApproximatorsSettings
 
 def do_work(i_data_set, n_algorithms):
     settings = get_settings()

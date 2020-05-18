@@ -89,9 +89,9 @@ if __name__ == '__main__':
     pool = Pool(processes=n_data_sets)
     results = []
     for i in range(n_data_sets):
-        results.append(pool.apply_async(do_work, (i, n_algorithms)))
+        results.append(pool.apply(do_work, (i, n_algorithms)))
     for i in range(n_data_sets):
-        r = results[i].get()
+        r = results[i]
         values[i] = r[0]
         times[i] = r[1]
 
