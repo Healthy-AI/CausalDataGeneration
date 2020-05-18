@@ -4,7 +4,7 @@ from matplotlib.scale import LogScale
 
 from DataGenerator.data_generator import split_patients, generate_data, DiscreteDistributionWithSmoothOutcomes
 from Main.SingleEvaluations import DeltaSweepSettings_small, TrueApproxSettings, GApproximatorsSettings, \
-    CDPApproximatorsSettings
+    CDPApproximatorsSettings, NaiveVsConstrainedSettings
 
 
 def plot_time_vs_effect(values, times, settings):
@@ -29,7 +29,7 @@ def plot_time_vs_effect(values, times, settings):
     plt.rcParams["font.family"] = "serif"
     for i_alg in range(n_algorithms):
         ax1.plot(zipped_mean[i_alg, 0], zipped_mean[i_alg, 1], plot_colors[i_alg] + plot_markers[i_alg] + plot_lines[0],
-                       label='{}'.format(algs[i_alg].label))
+                       label='{}'.format(algs[i_alg].label), markevery=3)
     ax1.invert_xaxis()
     ax1.legend()
     plt.xlabel("Mean time")
@@ -39,7 +39,7 @@ def plot_time_vs_effect(values, times, settings):
 
 
 if __name__ == '__main__':
-    settings = TrueApproxSettings
+    settings = NaiveVsConstrainedSettings
     starting_seed, n_data_sets, n_deltas, n_z, n_x, n_a, n_y, n_training_samples, n_test_samples, file_name_prefix = settings.load_settings()
     values = np.load('saved_values/' + file_name_prefix + "values.npy")
     times = np.load('saved_values/' + file_name_prefix + "times.npy")

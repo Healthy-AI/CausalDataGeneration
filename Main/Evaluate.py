@@ -23,8 +23,8 @@ if __name__ == '__main__':
     n_y = 3
     training_episodes = 5000
     n_training_samples = 5000
-    n_test_samples = 1000
-    delta = 0.4
+    n_test_samples = 2000
+    delta = 0.0
     epsilon = 0
     reward = -0.35
     # for grid search
@@ -63,13 +63,12 @@ if __name__ == '__main__':
     dist.print_detailed_treatment_statistics()
     #'''
     #dist = AntibioticsDatabase(n_x=1, antibiotic_limit=5, seed=seed)
-    '''
+
     dist = NewDistribution(seed=seed)
     #dist = NewDistributionSlightlyRandom(seed=seed)
     n_x = 1
     n_a = 3
     n_y = 3
-    '''
     '''
     dist = FredrikDistribution()
     n_x = 1
@@ -148,15 +147,15 @@ if __name__ == '__main__':
     algorithms = [
         #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
         #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Constrained Greedy True", label="CGT"),
-        #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
+        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
         #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation, name="Constrained Greedy FuncApprox"),
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintTT, true_approximation, name="Dynamic Programming Exact", label="CDP_E"),
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintCT, statistical_approximation, name="Dynamic Programming True Stat", label="CDP_TS"),
+        #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintTT, true_approximation, name="Dynamic Programming Exact", label="CDP_E"),
+        #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintCT, statistical_approximation, name="Dynamic Programming True Stat", label="CDP_TS"),
         ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, function_approximation, name="Dynamic Programming Func", label="CDPF"),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation,name="Constrained Dynamic Programming FuncApprox"),
-        #NaiveGreedy(n_x, n_a, n_y, split_training_data),
+        NaiveGreedy(n_x, n_a, n_y, statistical_approximation, n_y-1),
         #DistAlgWrapper(dist, name="Distribution", label="dist"),
         #NaiveDynamicProgramming(n_x, n_a, n_y, split_training_data, statistical_approximation, reward=reward)
         #QLearner(n_x, n_a, n_y, split_training_data, reward=reward, learning_time=training_episodes, learning_rate=0.01, discount_factor=1),
@@ -226,7 +225,9 @@ if __name__ == '__main__':
             x = np.arange(0, n_a)
             x_ticks = list(np.arange(1, n_a + 1))
             plt.figure()
-            plt.title('Treatment effect. delta: {}'.format(delta))
+            plt.rcParams["font.family"] = "serif"
+            plt.rcParams["font.size"] = 14
+            plt.title('Treatment effect, delta: {}'.format(delta))
             plt.ylabel('Mean treatment effect')
             plt.xlabel('Number of tried treatments')
             average_max_treatment_effect = sum([max(data[-1]) for data in test_data]) / len(test_data)
@@ -253,7 +254,7 @@ if __name__ == '__main__':
 
     if plot_delta_efficiency:
         # Calculate % of population at max - treatment_slack treatment over time
-        best_founds_efficiency = np.zeros((n_algorithms, n_a + 1))
+        best_founds_efficiency = np.zeros((n_algorithms, n_a))
         mean_num_tests = np.zeros(n_algorithms)
         for i_alg, alg in enumerate(algorithms):
             for i_sample in range(n_test_samples):
@@ -266,23 +267,27 @@ if __name__ == '__main__':
                         effect = treatments[i_treatment][1]
                         if effect > best_found:
                             best_found = effect
-                    if best_found == best_possible:
-                        best_founds_efficiency[i_alg][i_treatment] += 1
+                    if plot_treatment_efficiency:
+                        if best_found == best_possible:
+                            best_founds_efficiency[i_alg][i_treatment] += 1
+                    else:
+                        best_founds_efficiency[i_alg][i_treatment] += best_found
         best_founds_efficiency /= n_test_samples
         mean_num_tests /= n_test_samples
 
         # Plot mean treatment effect over population
         plt.figure()
-        plt.title('Treatment efficiency. d: {}'.format(delta))
-        plt.ylabel('Percentage of population at best possible treatment')
+        plt.rcParams["font.family"] = "serif"
+        plt.rcParams["font.size"] = 14
+        plt.title('Treatment efficacy, delta: {}'.format(delta))
+        plt.ylabel('Efficacy')
         plt.xlabel('Number of tried treatments')
-        x = np.arange(0, n_a + 1)
+        x = np.arange(0, n_a)
         x_ticks = list(np.arange(1, n_a + 2))
-        x_ticks[-1] = 'Done'
         for i_plot, alg in enumerate(algorithms):
-            plt.plot(x, best_founds_efficiency[i_plot], plot_markers[i_plot] + plot_colors[i_plot] + alt_plot_lines[0],
+            plt.plot(x, best_founds_efficiency[i_plot], plot_markers[i_plot] + plot_colors[i_plot] + alt_plot_lines[i_plot],
                      label=alg.label)
-            plt.axvline(mean_num_tests[i_plot] - 1, 0, 1, color=plot_colors[i_plot])
+            plt.axvline(mean_num_tests[i_plot] - 1, 0, 1, color=plot_colors[i_plot], linestyle=alt_plot_lines[i_plot])
         plt.xticks(x, x_ticks)
         plt.grid(True)
         plt.legend(loc='lower right')
