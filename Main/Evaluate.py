@@ -23,7 +23,7 @@ if __name__ == '__main__':
     training_episodes = 15000
     n_training_samples = 15000
     n_test_samples = 2000
-    delta = 0.0
+    delta = 0.1
     epsilon = 0
     reward = -0.35
     # for grid search
