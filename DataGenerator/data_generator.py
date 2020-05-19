@@ -1,7 +1,6 @@
 import itertools
 import json
 from multiprocessing.pool import Pool
-from DataGenerator.distributions import *
 import numpy as np
 
 

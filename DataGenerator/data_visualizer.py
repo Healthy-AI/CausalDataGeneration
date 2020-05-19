@@ -1,5 +1,3 @@
-import numpy as np
-from DataGenerator.distributions import *
 from DataGenerator.data_generator import *
 import matplotlib.pyplot as plt
 

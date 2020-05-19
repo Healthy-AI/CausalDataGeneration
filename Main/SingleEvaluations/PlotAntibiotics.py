@@ -14,14 +14,13 @@ def plot_data(values, times, settings, plot_var=False):
     load_settings = settings.load_settings
     setup_algorithms = settings.setup_algorithms
     starting_seed, n_data_sets, delta, file_name_prefix = load_settings()
-    dist = AntibioticsDatabase(1, 50)
+    dist = AntibioticsDatabase(AntibioticsSettings.n_x, 50, seed=90821)
     training_data, test_data = dist.get_data()
     training_data = split_patients(training_data)
     n_x = dist.n_x
     n_a = dist.n_a
     n_y = dist.n_y
     algs = setup_algorithms(training_data, n_x, n_a, n_y, delta)
-    file_name_prefix = file_name_prefix
     n_algorithms = len(algs)
 
     values_mean = np.sum(values, 0) / n_data_sets

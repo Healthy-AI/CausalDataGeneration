@@ -73,7 +73,7 @@ if __name__ == '__main__':
     starting_seed, n_data_sets, delta, file_name_prefix = settings.load_settings()
 
     # Quick hack to get n_algorithms
-    tmp_dist = AntibioticsDatabase(1, 50)
+    tmp_dist = AntibioticsDatabase(AntibioticsSettings.n_x, 50, seed=90821)
     training_data, test_data = tmp_dist.get_data()
     training_data = training_data
     n_x = tmp_dist.n_x
@@ -89,9 +89,9 @@ if __name__ == '__main__':
     pool = Pool(processes=n_data_sets)
     results = []
     for i in range(n_data_sets):
-        results.append(pool.apply_async(do_work, (i, n_algorithms)))
+        results.append(pool.apply(do_work, (i, n_algorithms)))
     for i in range(n_data_sets):
-        r = results[i].get()
+        r = results[i]
         values[i] = r[0]
         times[i] = r[1]
 
