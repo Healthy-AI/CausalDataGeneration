@@ -23,7 +23,7 @@ def do_work(i_data_set, n_algorithms):
     n_a = dist.n_a
     n_y = dist.n_y
     res = []
-    algorithms = settings.setup_algorithms(training_data, n_x, n_a, n_y, delta)
+    algorithms = settings.setup_algorithms(dist, training_data, n_x, n_a, n_y, delta)
     for alg in algorithms:
         if type(alg) == Doctor:
             alg.set_data(dist.doctor_data)
@@ -79,7 +79,7 @@ if __name__ == '__main__':
     n_x = tmp_dist.n_x
     n_a = tmp_dist.n_a
     n_y = tmp_dist.n_y
-    algs = settings.setup_algorithms(training_data, n_x, n_a, n_y, delta)
+    algs = settings.setup_algorithms(tmp_dist, training_data, n_x, n_a, n_y, delta)
     n_algorithms = len(algs)
 
     values = np.zeros((n_data_sets, n_algorithms, n_a))
@@ -96,5 +96,6 @@ if __name__ == '__main__':
         times[i] = r[1]
 
     np.save("saved_values/" + file_name_prefix + "values", values)
+    np.save("saved_values/" + file_name_prefix + "times", times)
     plot_data(values, times,  settings, plot_var)
     print("Total time for delta sweep was {:.3f} seconds".format(time.time() - main_start))
