@@ -19,8 +19,8 @@ if __name__ == '__main__':
     n_a = 5
     n_y = 3
     training_episodes = 750000
-    n_training_samples = 5000
-    n_test_samples = 1500
+    n_training_samples = 15000
+    n_test_samples = 3000
     delta = 0.3
     epsilon = 0
     reward = -0.25
@@ -50,6 +50,7 @@ if __name__ == '__main__':
     efficiency_results = np.zeros((n_algorithms, n_tests))
     for i, seed in enumerate(seeds):
         main_start = time.time()
+        print("Starting run {} of {}".format(i, len(seeds)))
         # Generate the data
         dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
         #dist.print_moderator_statistics()
@@ -81,7 +82,7 @@ if __name__ == '__main__':
             ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStatUpper, statistical_approximation, name='Constrained Greedy', label='CG'),
             ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStatUpper, statistical_approximation, name='Constrained Dynamic Programming', label='CDPU'),
             ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Constrained Dynamic Programming True", label="CDPT"),
-            NaiveGreedy(n_x, n_a, n_y, split_training_data),
+            NaiveGreedy(n_x, n_a, n_y, approximator=statistical_approximation, max_steps=n_a-1),
             NaiveDynamicProgramming(n_x, n_a, n_y, split_training_data, statistical_approximation, reward=reward)
         ]
 
