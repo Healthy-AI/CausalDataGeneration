@@ -51,7 +51,7 @@ def load_settings():
     n_data_sets = 10
     n_deltas = 40
     n_z = 3
-    n_x = 1
+    n_x = 5
     n_a = 5
     n_y = 3
     n_training_samples = 7000
