@@ -40,7 +40,7 @@ def plot_sweep_data(values, times, settings, plot_var=False, split_plot=True):
     else:
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(6, 10))
 
-    ax1.title('Mean treatment value/Mean search time vs data set size (delta: {})'.format(delta))
+    ax1.set_title('Mean treatment value/Mean search time vs data set size (delta: {})'.format(delta))
     ax1.set_xlabel('Data set size')
     ax2.set_xlabel('Data set size')
     ax1.set_ylabel('Mean treatment value')
@@ -67,7 +67,8 @@ def plot_sweep_data(values, times, settings, plot_var=False, split_plot=True):
     lines2, labels2 = ax2.get_legend_handles_labels()
     ax1.legend(lines1, labels1, loc='upper right')
     ax2.legend(lines2, labels2, loc='lower left')
-    plt.xscale('log')
+    ax1.set_xscale('log')
+    ax2.set_xscale('log')
     plt.savefig("saved_values/" + file_name_prefix + "_plot.png")
 
 

@@ -11,11 +11,13 @@ import time
 from pathlib import Path
 from Algorithms.better_treatment_constraint import Constraint
 from Algorithms.statistical_approximator import StatisticalApproximator
+from DataGenerator.distributions import DiscreteDistributionWithSmoothOutcomes
 from Database.antibioticsdatabase import AntibioticsDatabase
+import matplotlib.pyplot as plt
 
 if __name__ == '__main__':
     # Training values
-    seed = None  # Used for both synthetic and real data
+    seed = 10342  # Used for both synthetic and real data
     n_z = 3
     n_x = 1
     n_a = 5
@@ -23,7 +25,7 @@ if __name__ == '__main__':
     training_episodes = 15000
     n_training_samples = 15000
     n_test_samples = 2000
-    delta = 0.1
+    delta = 0.5
     epsilon = 0
     reward = -0.35
     # for grid search
@@ -38,8 +40,8 @@ if __name__ == '__main__':
     alt_plot_lines = ['-', '--', ':', '-.']
 
 
-    plot_mean_treatment_effect = False
-    plot_treatment_efficiency = False
+    plot_mean_treatment_effect = True
+    plot_treatment_efficiency = True
     plot_delta_efficiency = True
     plot_search_time = False
     plot_strictly_better = False
@@ -137,6 +139,7 @@ if __name__ == '__main__':
     start = time.time()
 
     constraintStat = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximation, delta=delta, epsilon=epsilon)
+    constraintStatN = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximation_n, delta=delta, epsilon=epsilon)
     constraintStatL = Constraint(split_training_data, n_a, n_y, approximator=statistical_approximation, delta=delta, epsilon=epsilon, bound='lower')
     constraintTrue = Constraint(split_training_data, n_a, n_y, approximator=true_approximation, delta=delta, epsilon=epsilon)
     constraintCT = TrueConstraint(dist, approximator=statistical_approximation, delta=delta, epsilon=epsilon)
@@ -165,14 +168,6 @@ if __name__ == '__main__':
         #OnlineQLearner(n_x, n_a, n_y, dist, constraint, learning_time=training_episodes),
         #DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintFuncApprox,  approximator=function_approximation),
         #DeepQLearning(n_x, n_a, n_y, split_training_data, constraint=constraintStat, approximator=statistical_approximation)
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation,
-                                      name="Constrained Dynamic Programming", label="CDP"),
-        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation,
-                          name="Constrained Greedy", label="CG"),
-        NaiveGreedy(n_x, n_a, n_y, statistical_approximation, round(delta * (n_a-1))+1, name='Naive Greedy',
-                    label='NG'),
-        NaiveDynamicProgramming(n_x, n_a, n_y, split_training_data, statistical_approximation, reward=-(delta + 0.0001),
-                                name='Naive Dynamic Programming', label='NDP'),
     ]
 
     n_algorithms = len(algorithms)

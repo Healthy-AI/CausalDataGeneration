@@ -5,7 +5,7 @@ import numpy as np
 import time
 from Algorithms.constrained_dynamic_programming import generate_data, split_patients
 from DataGenerator.distributions import DiscreteDistributionWithSmoothOutcomes
-from Main.SingleEvaluations import DeltaSweepSettings, DataAmountSettings2
+from Main.SingleEvaluations import DataAmountSettings, DataAmountSettings2
 from Main.SingleEvaluations.PlotSweepData import plot_sweep_data
 
 def get_settings():
