@@ -2,9 +2,11 @@ import itertools
 
 import numpy as np
 import scipy.stats
-from matplotlib import pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from sklearn import metrics
+
+
+from Algorithms.doctor_approximator import DoctorApproximator
+from DataGenerator.data_generator import split_patients
+from Database.antibioticsdatabase import AntibioticsDatabase
 
 
 class Distribution:
@@ -438,3 +440,28 @@ class NewDistributionSlightlyRandom(NewDistribution):
         probs = np.ones(3)*0.05
         probs[result] = 0.9
         return probs
+
+
+class SimulatedAntibiotics(Distribution):
+    def __init__(self, seed=None):
+        super().__init__(seed=seed)
+        dist = AntibioticsDatabase(n_x=6, antibiotic_limit=50, seed=seed)
+        training_data, test_data = dist.get_data()
+        data = split_patients(training_data)
+        n_x = dist.n_x
+        n_a = dist.n_a
+        n_y = dist.n_y
+        self.doctor_approximator = DoctorApproximator(n_x, n_a, n_y, data)
+        self.statistics = self.doctor_approximator.get_patient_statistics()
+
+    def draw_x(self, z):
+        pass
+
+    def draw_a(self, h, x, z):
+        pass
+
+    def draw_z(self):
+        pass
+
+
+SimulatedAntibiotics()

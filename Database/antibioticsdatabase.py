@@ -2,7 +2,7 @@ import psycopg2
 import numpy as np
 import base64
 from Database.treatment_to_test import treatment_to_test
-from Database.sql_get_inputevents import get_inputevents
+#from Database.sql_get_inputevents import get_inputevents
 from Database.sql_get_microbiologyevents import get_microbiologyevents
 from matplotlib import pyplot as plt
 import icd9cms.icd9 as icd

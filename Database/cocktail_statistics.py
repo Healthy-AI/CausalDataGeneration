@@ -2,7 +2,6 @@ from Database.sql_cocktail_statistics import get_antibiotcsevents
 from Database.antibioticsdatabase import AntibioticsDatabase
 import matplotlib.pyplot as plt
 import numpy as np
-from Database.treatment_to_test import treatment_to_test
 
 database = AntibioticsDatabase()
 database.cur.execute(get_antibiotcsevents)

@@ -1,6 +1,5 @@
 import numpy as np
 from Algorithms.help_functions import *
-import random
 
 
 class Constraint:
