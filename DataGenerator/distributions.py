@@ -462,6 +462,3 @@ class SimulatedAntibiotics(Distribution):
 
     def draw_z(self):
         pass
-
-
-SimulatedAntibiotics()
