@@ -20,7 +20,7 @@ def plot_data(values, times, settings, plot_var=False):
     n_x = dist.n_x
     n_a = dist.n_a
     n_y = dist.n_y
-    algs = setup_algorithms(training_data, n_x, n_a, n_y, delta)
+    algs = setup_algorithms(dist, training_data, n_x, n_a, n_y, delta)
     n_algorithms = len(algs)
 
     values_mean = np.sum(values, 0) / n_data_sets

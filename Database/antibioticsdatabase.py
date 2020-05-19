@@ -78,17 +78,23 @@ class AntibioticsDatabase:
             treatment = self.antibiotic_to_treatment(treatment_name)
             if organism in self.allowed_organisms and treatment_name in self.allowed_tests and outcome is not None:
                 intervention = np.array([treatment, outcome])
-                try:
-                    if treatment not in [intervention[0] for intervention in patients[hadm_id][organism]]:
-                        patients[hadm_id][organism].append(intervention)
-                except KeyError:
+                if hadm_id in patients:
+                    if organism in patients[hadm_id]:
+                        if treatment not in [intervention[0] for intervention in patients[hadm_id][organism]]:
+                            patients[hadm_id][organism].append(intervention)
+                    else:
+                        patients[hadm_id][organism] = [intervention]
+                        #print(patients[hadm_id])
+                else:
                     patients[hadm_id] = {organism: [intervention]}
                     patient_age_groups[hadm_id] = age_group
 
         self.remove_patients(patients)
 
         #self.cur.execute(get_inputevents)
-        self.cur.execute("SELECT DISTINCT(label), hadm_id FROM inputevents_mv JOIN d_items ON inputevents_mv.itemid = d_items.itemid WHERE d_items.category like 'Antibiotics'")
+        #self.cur.execute("SELECT DISTINCT(label), hadm_id FROM inputevents_mv JOIN d_items ON inputevents_mv.itemid = d_items.itemid WHERE d_items.category like 'Antibiotics'")
+        self.cur.execute("SELECT label, hadm_id FROM inputevents_mv JOIN d_items ON inputevents_mv.itemid = d_items.itemid "
+                         "WHERE d_items.category like 'Antibiotics' order by hadm_id, starttime")
 
         used_antibiotics = self.cur.fetchall()
         input_patients = {}
@@ -96,8 +102,6 @@ class AntibioticsDatabase:
             hadm_id = chartevent[1]
 
             if hadm_id in patients:
-                if len(patients[hadm_id].keys()) > 1:
-                    print('Warning: more than one bacteria for hadm_id', hadm_id)
                 treatment_name = self.treatment_to_test[chartevent[0]]
                 treatment = self.antibiotic_to_treatment(treatment_name)
                 for organism in patients[hadm_id].keys():
@@ -109,13 +113,15 @@ class AntibioticsDatabase:
                         intervention = np.array([treatment, outcome])
                         if hadm_id in input_patients:
                             if organism in input_patients[hadm_id]:
-                                input_patients[hadm_id][organism].append(intervention)
+                                treatments = [intervention[0] for intervention in input_patients[hadm_id][organism]]
+                                if treatment not in treatments:
+                                    input_patients[hadm_id][organism].append(intervention)
                             else:
                                 input_patients[hadm_id][organism] = [intervention]
                         else:
                             input_patients[hadm_id] = {organism: [intervention]}
 
-        self.remove_input_patients(input_patients)
+        input_patients = self.remove_input_patients(input_patients)
         #self.remove_training_data_from_test(input_patients, patients)
         input_patients, patients = self.split_training_to_test(input_patients, patients)
 
@@ -242,14 +248,18 @@ class AntibioticsDatabase:
         allowed_treatments_list = list(self.allowed_tests.keys())
         patients_to_delete = []
         for hadm_id, organism in patients.items():
-            for org, history in organism.items():
+            for organism, history in organism.items():
                 for treatment in allowed_treatments_list:
                     if self.antibiotic_to_treatment_dict[treatment] not in [intervention[0] for intervention in history]:
-                        patients_to_delete.append(hadm_id)
+                        patients_to_delete.append([hadm_id, organism])
                         break
-
-        for hadm_id in patients_to_delete:
-            del patients[hadm_id]
+        print(len(patients_to_delete), 'patients to delete')
+        for patient in patients_to_delete:
+            hadm_id = patient[0]
+            organism = patient[1]
+            if hadm_id in patients:
+                if organism in patients[hadm_id]:
+                    del patients[hadm_id][organism]
 
     def remove_input_patients(self, patients):
         allowed_treatments_list = list(self.allowed_tests.keys())
@@ -264,6 +274,7 @@ class AntibioticsDatabase:
 
         for hadm_id in patients_to_delete:
             del patients[hadm_id]
+        return patients
 
     def get_organisms_and_outcomes(self, data):
         organisms_and_outcome = {}
