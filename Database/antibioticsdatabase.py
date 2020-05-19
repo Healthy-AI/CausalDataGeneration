@@ -88,7 +88,9 @@ class AntibioticsDatabase:
         self.remove_patients(patients)
 
         #self.cur.execute(get_inputevents)
-        self.cur.execute("SELECT DISTINCT(label), hadm_id FROM inputevents_mv JOIN d_items ON inputevents_mv.itemid = d_items.itemid WHERE d_items.category like 'Antibiotics'")
+        #self.cur.execute("SELECT DISTINCT(label), hadm_id FROM inputevents_mv JOIN d_items ON inputevents_mv.itemid = d_items.itemid WHERE d_items.category like 'Antibiotics'")
+        self.cur.execute("SELECT label, hadm_id FROM inputevents_mv JOIN d_items ON inputevents_mv.itemid = d_items.itemid "
+                         "WHERE d_items.category like 'Antibiotics' order by hadm_id, starttime")
 
         used_antibiotics = self.cur.fetchall()
         input_patients = {}
@@ -109,7 +111,9 @@ class AntibioticsDatabase:
                         intervention = np.array([treatment, outcome])
                         if hadm_id in input_patients:
                             if organism in input_patients[hadm_id]:
-                                input_patients[hadm_id][organism].append(intervention)
+                                treatments = [intervention[0] for intervention in input_patients[hadm_id][organism]]
+                                if treatment not in treatments:
+                                    input_patients[hadm_id][organism].append(intervention)
                             else:
                                 input_patients[hadm_id][organism] = [intervention]
                         else:

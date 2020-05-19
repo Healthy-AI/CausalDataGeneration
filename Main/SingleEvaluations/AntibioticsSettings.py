@@ -39,8 +39,8 @@ def setup_algorithms(training_data, n_x, n_a, n_y, delta):
     print("Initializing the constraint took {:.3f} seconds".format(time.time() - start))
     print("Initializing algorithms")
     algorithms = [
-        ConstrainedGreedy(n_x, n_a, n_y, training_data, constraintStatUpper, statistical_approximation,
-                          name='Constrained Greedy', label='CG'),
+        #ConstrainedGreedy(n_x, n_a, n_y, training_data, constraintStatUpper, statistical_approximation,
+        #                  name='Constrained Greedy', label='CG'),
         # ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStatLower, statistical_approximation,
         #                   name='Constrained Greedy Lower', label='CG_L'),
         ConstrainedGreedy(n_x, n_a, n_y, training_data, constraintFuncApprox, function_approximation,
@@ -62,7 +62,7 @@ def setup_algorithms(training_data, n_x, n_a, n_y, delta):
 def load_settings():
     starting_seed = 90821  # Used for both synthetic and real data
     delta = 0.0
-    n_data_sets = 10
+    n_data_sets = 2
     file_name_prefix = 'antibioticsWithAgeComorbidity'
     return starting_seed, n_data_sets, delta, file_name_prefix
 
