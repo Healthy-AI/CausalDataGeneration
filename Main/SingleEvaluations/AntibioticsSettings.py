@@ -49,12 +49,12 @@ def setup_algorithms(dist, training_data, n_x, n_a, n_y, delta):
                          name="Constrained Greedy FuncApprox", label="CG_F"),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, training_data, constraintStatUpper,
         #                              statistical_approximation),
-        #ConstrainedDynamicProgramming(n_x, n_a, n_y, training_data, constraintFuncApprox,
-        #                              function_approximation, name="Constrained Dynamic Programming FuncApprox", label="CDP_F"),
+        ConstrainedDynamicProgramming(n_x, n_a, n_y, training_data, constraintFuncApprox,
+                                      function_approximation, name="Constrained Dynamic Programming FuncApprox", label="CDP_F"),
 
         #NaiveGreedy(n_x, n_a, n_y, function_approximation, max_steps=n_a),
         #NaiveGreedy(n_x, n_a, n_y, function_approximation, max_steps=n_a),
-        #NaiveDynamicProgramming(n_x, n_a, n_y, training_data, function_approximation, reward=-0.35),
+        NaiveDynamicProgramming(n_x, n_a, n_y, training_data, function_approximation, reward=-0.35),
         Doctor(),
         EmulatedDoctor(n_x, n_a, n_y, training_data, approximator=doctor_approximation)
     ]
@@ -63,9 +63,9 @@ def setup_algorithms(dist, training_data, n_x, n_a, n_y, delta):
 
 def load_settings():
     starting_seed = 90821  # Used for both synthetic and real data
-    delta = 0.0
-    n_data_sets = 10
-    file_name_prefix = 'antibioticsFA'
+    delta = 0.5
+    n_data_sets = 1
+    file_name_prefix = 'antibioticsFAdelta05'
     return starting_seed, n_data_sets, delta, file_name_prefix
 
 

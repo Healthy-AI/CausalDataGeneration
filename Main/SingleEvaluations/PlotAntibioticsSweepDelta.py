@@ -1,12 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from DataGenerator.data_generator import split_patients, generate_data
-from DataGenerator.distributions import DiscreteDistributionWithSmoothOutcomes
-from Main.SingleEvaluations import DeltaSweepSettings, DeltaSweepSettings_small, TrueApproxSettings, \
-    NaiveVsConstrainedSettings, BoundsSettings, CDPApproximatorsSettings, GApproximatorsSettings, \
-    GeneralDeltaSweepSettings
-import Main.SingleEvaluations.DeltaSweepSettings
-
+from Database.antibioticsdatabase import AntibioticsDatabase
+from Main.SingleEvaluations import AntibioticsDeltaSweepSettings
 
 def plot_sweep_delta(values, times, settings, plot_var=False, split_plot=True):
     plot_colors = ['k', 'r', 'b', 'g', 'm', 'c', 'y']
@@ -16,9 +12,14 @@ def plot_sweep_delta(values, times, settings, plot_var=False, split_plot=True):
     # Extract settings
     load_settings = settings.load_settings
     setup_algorithms = settings.setup_algorithms
-    starting_seed, n_data_sets, n_deltas, n_z, n_x, n_a, n_y, n_training_samples, n_test_samples, file_name_prefix = load_settings()
-    tmp_dist = DiscreteDistributionWithSmoothOutcomes(3, 5, 5, 3)
-    algs = setup_algorithms(split_patients(generate_data(tmp_dist, 10)), tmp_dist, 0.1)
+    starting_seed, n_data_sets, n_deltas, file_name_prefix = load_settings()
+    dist = AntibioticsDatabase(AntibioticsDeltaSweepSettings.n_x, 50, seed=10342)
+    training_data, test_data = dist.get_data()
+    training_data = split_patients(training_data)
+    n_x = dist.n_x
+    n_a = dist.n_a
+    n_y = dist.n_y
+    algs = setup_algorithms(dist, training_data, n_x, n_a, n_y, 0)
     n_algorithms = len(algs)
     deltas = np.linspace(0.0, 1.0, n_deltas)
 
@@ -42,7 +43,7 @@ def plot_sweep_delta(values, times, settings, plot_var=False, split_plot=True):
         ax2 = ax1.twinx()
     else:
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(6, 10))
-    ax1.set_title('Mean treatment effect/mean search time vs delta')
+    ax1.set_title('Mean treatment effect/mean search time vs \delta')
     ax1.set_xlabel('Delta')
     ax2.set_xlabel('Delta')
     ax1.set_ylabel('Efficacy')
@@ -69,13 +70,13 @@ def plot_sweep_delta(values, times, settings, plot_var=False, split_plot=True):
     lines2, labels2 = ax2.get_legend_handles_labels()
     ax1.legend(lines1, labels1, loc='upper right')
     ax2.legend(lines2, labels2, loc='lower left')
-    plt.savefig("saved_values/" + file_name_prefix + "_plot.png")
+    plt.savefig("saved_values/" + file_name_prefix + "_plot2.png")
 
 
 if __name__ == '__main__':
 
-    settings = GeneralDeltaSweepSettings
-    starting_seed, n_data_sets, n_deltas, n_z, n_x, n_a, n_y, n_training_samples, n_test_samples, file_name_prefix = settings.load_settings()
+    settings = AntibioticsDeltaSweepSettings
+    starting_seed, n_data_sets, n_deltas, file_name_prefix = settings.load_settings()
     values = np.load('saved_values/' + file_name_prefix + "values.npy")
     times = np.load('saved_values/' + file_name_prefix + "times.npy")
 
