@@ -29,22 +29,8 @@ def setup_algorithms(training_data, dist, delta, train=True):
     n_a = dist.n_a
     n_y = dist.n_y
     statistical_approximation_prior = StatisticalApproximator(n_x, n_a, n_y, training_data, prior_mode='gaussian')
-    function_approximation = FunctionApproximation(n_x, n_a, n_y, training_data)
-    constraint_prior = Constraint(training_data, n_a, n_y, approximator=statistical_approximation_prior, delta=delta)
-
-    constraintFuncApprox = Constraint(training_data, n_a, n_y, approximator=function_approximation, delta=delta)
 
     algorithms = [
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, training_data, constraint_prior, statistical_approximation_prior, name="Constrained Dynamic Programming", label="CDP"),
-        ConstrainedGreedy(n_x, n_a, n_y, training_data, constraint_prior, statistical_approximation_prior, name="Constrained Greedy", label="CG"),
-        ConstrainedGreedy(n_x, n_a, n_y, training_data, constraintFuncApprox, function_approximation,
-                          name="Constrained Greedy FuncApprox", label="CG_F"),
-        # ConstrainedDynamicProgramming(n_x, n_a, n_y, training_data, constraintStatUpper,
-        #                              statistical_approximation),
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, training_data, constraintFuncApprox,
-                                      function_approximation, name="Constrained Dynamic Programming FuncApprox",
-                                      label="CDP_F"),
-
         NaiveDynamicProgramming(n_x, n_a, n_y, training_data, statistical_approximation_prior, reward=-(delta/2+0.0001), name='Naive Dynamic Programming', label='NDP'),
     ]
 
@@ -56,7 +42,7 @@ def load_settings():
     starting_seed = 10342
     n_data_sets = 4
     n_deltas = 10
-    file_name_prefix = "AntibioticsComparisonDeltaSweep_20deltasFixedSeedFA"
+    file_name_prefix = "AntibioticsNDP"
 
     return starting_seed, n_data_sets, n_deltas, file_name_prefix
 

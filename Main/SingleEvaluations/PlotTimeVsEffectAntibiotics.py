@@ -18,7 +18,7 @@ def plot_time_vs_effect(values, times, settings):
     training_data, test_data = dist.get_data()
     training_data = split_patients(training_data)
     algs = setup_algorithms(training_data, dist, 0)
-    n_algorithms = len(algs)-1
+    n_algorithms = len(algs)
 
     values_mean = np.sum(values, 0) / n_data_sets
     times_mean = np.sum(times, 0) / n_data_sets
@@ -38,7 +38,7 @@ def plot_time_vs_effect(values, times, settings):
     plt.xlabel("Mean time")
     plt.ylabel("Efficacy")
     ax1.grid(True)
-    plt.savefig("saved_values/" + file_name_prefix + "_time_vs_effect2.pdf")
+    plt.savefig("saved_values/" + file_name_prefix + "_time_vs_effect3.pdf")
 
 
 if __name__ == '__main__':

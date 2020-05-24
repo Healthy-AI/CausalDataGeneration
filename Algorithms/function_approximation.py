@@ -95,7 +95,7 @@ class FunctionApproximation(ProbabilityApproximator):
         probs = self.prepare_calculation(x, history, action)
         return probs[0]
 
-    def calculate_probability_greedy(self, state, best_outcome, use_expected_value=True):
+    def calculate_probability_greedy(self, state, best_outcome, use_expected_value=False):
         x, history = state
         probability_of_outcome_approximation = self.prepare_calculation(x, history)
         return super(FunctionApproximation, self).calculate_probability_greedy(

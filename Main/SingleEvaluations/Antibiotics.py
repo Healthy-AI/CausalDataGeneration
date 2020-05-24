@@ -1,5 +1,5 @@
 from multiprocessing.pool import Pool
-from Main.SingleEvaluations import AntibioticsSettings
+from Main.SingleEvaluations import AntibioticsSettings, AntibioticsSettingsGreedyTest
 from Main.SingleEvaluations.PlotAntibiotics import *
 from Database.antibioticsdatabase import AntibioticsDatabase
 import time
@@ -8,7 +8,7 @@ from Algorithms.doctor import Doctor
 
 
 def get_settings():
-    return AntibioticsSettings
+    return AntibioticsSettingsGreedyTest #AntibioticsSettings
 
 
 def do_work(i_data_set, n_algorithms):

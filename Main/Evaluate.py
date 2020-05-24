@@ -11,7 +11,7 @@ import time
 from pathlib import Path
 from Algorithms.better_treatment_constraint import Constraint
 from Algorithms.statistical_approximator import StatisticalApproximator
-from DataGenerator.distributions import DiscreteDistributionWithSmoothOutcomes
+from DataGenerator.distributions import DiscreteDistributionWithSmoothOutcomes, NewDistribution
 from Database.antibioticsdatabase import AntibioticsDatabase
 import matplotlib.pyplot as plt
 
@@ -25,7 +25,7 @@ if __name__ == '__main__':
     training_episodes = 15000
     n_training_samples = 15000
     n_test_samples = 2000
-    delta = 0.5
+    delta = 0.0
     epsilon = 0
     reward = -0.35
     # for grid search
@@ -41,8 +41,8 @@ if __name__ == '__main__':
 
 
     plot_mean_treatment_effect = True
-    plot_treatment_efficiency = True
-    plot_delta_efficiency = True
+    plot_treatment_efficiency = False
+    plot_delta_efficiency = False
     plot_search_time = False
     plot_strictly_better = False
     plot_delta_grid_search = False
@@ -55,23 +55,23 @@ if __name__ == '__main__':
     # Generate the data
 
     #dist = DiscreteDistribution(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
-    dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
+    #dist = DiscreteDistributionWithSmoothOutcomes(n_z, n_x, n_a, n_y, seed=seed, outcome_sensitivity_x_z=1)
     #dist = DiscreteDistributionWithInformation(n_z, n_x, n_a, n_y, seed=seed)
     #'''
-    dist.print_moderator_statistics()
-    dist.print_covariate_statistics()
-    dist.print_treatment_statistics()
-    dist.print_detailed_treatment_statistics()
+    #dist.print_moderator_statistics()
+    #dist.print_covariate_statistics()
+    #dist.print_treatment_statistics()
+    #dist.print_detailed_treatment_statistics()
     #'''
     #dist = AntibioticsDatabase(n_x=1, antibiotic_limit=5, seed=seed)
 
-    '''
+
     dist = NewDistribution(seed=seed)
     #dist = NewDistributionSlightlyRandom(seed=seed)
     n_x = 1
     n_a = 3
     n_y = 3
-    '''
+
     '''
     dist = FredrikDistribution()
     n_x = 1
@@ -149,13 +149,12 @@ if __name__ == '__main__':
     print("Initializing the constraint took {:.3f} seconds".format(time.time() - start))
     print("Initializing algorithms")
     algorithms = [
-        #GreedyShuffled(n_x, n_a, n_y, split_training_data, delta, epsilon),
         #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Constrained Greedy True", label="CGT"),
-        #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
+        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
         #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation, name="Constrained Greedy FuncApprox"),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintTT, true_approximation, name="Dynamic Programming Exact", label="CDP_E"),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintCT, statistical_approximation, name="Dynamic Programming True Stat", label="CDP_TS"),
-        #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
+        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStatL, statistical_approximation, name="CDP_L", label='CDP_L'),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintCT, statistical_approximation, name="CDP_E", label='CDP_E'),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, function_approximation, name="Dynamic Programming Func", label="CDPF"),
@@ -232,30 +231,35 @@ if __name__ == '__main__':
             plt.figure()
             plt.rcParams["font.family"] = "serif"
             plt.rcParams["font.size"] = 14
-            plt.title('Treatment effect, delta: {}'.format(delta))
+            plt.title(r'Treatment effect, $\delta$: {}'.format(delta))
             plt.ylabel('Mean treatment effect')
             plt.xlabel('Number of tried treatments')
             average_max_treatment_effect = sum([max(data[-1]) for data in test_data]) / len(test_data)
             mean_lines = np.linspace(0, 1, n_algorithms + 1)
             for i_plot, alg in enumerate(algorithms):
-                plt.plot(x, max_mean_treatment_effects[i_plot],
-                         plot_markers[i_plot] + plot_colors[i_plot], linestyle=plot_lines[i_plot % len(plot_lines)],
-                         linewidth=4, label=alg.label)
-                plt.plot(x, max_mean_treatment_effects[i_plot], plot_colors[i_plot], linestyle='-', linewidth=2,
-                         alpha=0.3)
+                #plt.plot(x, max_mean_treatment_effects[i_plot],
+                #         plot_markers[i_plot] + plot_colors[i_plot], linestyle=alt_plot_lines[i_plot % len(plot_lines)],
+                #         linewidth=4, label=alg.label)
+                #plt.plot(x, max_mean_treatment_effects[i_plot], plot_colors[i_plot], linestyle='-', linewidth=2,
+                #         alpha=0.3)
                 # plt.plot(x, mean_treatment_effects[i_plot], plot_markers[i_plot] + plot_colors[i_plot] + plot_lines[1])
-                # plt.fill_between(x, mean_treatment_effects[i_plot], max_mean_treatment_effects[i_plot], color=plot_colors[i_plot], alpha=0.1)
-                plt.axvline(mean_num_tests[i_plot] - 1, ymin=mean_lines[i_plot], ymax=mean_lines[i_plot + 1],
-                            color=plot_colors[i_plot])
-                plt.axvline(mean_num_tests[i_plot] - 1, ymin=0, ymax=1,
-                            color=plot_colors[i_plot], alpha=0.1)
 
+                plt.plot(x, max_mean_treatment_effects[i_plot],
+                         plot_markers[i_plot] + plot_colors[i_plot] + alt_plot_lines[i_plot],
+                         label=alg.label)
+                # plt.fill_between(x, mean_treatment_effects[i_plot], max_mean_treatment_effects[i_plot], color=plot_colors[i_plot], alpha=0.1)
+                #plt.axvline(mean_num_tests[i_plot] - 1, ymin=mean_lines[i_plot], ymax=mean_lines[i_plot + 1],
+                #            color=plot_colors[i_plot])
+                #plt.axvline(mean_num_tests[i_plot] - 1, ymin=0, ymax=1, color=plot_colors[i_plot], alpha=0.1)
+
+                plt.axvline(mean_num_tests[i_plot] - 1, 0, 1, color=plot_colors[i_plot],
+                            linestyle=alt_plot_lines[i_plot])
             plt.grid(True)
             plt.xticks(x, x_ticks)
-            plt.plot(x, np.ones(len(x)) * average_max_treatment_effect, linestyle=plot_lines[-1], label='MAX_POSS_AVG')
+            plt.plot(x, np.ones(len(x)) * average_max_treatment_effect, linestyle=alt_plot_lines[-1], label='MAX_POSS_AVG')
 
             plt.legend(loc='lower right')
-            plt.show(block=False)
+            plt.savefig("SingleEvaluations/saved_values/meanEffect.pdf")
 
     if plot_delta_efficiency:
         # Calculate % of population at max - treatment_slack treatment over time
@@ -284,7 +288,7 @@ if __name__ == '__main__':
         plt.figure()
         plt.rcParams["font.family"] = "serif"
         plt.rcParams["font.size"] = 14
-        plt.title('Treatment efficacy, delta: {}'.format(delta))
+        plt.title(r'Treatment efficacy, $\delta$: {}'.format(delta))
         plt.ylabel('Efficacy')
         plt.xlabel('Number of tried treatments')
         x = np.arange(0, n_a)
