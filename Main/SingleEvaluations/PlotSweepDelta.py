@@ -4,7 +4,7 @@ from DataGenerator.data_generator import split_patients, generate_data
 from DataGenerator.distributions import DiscreteDistributionWithSmoothOutcomes
 from Main.SingleEvaluations import DeltaSweepSettings, DeltaSweepSettings_small, TrueApproxSettings, \
     NaiveVsConstrainedSettings, BoundsSettings, CDPApproximatorsSettings, GApproximatorsSettings, \
-    GeneralDeltaSweepSettings
+    GeneralDeltaSweepSettings, GeneralDeltaSweepSettings2
 import Main.SingleEvaluations.DeltaSweepSettings
 
 
@@ -49,9 +49,9 @@ def plot_sweep_delta(values, times, settings, plot_var=False, split_plot=True):
     ax2.set_ylabel('Mean search time')
     lns = []
     for i_alg in range(n_algorithms):
-        ln1 = ax1.plot(deltas, values_mean[:, i_alg], plot_colors[i_alg] + plot_markers[i_alg] + plot_lines[0],
+        ln1 = ax1.plot(deltas, values_mean[:, i_alg], plot_colors[i_alg] + plot_markers[i_alg] + plot_lines[i_alg],
                        label='{} {}'.format(algs[i_alg].label, 'effect'), markevery=3)
-        ln2 = ax2.plot(deltas, times_mean[:, i_alg], plot_colors[i_alg] + plot_markers[i_alg] + plot_lines[1],
+        ln2 = ax2.plot(deltas, times_mean[:, i_alg], plot_colors[i_alg] + plot_markers[i_alg] + plot_lines[i_alg],
                        label='{} {}'.format(algs[i_alg].label, 'time'), markevery=3)
         lns.append(ln1)
         lns.append(ln2)
@@ -69,7 +69,7 @@ def plot_sweep_delta(values, times, settings, plot_var=False, split_plot=True):
     lines2, labels2 = ax2.get_legend_handles_labels()
     ax1.legend(lines1, labels1, loc='upper right')
     ax2.legend(lines2, labels2, loc='lower left')
-    plt.savefig("saved_values/" + file_name_prefix + "_plot.png")
+    plt.savefig("saved_values/" + file_name_prefix + "_plot.pdf")
 
 
 if __name__ == '__main__':

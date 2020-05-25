@@ -54,7 +54,7 @@ def setup_algorithms(dist, training_data, n_x, n_a, n_y, delta):
 
         #NaiveGreedy(n_x, n_a, n_y, function_approximation, max_steps=n_a),
         #NaiveGreedy(n_x, n_a, n_y, function_approximation, max_steps=n_a),
-        NaiveDynamicProgramming(n_x, n_a, n_y, training_data, function_approximation, reward=-0.35),
+        NaiveDynamicProgramming(n_x, n_a, n_y, training_data, constraintStatUpper, reward=-0.35),
         Doctor(),
         EmulatedDoctor(n_x, n_a, n_y, training_data, approximator=doctor_approximation)
     ]
@@ -62,10 +62,10 @@ def setup_algorithms(dist, training_data, n_x, n_a, n_y, delta):
 
 
 def load_settings():
-    starting_seed = 90821  # Used for both synthetic and real data
+    starting_seed = 10342  # Used for both synthetic and real data
     delta = 0.0
-    n_data_sets = 1
-    file_name_prefix = 'antibioticsFA'
+    n_data_sets = 4
+    file_name_prefix = 'antibioticsFAdelta0'
     return starting_seed, n_data_sets, delta, file_name_prefix
 
 

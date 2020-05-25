@@ -38,7 +38,7 @@ def plot_time_vs_effect(values, times, settings):
     plt.xlabel("Mean time")
     plt.ylabel("Efficacy")
     ax1.grid(True)
-    plt.savefig("saved_values/" + file_name_prefix + "_time_vs_effect3.pdf")
+    plt.savefig("saved_values/" + file_name_prefix + "_time_vs_effect4.pdf")
 
 
 if __name__ == '__main__':
@@ -46,5 +46,11 @@ if __name__ == '__main__':
     starting_seed, n_data_sets, n_deltas, file_name_prefix = settings.load_settings()
     values = np.load('saved_values/' + file_name_prefix + "values.npy")
     times = np.load('saved_values/' + file_name_prefix + "times.npy")
+
+    NPD_file_name_prefix = "AntibioticsNDP"
+    NDPvalues = np.load('saved_values/' + NPD_file_name_prefix + "values.npy")
+    NDPtimes = np.load('saved_values/' + NPD_file_name_prefix + "times.npy")
+    values[:,:,-1] = np.squeeze(NDPvalues)
+    times[:,:,-1] = np.squeeze(NDPtimes)
 
     plot_time_vs_effect(values, times, settings)

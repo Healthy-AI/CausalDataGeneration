@@ -3,13 +3,13 @@ from DataGenerator.distributions import DiscreteDistributionWithSmoothOutcomes
 import numpy as np
 import matplotlib.pylab as plt
 
-from Main.SingleEvaluations import DataAmountSettings
+from Main.SingleEvaluations import DataAmountSettings, DataAmountSettings2
 
 
 def plot_sweep_data(values, times, settings, plot_var=False, split_plot=True):
     plot_colors = ['k', 'r', 'b', 'g', 'm', 'c', 'y']
     plot_markers = ['s', 'v', 'P', '1', '2', '3', '4']
-    plot_lines = ['-', '--', ':', '-.']
+    plot_lines = ['-', '--', ':', '-.', '-', '--']
 
     load_settings = settings.load_settings
     setup_algorithms = settings.setup_algorithms
@@ -47,9 +47,9 @@ def plot_sweep_data(values, times, settings, plot_var=False, split_plot=True):
     ax2.set_ylabel('Mean search time')
     lns = []
     for i_alg in range(n_algorithms):
-        ln1 = ax1.plot(n_training_samples_array, values_mean[:, i_alg], plot_colors[i_alg] + plot_markers[i_alg] + plot_lines[0],
+        ln1 = ax1.plot(n_training_samples_array, values_mean[:, i_alg], plot_colors[i_alg] + plot_markers[i_alg] + plot_lines[i_alg],
                        label='{} {}'.format(algs[i_alg].label, 'effect'), markevery=3)
-        ln2 = ax2.plot(n_training_samples_array, times_mean[:, i_alg], plot_colors[i_alg] + plot_markers[i_alg] + plot_lines[1],
+        ln2 = ax2.plot(n_training_samples_array, times_mean[:, i_alg], plot_colors[i_alg] + plot_markers[i_alg] + plot_lines[i_alg],
                        label='{} {}'.format(algs[i_alg].label, 'time'), markevery=3)
         lns.append(ln1)
         lns.append(ln2)
@@ -65,11 +65,11 @@ def plot_sweep_data(values, times, settings, plot_var=False, split_plot=True):
     plt.rcParams["font.family"] = "serif"
     lines1, labels1 = ax1.get_legend_handles_labels()
     lines2, labels2 = ax2.get_legend_handles_labels()
-    ax1.legend(lines1, labels1, loc='upper right')
-    ax2.legend(lines2, labels2, loc='lower left')
+    ax1.legend(lines1, labels1, loc='lower right')
+    ax2.legend(lines2, labels2, loc='upper right')
     ax1.set_xscale('log')
     ax2.set_xscale('log')
-    plt.savefig("saved_values/" + file_name_prefix + "_plot.png")
+    plt.savefig("saved_values/" + file_name_prefix + "_plot.pdf")
 
 
 if __name__ == '__main__':

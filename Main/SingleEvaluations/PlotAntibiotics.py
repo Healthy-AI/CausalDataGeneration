@@ -14,7 +14,7 @@ def plot_data(values, times, settings, plot_var=False):
     load_settings = settings.load_settings
     setup_algorithms = settings.setup_algorithms
     starting_seed, n_data_sets, delta, file_name_prefix = load_settings()
-    dist = AntibioticsDatabase(AntibioticsSettings.n_x, 50, seed=90821)
+    dist = AntibioticsDatabase(AntibioticsSettings.n_x, 50, seed=10342)
     training_data, test_data = dist.get_data()
     training_data = split_patients(training_data)
     n_x = dist.n_x
@@ -59,6 +59,7 @@ def plot_data(values, times, settings, plot_var=False):
     plt.xlabel('Number of tried treatments')
     average_max_treatment_effect = sum([max(data[-1]) for data in test_data]) / len(test_data)
     mean_lines = np.linspace(0, 1, n_algorithms)
+    algs[-3].label = "NDP_F"
     algs[-2].label = "Emulated doctor"
     for i_alg in range(n_algorithms):
         if algs[i_alg].name != "Doctor":
