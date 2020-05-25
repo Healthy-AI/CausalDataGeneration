@@ -16,10 +16,7 @@ def plot_sweep_delta(values, times, settings, plot_var=False, split_plot=True):
     dist = AntibioticsDatabase(AntibioticsDeltaSweepSettings.n_x, 50, seed=10342)
     training_data, test_data = dist.get_data()
     training_data = split_patients(training_data)
-    n_x = dist.n_x
-    n_a = dist.n_a
-    n_y = dist.n_y
-    algs = setup_algorithms(dist, training_data, n_x, n_a, n_y, 0)
+    algs = setup_algorithms(training_data, dist, 0)
     n_algorithms = len(algs)
     deltas = np.linspace(0.0, 1.0, n_deltas)
 
@@ -43,9 +40,9 @@ def plot_sweep_delta(values, times, settings, plot_var=False, split_plot=True):
         ax2 = ax1.twinx()
     else:
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(6, 10))
-    ax1.set_title('Mean treatment effect/mean search time vs \delta')
-    ax1.set_xlabel('Delta')
-    ax2.set_xlabel('Delta')
+    ax1.set_title(r'Mean treatment effect/mean search time vs $\delta$')
+    ax1.set_xlabel(r'$\delta$')
+    ax2.set_xlabel(r'$\delta$')
     ax1.set_ylabel('Efficacy')
     ax2.set_ylabel('Mean search time')
     lns = []

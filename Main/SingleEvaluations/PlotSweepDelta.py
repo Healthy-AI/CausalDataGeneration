@@ -42,9 +42,9 @@ def plot_sweep_delta(values, times, settings, plot_var=False, split_plot=True):
         ax2 = ax1.twinx()
     else:
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(6, 10))
-    ax1.set_title('Mean treatment effect/mean search time vs delta')
-    ax1.set_xlabel('Delta')
-    ax2.set_xlabel('Delta')
+    ax1.set_title(r'Mean treatment effect/mean search time vs $\delta$')
+    ax1.set_xlabel(r'$\delta$')
+    ax2.set_xlabel(r'$\delta$')
     ax1.set_ylabel('Efficacy')
     ax2.set_ylabel('Mean search time')
     lns = []

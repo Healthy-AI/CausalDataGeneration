@@ -64,10 +64,9 @@ def plot_data(values, times, settings, plot_var=False):
     for i_alg in range(n_algorithms):
         if algs[i_alg].name != "Doctor":
             plt.plot(x, values_mean[i_alg],
-                     plot_markers[i_alg] + plot_colors[i_alg], linestyle=plot_lines[i_alg % len(plot_lines)],
-                     linewidth=4, label=algs[i_alg].label)
-            plt.plot(x, values_mean[i_alg], plot_colors[i_alg], linestyle='-', linewidth=2,
-                     alpha=0.3)
+                     plot_markers[i_alg] + plot_colors[i_alg], linestyle=plot_lines[i_alg % len(plot_lines)], label=algs[i_alg].label)
+            #plt.plot(x, values_mean[i_alg], plot_colors[i_alg], linestyle='-',
+            #         alpha=0.3)
             # plt.plot(x, mean_treatment_effects[i_plot], plot_markers[i_plot] + plot_colors[i_plot] + plot_lines[1])
             # plt.fill_between(x, mean_treatment_effects[i_plot], max_mean_treatment_effects[i_plot], color=plot_colors[i_plot], alpha=0.1)
             plt.axvline(times_mean[i_alg] - 1, ymin=mean_lines[i_alg], ymax=mean_lines[i_alg + 1],
@@ -85,7 +84,7 @@ def plot_data(values, times, settings, plot_var=False):
     plt.plot(x, np.ones(len(x)) * average_max_treatment_effect, linestyle=plot_lines[-1], label='MAX_POSS_AVG')
 
     plt.legend(loc='lower right')
-    plt.savefig("saved_values/" + file_name_prefix + "_plot.pdf")
+    plt.savefig("saved_values/" + file_name_prefix + "_plotNew.pdf")
 
     # Plot mean number of treatments tried
     plt.figure()
