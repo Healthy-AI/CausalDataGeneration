@@ -41,31 +41,24 @@ def setup_algorithms(dist, training_data, n_x, n_a, n_y, delta):
     print("Initializing the constraint took {:.3f} seconds".format(time.time() - start))
     print("Initializing algorithms")
     algorithms = [
-        #ConstrainedGreedy(n_x, n_a, n_y, training_data, constraintStatUpper, statistical_approximation,
-        #                  name='Constrained Greedy', label='CG'),
+        ConstrainedGreedy(n_x, n_a, n_y, training_data, constraintStatUpper, statistical_approximation,
+                          name='Constrained Greedy', label='CG'),
         # ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStatLower, statistical_approximation,
         #                   name='Constrained Greedy Lower', label='CG_L'),
-        ConstrainedGreedy(n_x, n_a, n_y, training_data, constraintFuncApprox, function_approximation,
-                         name="Constrained Greedy FuncApprox", label="CG_F"),
+        #ConstrainedGreedy(n_x, n_a, n_y, training_data, constraintFuncApprox, function_approximation,
+        #                 name="Constrained Greedy FuncApprox", label="CG_F"),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, training_data, constraintStatUpper,
         #                              statistical_approximation),
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, training_data, constraintFuncApprox,
-                                      function_approximation, name="Constrained Dynamic Programming FuncApprox", label="CDP_F"),
 
-        #NaiveGreedy(n_x, n_a, n_y, function_approximation, max_steps=n_a),
-        #NaiveGreedy(n_x, n_a, n_y, function_approximation, max_steps=n_a),
-        NaiveDynamicProgramming(n_x, n_a, n_y, training_data, constraintStatUpper, reward=-0.35),
-        Doctor(),
-        EmulatedDoctor(n_x, n_a, n_y, training_data, approximator=doctor_approximation)
     ]
     return algorithms
 
 
 def load_settings():
-    starting_seed = 10342  # Used for both synthetic and real data
-    delta = 0.0
-    n_data_sets = 4
-    file_name_prefix = 'antibioticsFAdelta0'
+    starting_seed = 90821  # Used for both synthetic and real data
+    delta = 0.5
+    n_data_sets = 1
+    file_name_prefix = 'antibioticsGreedyTest'
     return starting_seed, n_data_sets, delta, file_name_prefix
 
 

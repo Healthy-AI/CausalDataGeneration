@@ -84,7 +84,6 @@ class AntibioticsDatabase:
                             patients[hadm_id][organism].append(intervention)
                     else:
                         patients[hadm_id][organism] = [intervention]
-                        #print(patients[hadm_id])
                 else:
                     patients[hadm_id] = {organism: [intervention]}
                     patient_age_groups[hadm_id] = age_group
