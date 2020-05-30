@@ -34,9 +34,9 @@ def setup_algorithms(dist, training_data, n_x, n_a, n_y, delta):
     print("Initializing Constraint")
     start = time.time()
 
-    constraintStatUpper = Constraint(training_data, n_a, n_y, approximator=statistical_approximation, delta=delta, bound='upper')
-    constraintFuncApprox = Constraint(training_data, n_a, n_y, approximator=function_approximation, delta=delta)
-    constraint_exact_func = TrueConstraint(dist, approximator=function_approximation, delta=delta)
+    #constraintStatUpper = Constraint(training_data, n_a, n_y, approximator=statistical_approximation, delta=delta, bound='upper')
+    #constraintFuncApprox = Constraint(training_data, n_a, n_y, approximator=function_approximation, delta=delta)
+    constraint_middle = TrueConstraint(dist, approximator=function_approximation, delta=delta)
 
     print("Initializing the constraint took {:.3f} seconds".format(time.time() - start))
     print("Initializing algorithms")
@@ -45,16 +45,16 @@ def setup_algorithms(dist, training_data, n_x, n_a, n_y, delta):
         #                  name='Constrained Greedy', label='CG'),
         # ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStatLower, statistical_approximation,
         #                   name='Constrained Greedy Lower', label='CG_L'),
-        ConstrainedGreedy(n_x, n_a, n_y, training_data, constraintFuncApprox, function_approximation,
+        ConstrainedGreedy(n_x, n_a, n_y, training_data, constraint_middle, function_approximation,
                          name="Constrained Greedy FuncApprox", label="CG_F"),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, training_data, constraintStatUpper,
         #                              statistical_approximation),
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, training_data, constraintFuncApprox,
+        ConstrainedDynamicProgramming(n_x, n_a, n_y, training_data, constraint_middle,
                                       function_approximation, name="Constrained Dynamic Programming FuncApprox", label="CDP_F"),
 
         #NaiveGreedy(n_x, n_a, n_y, function_approximation, max_steps=n_a),
         #NaiveGreedy(n_x, n_a, n_y, function_approximation, max_steps=n_a),
-        NaiveDynamicProgramming(n_x, n_a, n_y, training_data, statistical_approximation, reward=-0.35),
+        NaiveDynamicProgramming(n_x, n_a, n_y, training_data, function_approximation, reward=-0.35),
         Doctor(),
         EmulatedDoctor(n_x, n_a, n_y, training_data, approximator=doctor_approximation)
     ]
@@ -65,7 +65,7 @@ def load_settings():
     starting_seed = 10342  # Used for both synthetic and real data
     delta = 0.0
     n_data_sets = 4
-    file_name_prefix = 'antibioticsFAdelta0'
+    file_name_prefix = 'antibioticsFAdelta0MiddleBound'
     return starting_seed, n_data_sets, delta, file_name_prefix
 
 

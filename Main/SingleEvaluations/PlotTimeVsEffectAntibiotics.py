@@ -6,6 +6,7 @@ from DataGenerator.data_generator import split_patients, generate_data
 from Database.antibioticsdatabase import AntibioticsDatabase
 from Main.SingleEvaluations import AntibioticsDeltaSweepSettings
 
+plt.rcParams["font.family"] = "serif"
 
 def plot_time_vs_effect(values, times, settings):
     plot_colors = ['k', 'r', 'b', 'g', 'm', 'c', 'y']
@@ -28,17 +29,18 @@ def plot_time_vs_effect(values, times, settings):
         zipped_mean[i_alg][0] = times_mean[:, i_alg]
         zipped_mean[i_alg][1] = values_mean[:, i_alg]
 
+
     fig, ax1 = plt.subplots(figsize=(6, 4))
-    plt.rcParams["font.family"] = "serif"
+
     for i_alg in range(n_algorithms):
         ax1.plot(zipped_mean[i_alg, 0], zipped_mean[i_alg, 1], plot_colors[i_alg] + plot_markers[i_alg] + plot_lines[0],
                        label='{}'.format(algs[i_alg].label))
-    ax1.invert_xaxis()
     ax1.legend()
-    plt.xlabel("Mean time")
-    plt.ylabel("Efficacy")
+
+    plt.xlabel("Mean time", fontsize=14)
+    plt.ylabel("Efficacy", fontsize=14)
     ax1.grid(True)
-    plt.savefig("saved_values/" + file_name_prefix + "_time_vs_effect4.pdf")
+    plt.savefig("saved_values/" + file_name_prefix + "_time_vs_effectAll.pdf", bbox_inches='tight', pad_inches=0.02)
 
 
 if __name__ == '__main__':
@@ -47,10 +49,17 @@ if __name__ == '__main__':
     values = np.load('saved_values/' + file_name_prefix + "values.npy")
     times = np.load('saved_values/' + file_name_prefix + "times.npy")
 
+
     NPD_file_name_prefix = "AntibioticsNDP"
     NDPvalues = np.load('saved_values/' + NPD_file_name_prefix + "values.npy")
     NDPtimes = np.load('saved_values/' + NPD_file_name_prefix + "times.npy")
     values[:,:,-1] = np.squeeze(NDPvalues)
     times[:,:,-1] = np.squeeze(NDPtimes)
+
+    NPD_file_name_prefix = "AntibioticsNDPFunc"
+    NDPFuncvalues = np.load('saved_values/' + NPD_file_name_prefix + "values.npy")
+    NDPFunctimes = np.load('saved_values/' + NPD_file_name_prefix + "times.npy")
+    values = np.concatenate((values, NDPFuncvalues), axis=2)
+    times = np.concatenate((times, NDPFunctimes), axis=2)
 
     plot_time_vs_effect(values, times, settings)

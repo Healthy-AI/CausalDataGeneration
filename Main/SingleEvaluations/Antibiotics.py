@@ -1,6 +1,6 @@
 from multiprocessing.pool import Pool
-from Main.SingleEvaluations import AntibioticsSettings, AntibioticsSettingsGreedyTest
-from Main.SingleEvaluations.PlotAntibiotics import *
+from Main.SingleEvaluations import AntibioticsSettings2, AntibioticsSettingsGreedyTest, AntibioticsSettings3
+from Main.SingleEvaluations.PlotAntibiotics import plot_data
 from Database.antibioticsdatabase import AntibioticsDatabase
 import time
 import numpy as np
@@ -8,7 +8,7 @@ from Algorithms.doctor import Doctor
 
 
 def get_settings():
-    return AntibioticsSettings
+    return AntibioticsSettings3
 
 
 def do_work(i_data_set, n_algorithms):
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     starting_seed, n_data_sets, delta, file_name_prefix = settings.load_settings()
 
     # Quick hack to get n_algorithms
-    tmp_dist = AntibioticsDatabase(AntibioticsSettings.n_x, 50, seed=10342)
+    tmp_dist = AntibioticsDatabase(AntibioticsSettings2.n_x, 50, seed=10342)
     training_data, test_data = tmp_dist.get_data()
     training_data = training_data
     n_x = tmp_dist.n_x

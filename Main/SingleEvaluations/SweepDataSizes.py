@@ -1,22 +1,22 @@
 from multiprocessing.pool import Pool
-
+import multiprocessing as mp
 import matplotlib.pyplot as plt
 import numpy as np
 import time
 from Algorithms.constrained_dynamic_programming import generate_data, split_patients
 from DataGenerator.distributions import DiscreteDistributionWithSmoothOutcomes
-from Main.SingleEvaluations import DataAmountSettings, DataAmountSettings2
+from Main.SingleEvaluations import DataAmountSettings, DataAmountSettings2, DataAmountSettings3
 from Main.SingleEvaluations.PlotSweepData import plot_sweep_data
 
 def get_settings():
-    return DataAmountSettings
+    return DataAmountSettings3
 
 def do_work(i_data_set, n_algorithms):
     settings = get_settings()
     starting_seed, n_data_sets, delta, n_data_set_sizes, n_z, n_x, n_a, n_y, n_training_samples_max, n_test_samples, file_name_prefix = settings.load_settings()
     res = np.zeros((2, n_data_set_sizes, n_algorithms))
     seeds = [x for x in range(starting_seed, starting_seed + n_data_sets)]
-    n_training_samples_array = np.geomspace(10, n_training_samples_max, n_data_set_sizes).astype(int)
+    n_training_samples_array = np.geomspace(50, n_training_samples_max, n_data_set_sizes).astype(int)
 
     print("Starting set {}".format(i_data_set))
     dist, unsplit_training_data, test_data = settings.setup_data_sets(n_z, n_x, n_a, n_y, n_training_samples_max, n_test_samples,
@@ -75,7 +75,7 @@ if __name__ == '__main__':
     times = np.zeros((n_data_sets, n_data_set_sizes, n_algorithms))
 
     main_start = time.time()
-    pool = Pool(processes=10)
+    pool = Pool(processes=mp.cpu_count())
     results = []
     for i in range(n_data_sets):
         results.append(pool.apply_async(do_work, (i, n_algorithms)))

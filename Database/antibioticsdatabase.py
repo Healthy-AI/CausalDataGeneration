@@ -8,6 +8,8 @@ from matplotlib import pyplot as plt
 import icd9cms.icd9 as icd
 
 
+
+
 class AntibioticsDatabase:
     def __init__(self, n_x=6, antibiotic_limit=50, seed=None):
         self.random = np.random.RandomState()
@@ -64,7 +66,7 @@ class AntibioticsDatabase:
         microbiology_test_data = self.cur.fetchall()
 
         patients = {}
-        patient_age_groups = {}
+        self.patient_age_groups = {}
 
         self.random.shuffle(microbiology_test_data)
         for chartevent in microbiology_test_data:
@@ -86,7 +88,7 @@ class AntibioticsDatabase:
                         patients[hadm_id][organism] = [intervention]
                 else:
                     patients[hadm_id] = {organism: [intervention]}
-                    patient_age_groups[hadm_id] = age_group
+                    self.patient_age_groups[hadm_id] = age_group
 
         self.remove_patients(patients)
 
@@ -119,9 +121,12 @@ class AntibioticsDatabase:
                                 input_patients[hadm_id][organism] = [intervention]
                         else:
                             input_patients[hadm_id] = {organism: [intervention]}
-
-        input_patients = self.remove_input_patients(input_patients)
+        #input_patients = self.remove_input_patients(input_patients)
         #self.remove_training_data_from_test(input_patients, patients)
+        self.comorbidites = self.load_comorbidities()
+        patients = self.copy_patients_with_multiple_organisms(patients)
+        input_patients = self.copy_patients_with_multiple_organisms(input_patients)
+
         input_patients, patients = self.split_training_to_test(input_patients, patients)
 
         self.n_a = len(self.allowed_tests.keys())
@@ -129,7 +134,7 @@ class AntibioticsDatabase:
         #self.plot_outcome_histogram(microbiology_test_data)
         #self.plot_matrix(microbiology_test_data)
 
-        self.comorbidites = self.load_comorbidities()
+
 
 
         antibiotics_data = {'z': [], 'x': [], 'h': []}
@@ -138,7 +143,7 @@ class AntibioticsDatabase:
         for hadm_id, microbiology_test_data in patients.items():
             for organism, history in microbiology_test_data.items():
                 organism_x = self.organism_to_x_dict[organism]
-                age_group = patient_age_groups[hadm_id]
+                age_group = self.patient_age_groups[hadm_id]
                 comorbities = self.get_comorbidites_x(hadm_id)
                 x = self.create_x((organism_x, age_group, comorbities))
                 test_data.append(self.get_test_data(x, history))
@@ -146,7 +151,7 @@ class AntibioticsDatabase:
         for hadm_id, organism_and_history in input_patients.items():
             for organism, history in organism_and_history.items():
                 organism_x = self.organism_to_x_dict[organism]
-                age_group = patient_age_groups[hadm_id]
+                age_group = self.patient_age_groups[hadm_id]
                 comorbities = self.get_comorbidites_x(hadm_id)
                 x = self.create_x((organism_x, age_group, comorbities))
                 antibiotics_data['z'].append(hadm_id)
@@ -160,6 +165,22 @@ class AntibioticsDatabase:
         print("{} organisms".format(self.organism_counter))
         print("Organisms: {}".format(list(self.organism_to_x_dict.keys())))
         return antibiotics_data, test_data
+
+    def copy_patients_with_multiple_organisms(self, patients):
+        new_patients = {}
+        for hadm_id, data in patients.items():
+            counter = 1
+            for organism, history in data.items():
+                ids = [hadm_id] * counter
+                new_id = int("".join([str(hadm_id) for hadm_id in ids]))
+                new_patients[new_id] = {organism: history}
+                if new_id not in self.patient_age_groups:
+                    self.patient_age_groups[new_id] = self.patient_age_groups[hadm_id]
+                if new_id not in self.comorbidites:
+                    self.comorbidites[new_id] = self.comorbidites[hadm_id]
+
+                counter += 1
+        return new_patients
 
     def get_age_group_2x(self, age):
         if age > 60:
@@ -205,20 +226,18 @@ class AntibioticsDatabase:
         x = np.concatenate(args)
         return x
 
-    def split_training_to_test(self, training, test, split=0.7):
+    def split_training_to_test(self, training, test, split=0.75):
         hadm_ids = np.array(list(training.keys()))
-        training_samples = int(np.ceil(len(hadm_ids)*split))
-        test_samples = int(np.floor(len(hadm_ids)*(1 - split)))
-        tr_s = [True]*training_samples
-        te_s = [False]*test_samples
+        n_training_samples = int(np.ceil(len(hadm_ids)*split))
+        n_test_samples = int(np.floor(len(hadm_ids)*(1 - split)))
+        tr_s = [True]*n_training_samples
+        te_s = [False]*n_test_samples
         is_training_sample = tr_s + te_s
-        print(len(is_training_sample), len(training))
         self.random.shuffle(is_training_sample)
         test_set = {}
         training_set = {}
         i = 0
         for hadm_id, organism_and_history in training.items():
-            #print(i, len(training))
             if is_training_sample[i]:
                 training_set[hadm_id] = organism_and_history
             else:
@@ -252,7 +271,7 @@ class AntibioticsDatabase:
                     if self.antibiotic_to_treatment_dict[treatment] not in [intervention[0] for intervention in history]:
                         patients_to_delete.append([hadm_id, organism])
                         break
-        print(len(patients_to_delete), 'patients to delete')
+
         for patient in patients_to_delete:
             hadm_id = patient[0]
             organism = patient[1]

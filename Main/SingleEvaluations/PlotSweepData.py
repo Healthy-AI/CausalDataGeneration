@@ -3,13 +3,13 @@ from DataGenerator.distributions import DiscreteDistributionWithSmoothOutcomes
 import numpy as np
 import matplotlib.pylab as plt
 
-from Main.SingleEvaluations import DataAmountSettings, DataAmountSettings2
-
+from Main.SingleEvaluations import DataAmountSettings, DataAmountSettings2, DataAmountSettings3
+plt.rcParams["font.family"] = "serif"
 
 def plot_sweep_data(values, times, settings, plot_var=False, split_plot=True):
     plot_colors = ['k', 'r', 'b', 'g', 'm', 'c', 'y']
     plot_markers = ['s', 'v', 'P', '1', '2', '3', '4']
-    plot_lines = ['-', '--', ':', '-.', '-', '--']
+    plot_lines = ['-', '--', ':', '-.', '-', '--']*2
 
     load_settings = settings.load_settings
     setup_algorithms = settings.setup_algorithms
@@ -18,7 +18,7 @@ def plot_sweep_data(values, times, settings, plot_var=False, split_plot=True):
     algs = setup_algorithms(split_patients(generate_data(tmp_dist, 10)), tmp_dist, 0.1)
     file_name_prefix = file_name_prefix
     n_algorithms = len(algs)
-    n_training_samples_array = np.geomspace(10, n_training_samples_max, n_data_set_sizes).astype(int)
+    n_training_samples_array = np.geomspace(50, n_training_samples_max, n_data_set_sizes).astype(int)
 
     values_mean = np.sum(values, 0) / n_data_sets
     times_mean = np.sum(times, 0) / n_data_sets
@@ -62,7 +62,7 @@ def plot_sweep_data(values, times, settings, plot_var=False, split_plot=True):
             lns.append(ln2v)
     ax1.grid(True)
     ax2.grid(True)
-    plt.rcParams["font.family"] = "serif"
+
     lines1, labels1 = ax1.get_legend_handles_labels()
     lines2, labels2 = ax2.get_legend_handles_labels()
     ax1.legend(lines1, labels1, loc='lower right')
@@ -73,7 +73,7 @@ def plot_sweep_data(values, times, settings, plot_var=False, split_plot=True):
 
 
 if __name__ == '__main__':
-    settings = DataAmountSettings
+    settings = DataAmountSettings3
     starting_seed, n_data_sets, delta, n_data_set_sizes, n_z, n_x, n_a, n_y, n_training_samples_max, n_test_samples, file_name_prefix = settings.load_settings()
     values = np.load("saved_values/" + file_name_prefix + "values.npy")
     times = np.load("saved_values/" + file_name_prefix + "times.npy")

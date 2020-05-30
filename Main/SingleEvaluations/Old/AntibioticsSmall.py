@@ -14,6 +14,7 @@ from Database.antibioticsdatabase import AntibioticsDatabase
 from Algorithms.doctor import Doctor
 from Algorithms.emulated_doctor import EmulatedDoctor
 from Algorithms.doctor_approximator import DoctorApproximator
+from matplotlib import pyplot as plt
 
 if __name__ == '__main__':
     # Training values

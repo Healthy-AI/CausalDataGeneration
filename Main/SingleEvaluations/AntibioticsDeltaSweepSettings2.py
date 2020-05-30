@@ -46,7 +46,6 @@ def setup_algorithms(training_data, dist, delta, train=True):
                                       label="CDP_F"),
 
         NaiveDynamicProgramming(n_x, n_a, n_y, training_data, statistical_approximation_prior, reward=-(delta/2+0.0001), name='Naive Dynamic Programming', label='NDP'),
-        NaiveDynamicProgramming(n_x, n_a, n_y, training_data, function_approximation, reward=-(delta/2+0.0001), name='Naive Dynamic Programming FuncApprox', label='NDP_F'),
     ]
 
     print("Setting up algorithms took {:.3f} seconds".format(time.time() - start))
@@ -55,8 +54,8 @@ def setup_algorithms(training_data, dist, delta, train=True):
 
 def load_settings():
     starting_seed = 10342
-    n_data_sets = 4
-    n_deltas = 10
+    n_data_sets = 2
+    n_deltas = 2
     file_name_prefix = "AntibioticsComparisonDeltaSweep_20deltasFixedSeedFA"
 
     return starting_seed, n_data_sets, n_deltas, file_name_prefix

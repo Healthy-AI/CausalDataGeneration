@@ -7,12 +7,12 @@ from Algorithms.constrained_dynamic_programming import generate_data, split_pati
 from DataGenerator.distributions import DiscreteDistributionWithSmoothOutcomes
 from Main.SingleEvaluations import DeltaSweepSettings, GApproximatorsSettings, CDPApproximatorsSettings, \
     TrueApproxSettings, DeltaSweepSettings_small, NaiveVsConstrainedSettings, CDPBoundsSettings, GBoundsSettings, \
-    GeneralDeltaSweepSettings
+    GeneralDeltaSweepSettings, DeltaSweepSettings2
 from Main.SingleEvaluations.PlotSweepDelta import plot_sweep_delta
 
 
 def get_settings():
-    return GeneralDeltaSweepSettings
+    return DeltaSweepSettings
 
 def do_work(i_data_set, n_algorithms):
     settings = get_settings()
@@ -65,9 +65,9 @@ if __name__ == '__main__':
     pool = Pool(processes=n_data_sets)
     results = []
     for i in range(n_data_sets):
-        results.append(pool.apply_async(do_work, (i, n_algorithms)))
+        results.append(pool.apply(do_work, (i, n_algorithms)))
     for i in range(n_data_sets):
-        r = results[i].get()
+        r = results[i]
         values[i] = r[0]
         times[i] = r[1]
 

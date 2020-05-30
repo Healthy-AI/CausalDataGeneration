@@ -73,7 +73,7 @@ class FunctionApproximation(ProbabilityApproximator):
                     if h in self.predictions_dict:
                         prediction = self.predictions_dict[h]
                     else:
-                        prediction = self.model.predict_proba(features.reshape(1, -1))[0]
+                        prediction = np.squeeze(self.model.predict_proba(features.reshape(1, -1)))
                         self.predictions_dict[h] = prediction
                     probability_of_outcome_approximation[action] = prediction
         else:

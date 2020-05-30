@@ -5,12 +5,13 @@ import numpy as np
 import time
 from Algorithms.constrained_dynamic_programming import generate_data, split_patients
 from Database.antibioticsdatabase import AntibioticsDatabase
-from Main.SingleEvaluations import AntibioticsDeltaSweepSettings, NDPAntibioticsDeltaSweepSettings
+from Main.SingleEvaluations import AntibioticsDeltaSweepSettings, NDPAntibioticsDeltaSweepSettings, \
+    NDPFuncAntibioticsDeltaSweepSettings
 from Main.SingleEvaluations.PlotTimeVsEffectAntibiotics import plot_time_vs_effect
 
 
 def get_settings():
-    return NDPAntibioticsDeltaSweepSettings
+    return NDPFuncAntibioticsDeltaSweepSettings
 
 def do_work(i_data_set, n_algorithms):
     settings = get_settings()
