@@ -1,15 +1,11 @@
-from Algorithms.function_approximation import FunctionApproximation
-from Algorithms.naive_dynamic_programming import NaiveDynamicProgramming
-from Algorithms.constrained_dynamic_programming import ConstrainedDynamicProgramming
+from Algorithms.Approximators.function_approximation import FunctionApproximation
 from Algorithms.naive_greedy import NaiveGreedy
-from Algorithms.deep_q_learning import DeepQLearning
 from Algorithms.constrained_greedy import ConstrainedGreedy
-from Algorithms.exact_approximator import ExactApproximator
+from Algorithms.Approximators.exact_approximator import ExactApproximator
 from DataGenerator.data_generator import *
 import time
 from pathlib import Path
-from Algorithms.better_treatment_constraint import Constraint
-from Algorithms.statistical_approximator import StatisticalApproximator
+from Algorithms.Constraints.better_treatment_constraint import Constraint
 from Database.antibioticsdatabase import AntibioticsDatabase
 
 if __name__ == '__main__':

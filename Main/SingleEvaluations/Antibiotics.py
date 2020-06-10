@@ -1,6 +1,4 @@
-from multiprocessing.pool import Pool
-from Main.SingleEvaluations import AntibioticsSettings, AntibioticsSettingsGreedyTest
-from Main.SingleEvaluations.PlotAntibiotics import *
+from Main.SingleEvaluations.Plotters.PlotAntibiotics import *
 from Database.antibioticsdatabase import AntibioticsDatabase
 import time
 import numpy as np

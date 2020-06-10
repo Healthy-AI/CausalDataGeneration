@@ -1,5 +1,3 @@
-from Algorithms.better_treatment_constraint import Constraint
-from DataGenerator.data_generator import *
 from DataGenerator.data_visualizer import *
 from Algorithms.help_functions import *
 

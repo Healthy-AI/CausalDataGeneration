@@ -1,15 +1,11 @@
 from Algorithms.constrained_greedy import ConstrainedGreedy
-from Algorithms.function_approximation import FunctionApproximation
-from Algorithms.naive_dynamic_programming import NaiveDynamicProgramming
+from Algorithms.Approximators.function_approximation import FunctionApproximation
 from Algorithms.constrained_dynamic_programming import ConstrainedDynamicProgramming
-from Algorithms.exact_approximator import ExactApproximator
+from Algorithms.Approximators.exact_approximator import ExactApproximator
 from DataGenerator.data_generator import *
 import time
-from pathlib import Path
-from Algorithms.better_treatment_constraint import Constraint
-from Algorithms.statistical_approximator import StatisticalApproximator
-from Database.antibioticsdatabase import AntibioticsDatabase
-
+from Algorithms.Constraints.better_treatment_constraint import Constraint
+from Algorithms.Approximators.statistical_approximator import StatisticalApproximator
 
 if __name__ == '__main__':
     # Training values
@@ -60,8 +56,8 @@ if __name__ == '__main__':
     outcome_name = 'outcome'
     for training_data_set in data_sets:
         print("Initializing approximator")
-        statistical_approximationPrior = StatisticalApproximator(n_x, n_a, n_y, training_data_set, prior_mode='gaussian')
-        statistical_approximationNone = StatisticalApproximator(n_x, n_a, n_y, training_data_set, prior_mode='none')
+        statistical_approximationPrior = StatisticalApproximator(n_x, n_a, n_y, training_data_set, smoothing_mode='gaussian')
+        statistical_approximationNone = StatisticalApproximator(n_x, n_a, n_y, training_data_set, smoothing_mode='none')
         function_approximation = FunctionApproximation(n_x, n_a, n_y, training_data_set)
 
         print("Initializing Constraint")

@@ -1,12 +1,9 @@
 from multiprocessing.pool import Pool
 
-import matplotlib.pyplot as plt
 import numpy as np
 import time
-from Algorithms.constrained_dynamic_programming import generate_data, split_patients
-from Database.antibioticsdatabase import AntibioticsDatabase
-from Main.SingleEvaluations import AntibioticsDeltaSweepSettings, NDPAntibioticsDeltaSweepSettings
-from Main.SingleEvaluations.PlotTimeVsEffectAntibiotics import plot_time_vs_effect
+from Main.SingleEvaluations.Settings import NDPAntibioticsDeltaSweepSettings
+from Main.SingleEvaluations.Plotters.PlotTimeVsEffectAntibiotics import plot_time_vs_effect
 
 
 def get_settings():

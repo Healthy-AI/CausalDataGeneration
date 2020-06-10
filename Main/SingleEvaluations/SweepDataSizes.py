@@ -1,12 +1,11 @@
 from multiprocessing.pool import Pool
 
-import matplotlib.pyplot as plt
 import numpy as np
 import time
 from Algorithms.constrained_dynamic_programming import generate_data, split_patients
 from DataGenerator.distributions import DiscreteDistributionWithSmoothOutcomes
-from Main.SingleEvaluations import DataAmountSettings, DataAmountSettings2
-from Main.SingleEvaluations.PlotSweepData import plot_sweep_data
+from Main.SingleEvaluations.Settings import DataAmountSettings
+from Main.SingleEvaluations.Plotters.PlotSweepData import plot_sweep_data
 
 def get_settings():
     return DataAmountSettings
@@ -75,7 +74,7 @@ if __name__ == '__main__':
     times = np.zeros((n_data_sets, n_data_set_sizes, n_algorithms))
 
     main_start = time.time()
-    pool = Pool(processes=10)
+    pool = Pool(processes=n_data_sets)
     results = []
     for i in range(n_data_sets):
         results.append(pool.apply_async(do_work, (i, n_algorithms)))

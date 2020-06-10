@@ -1,17 +1,14 @@
 from Algorithms.constrained_greedy import ConstrainedGreedy
-from Algorithms.distribution_algorithm_wrapper import DistAlgWrapper
-from Algorithms.function_approximation import FunctionApproximation
-from Algorithms.naive_dynamic_programming import NaiveDynamicProgramming
+from Algorithms.Approximators.function_approximation import FunctionApproximation
 from Algorithms.constrained_dynamic_programming import ConstrainedDynamicProgramming
-from Algorithms.naive_greedy import NaiveGreedy
-from Algorithms.exact_approximator import ExactApproximator
-from Algorithms.true_constraint import TrueConstraint
+from Algorithms.Approximators.exact_approximator import ExactApproximator
+from Algorithms.Constraints.true_constraint import TrueConstraint
 from DataGenerator.data_generator import *
 import time
 from pathlib import Path
-from Algorithms.better_treatment_constraint import Constraint
-from Algorithms.statistical_approximator import StatisticalApproximator
-from DataGenerator.distributions import DiscreteDistributionWithSmoothOutcomes, NewDistribution
+from Algorithms.Constraints.better_treatment_constraint import Constraint
+from Algorithms.Approximators.statistical_approximator import StatisticalApproximator
+from DataGenerator.distributions import ToyDistribution2
 from Database.antibioticsdatabase import AntibioticsDatabase
 import matplotlib.pyplot as plt
 
@@ -66,7 +63,7 @@ if __name__ == '__main__':
     #dist = AntibioticsDatabase(n_x=1, antibiotic_limit=5, seed=seed)
 
 
-    dist = NewDistribution(seed=seed)
+    dist = ToyDistribution2(seed=seed)
     #dist = NewDistributionSlightlyRandom(seed=seed)
     n_x = 1
     n_a = 3
@@ -129,8 +126,8 @@ if __name__ == '__main__':
     print("Initializing statistical approximator")
     start = time.time()
 
-    statistical_approximation = StatisticalApproximator(n_x, n_a, n_y, split_training_data, prior_mode='gaussian')
-    statistical_approximation_n = StatisticalApproximator(n_x, n_a, n_y, split_training_data, prior_mode='none')
+    statistical_approximation = StatisticalApproximator(n_x, n_a, n_y, split_training_data, smoothing_mode='gaussian')
+    statistical_approximation_n = StatisticalApproximator(n_x, n_a, n_y, split_training_data, smoothing_mode='none')
     #print("Initializing {} took {:.3f} seconds".format(statistical_approximation.name, time.time() - start))
 
     true_approximation = ExactApproximator(dist)

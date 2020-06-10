@@ -4,7 +4,7 @@ import numpy as np
 import scipy.stats
 
 
-from Algorithms.doctor_approximator import DoctorApproximator
+from Algorithms.Approximators.doctor_approximator import DoctorApproximator
 from DataGenerator.data_generator import split_patients
 from Database.antibioticsdatabase import AntibioticsDatabase
 
@@ -16,16 +16,64 @@ class Distribution:
 
     def draw_z(self):
         pass
+        # Return a representation of Z, this can be any format
 
     def draw_x(self, z):
         pass
+        # Return a list of X values
 
     def draw_a(self, h, x, z):
         pass
+        # Return a single integer representing the index of a treatment A
 
     def draw_y(self, a, h, x, z):
         pass
+        # Return a tuple, (int, bool), representing the outcome of treatment a and if this is the last treatment that
+        # should be tried
 
+class ToyExampleDistribution(Distribution):
+    def __init__(self):
+        super().__init__()
+        self.name = 'ToyExample'
+    n_a = 3
+    treatment_weights = np.array([0.65, 0.6, 0.4])
+    results_array = np.array([[1, 0, 1, 0],
+                              [1, 0, 0, 1],
+                              [0, 1, 1, 0]])
+    z_weights = np.array([0.45, 0.20, 0.20, 0.15])
+
+    def draw_z(self):
+        return self.random.choice(4, p=self.z_weights)
+
+    def draw_x(self, z):
+        return [0]
+
+    def draw_a(self, h, x, z):
+        weights = np.sum(self.z_weights * self.results_array, 1)
+        if len(h) > 0:
+            treatment_found = np.max(h, 0)[1]
+            used_a = [u[0] for u in h]
+            if treatment_found:
+                weights = np.array([1, 1, 1])
+                for u in used_a:
+                    weights[u] = 0
+            else:
+                a_weights = self.results_array.copy()
+                for u in used_a:
+                    a_weights = a_weights - a_weights[u]
+                    a_weights = np.maximum(a_weights, 0)
+                a_weights = self.z_weights * a_weights
+                weights = np.sum(a_weights, 1)
+
+        return self.random.choice(3, p=weights/sum(weights))
+
+    def draw_y(self, a, h, x, z):
+        result = self.results_array[a][z]
+        if len(h) > 0:
+            best_result = np.max(h, 0)[1]
+            if max(result, best_result) == 1 and self.random.random() < 0.85:
+                return result, True
+        return result, False
 
 # Creates a random distribution with binary discrete covariates and moderators
 class DiscreteDistribution(Distribution):
@@ -317,52 +365,7 @@ class DiscreteDistributionWithInformation(DiscreteDistribution):
         return self.outcome_probabilities[dist_index]
 
 
-class FredrikDistribution(Distribution):
-    def __init__(self):
-        super().__init__()
-        self.name = 'Fredrik'
-    n_a = 3
-    treatment_weights = np.array([0.65, 0.6, 0.4])
-    results_array = np.array([[1, 0, 1, 0],
-                              [1, 0, 0, 1],
-                              [0, 1, 1, 0]])
-    z_weights = np.array([0.45, 0.20, 0.20, 0.15])
-
-    def draw_z(self):
-        return self.random.choice(4, p=self.z_weights)
-
-    def draw_x(self, z):
-        return [0]
-
-    def draw_a(self, h, x, z):
-        weights = np.sum(self.z_weights * self.results_array, 1)
-        if len(h) > 0:
-            treatment_found = np.max(h, 0)[1]
-            used_a = [u[0] for u in h]
-            if treatment_found:
-                weights = np.array([1, 1, 1])
-                for u in used_a:
-                    weights[u] = 0
-            else:
-                a_weights = self.results_array.copy()
-                for u in used_a:
-                    a_weights = a_weights - a_weights[u]
-                    a_weights = np.maximum(a_weights, 0)
-                a_weights = self.z_weights * a_weights
-                weights = np.sum(a_weights, 1)
-
-        return self.random.choice(3, p=weights/sum(weights))
-
-    def draw_y(self, a, h, x, z):
-        result = self.results_array[a][z]
-        if len(h) > 0:
-            best_result = np.max(h, 0)[1]
-            if max(result, best_result) == 1 and self.random.random() < 0.85:
-                return result, True
-        return result, False
-
-
-class NewDistribution(Distribution):
+class ToyDistribution2(Distribution):
     def __init__(self, seed=None):
         super().__init__(seed)
         self.name = 'New'
@@ -422,7 +425,7 @@ class NewDistribution(Distribution):
         return probs
 
 
-class NewDistributionSlightlyRandom(NewDistribution):
+class ToyDistribution2SlightlyRandom(ToyDistribution2):
     def draw_y(self, a, h, x, z):
         y = self.results_array[a][z]
         if self.random.random() < 0.15:

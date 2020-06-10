@@ -1,27 +1,84 @@
-# CausalDataGeneration
-Generate causal data from a history of treatments
+# Minimizing search time for finding an effective treatment
+Code for generating data, algorithms for creating policies and visualizing the results for the problem of finding an 
+effective treatment in as few trials as possible. Read **Evaluating policies and Plotting** for instructions of how to
+run the project in the simplest way.
 
-This package consists of two parts: 
-a data generator and a q-learning model.
+# Data Generation
+Data generation is done by so called distributions found in DataGenerator/distributions.py. Each distribution implements
+four methods that describe a patient and which treatments that patient receives. The default distribution used is 
+DiscreteDistributionWithSmoothOutcomes for most other files. The DiscreteDistributon family of distributions has 
+methods for printing statistics of the distributions as well.
 
-The data generator creates a population of patients from a tailored distribution (in distributions.py).
-The variables for SimpleDistribution are: covariates X [0,1], confounders Z [0, 1, 2], treatments A [1,2,3,4], and outcomes Y [0,1,2].
-Patients have a history which is a list of treatments and outcomes e.g. [(a0, y0), (a1, y1)]
+To generate data, use the helper class DataGenerator/data_generator.py. This class has functions to generate both 
+training and test data. Most other classes expect the training data to be in "split" format, this is achieved by calling
+the split_patients function.
 
-The data is generated such that, for every patient, we draw confounder Z and then covariate X,
-then we draw treatment A and outcome Y until all treatments are tried on the patient.
-After that, we trim the data so that the patients stopped trying a new treatment if it found
- an outcome equal to 2.
+# Algorithms
+The algorithms can be found in the Algorithms/ folder, including classes in Algorithms/Approximators/ for approximating
+the probability of outcomes and classes in Algorithms/Constraints/ for calculating the constraints used.
 
-There is also functionality to split the history of a patient. A patient with covariate x0 
-and history [(a0, y0), (a1, y1)] will become three patients with covariate x0 and history [(a0, y0)], [(a1, y1)], and [(a0, y0), (a1, y1)]
+**Algorithms**
+*constrained_greedy.py* is the main greedy constrained variant, using a greedy rule to find the best treatment in each
+trial.
 
- A simple offline q-learning algorithm is also implemented in q_learning.py. 
- Each final state, e.g. where a stopping action is taken, is initialized to the value of the best treatment at that time, 
- or -infinity if no medium or better treatment is found. 
- We use a discount factor of 1 since the problem has a finitie horizon, instead opting to have negative reward of -0.5 
- for each tried medicine. The value of the reward is not very important for this simple problem, and any negative reward 
- solves the problem.
-Actions are sampled randomly from the provided dataset with replacement.
- 
- 
+*constrained_dynamic_programming.py* is the main dynamic programming variant.
+
+*naive_greedy.py* is the greedy variant that does not use a constraint.
+
+*naive_dynamic_programming.py* is the dynamic programming variant that does not use a constraint.
+
+*emulated_doctor.py* emulates what the doctor would have done for the Antibiotic resistance data set.
+
+*distribution_algorithm_wrapper.py* can be used to compare the policy that the distribution uses to the algorithmic 
+ones.
+
+**Approximators**
+
+*statistical_approximator.py* uses a smoothing function that can either be 'gaussian' or 'none'. It estimates outcome 
+probabilities using frequency statistics.
+
+*function_approximator.py* uses a Random Forest regression to approximate the outcome probabilities.
+
+*exact_approximator.py* uses the real probabilities from the distribution to calculate the outcome probabilities.
+
+*doctor_approximator.py* is used by emulated_doctor.py.
+
+**Constraints**
+
+*better_treatment_constraint.py* can either use an 'upper' or 'lower' bound for quickly estimating the constraint.
+
+*true_constraint.py* calculates the constraint exactly, but requires more processing time.
+
+# Evaluating policies and plotting
+
+Use the file *Main/Evaluate.py* to run custom evaluations.
+
+To do an easier evaluation, the main way to do this is in Main/SingleEvaluations/ where we have four files that evaluate
+the policies in different ways. To run an evaluation, first copy a Settings file in Main/SingleEvaluations/Settings.
+Take a look at *GeneralDeltaSweepSettings.py* and *DataAmountSettings.py* for examples, but each file requires you to
+edit the 'setup_algorithms' function to specify which algorithms to evaluate and the 'get_settings' function to set 
+which other settings, e.g. number of data sets to average over, to use.
+
+**Evaluators**
+
+To use, simply set the setting you want to use in the 'load_settings' function and run.
+
+*Antibiotics.py* does a single evaluation of the antibiotics data set.
+
+*AntibioticsSweepDelta.py* evaluates the antibiotics data set over several different values of delta.
+
+*SweepDataSizes.py* evaluates policies over different data set sizes.
+
+*SweepDelta.pu* evaluates policies over different values of delta.
+
+**Plotters**
+
+To re-plot already evaluated policies, the plotters can be used. Can also plot Time vs Effect instead of separate plots.
+Simply change the 'get_settings' function to load the correct settings file. The Antibiotics files are used to plot 
+antibiotics data. The Split files are used to plot two separate images instead of one combined.
+
+*PlotSweepData.py* plots a data set size sweep.
+
+*PlotSweepDelta.py* plots a delta values sweep.
+
+*PlotTimeVsEffect.py* plots the time against the effect for both data set sizes and delta. Works better for delta.

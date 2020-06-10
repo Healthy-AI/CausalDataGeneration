@@ -18,7 +18,7 @@ def generate_sample(generator):
             break
     return z, x, h
 
-
+# Generates training data
 def generate_data(generator, n_samples):
     data = {'z': [], 'x': [], 'h': []}
 

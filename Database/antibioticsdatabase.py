@@ -50,7 +50,7 @@ class AntibioticsDatabase:
         self.doctor_data = []
 
     def init_database(self):
-        pw = base64.b64decode(b'aGVhbHRoeUFJ').decode("utf-8")
+        pw = base64.b64decode(b'aGVhbHRoeUFJ').decode("utf-8")      # Local password to postgres mimic DB
         self.conn = psycopg2.connect(database="mimic", user="postgres", password=pw)
         self.cur = self.conn.cursor()
         self.cur.execute('set search_path=mimiciii')

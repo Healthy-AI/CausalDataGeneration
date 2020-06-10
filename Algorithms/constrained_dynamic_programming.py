@@ -1,5 +1,5 @@
 from OldAlgorithms.q_learning import *
-from Algorithms.better_treatment_constraint import *
+from Algorithms.Constraints.better_treatment_constraint import *
 
 
 class ConstrainedDynamicProgramming(QLearner):

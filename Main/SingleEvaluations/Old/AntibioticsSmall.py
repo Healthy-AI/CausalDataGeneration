@@ -1,19 +1,14 @@
-from Algorithms.function_approximation import FunctionApproximation
-from Algorithms.naive_dynamic_programming import NaiveDynamicProgramming
-from Algorithms.constrained_dynamic_programming import ConstrainedDynamicProgramming
-from Algorithms.naive_greedy import NaiveGreedy
-from Algorithms.deep_q_learning import DeepQLearning
+from Algorithms.Approximators.function_approximation import FunctionApproximation
 from Algorithms.constrained_greedy import ConstrainedGreedy
-from Algorithms.exact_approximator import ExactApproximator
 from DataGenerator.data_generator import *
 import time
 from pathlib import Path
-from Algorithms.better_treatment_constraint import Constraint
-from Algorithms.statistical_approximator import StatisticalApproximator
+from Algorithms.Constraints.better_treatment_constraint import Constraint
+from Algorithms.Approximators.statistical_approximator import StatisticalApproximator
 from Database.antibioticsdatabase import AntibioticsDatabase
 from Algorithms.doctor import Doctor
 from Algorithms.emulated_doctor import EmulatedDoctor
-from Algorithms.doctor_approximator import DoctorApproximator
+from Algorithms.Approximators.doctor_approximator import DoctorApproximator
 
 if __name__ == '__main__':
     # Training values
@@ -127,7 +122,7 @@ if __name__ == '__main__':
     # print("Initializing {} took {:.3f} seconds".format(function_approximation.name, time.time()-start))
     print("Initializing statistical approximator")
     start = time.time()
-    statistical_approximation = StatisticalApproximator(n_x, n_a, n_y, split_training_data, prior_mode='gaussian')
+    statistical_approximation = StatisticalApproximator(n_x, n_a, n_y, split_training_data, smoothing_mode='gaussian')
     doctor_approximation = DoctorApproximator(n_x, n_a, n_y, split_training_data)
     # print("Initializing {} took {:.3f} seconds".format(statistical_approximation.name, time.time() - start))
 
