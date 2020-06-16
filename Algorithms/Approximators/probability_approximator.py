@@ -2,13 +2,14 @@ import numpy as np
 
 
 class ProbabilityApproximator:
-    def __init__(self, n_x, n_a, n_y, data):
+    def __init__(self, n_x, n_a, n_y, data, epsilon=0):
         self.n_x = n_x
         self.n_y = n_y
         self.n_a = n_a
         self.max_possible_outcome = self.n_y - 1
         self.stop_action = self.n_a
         self.data = data
+        self.epsilon = epsilon
 
     def calculate_probability(self, x, history, action, outcome):
         pass
@@ -23,7 +24,7 @@ class ProbabilityApproximator:
         tot = np.sum(prob_matrix, axis=1)
         tot[tot == 0] = 1
         ev_vec = np.zeros(self.n_a)
-        for i in range(best_outcome + 1, self.n_y):
+        for i in range(best_outcome + 1 + self.epsilon, self.n_y):
             if use_expected_value:
                 ev_vec += prob_matrix[:, i] * i
             else:

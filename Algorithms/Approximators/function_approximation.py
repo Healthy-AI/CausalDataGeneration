@@ -5,8 +5,8 @@ from Algorithms.help_functions import *
 
 
 class FunctionApproximation(ProbabilityApproximator):
-    def __init__(self, n_x, n_a, n_y, data):
-        super().__init__(n_x, n_a, n_y, data)
+    def __init__(self, n_x, n_a, n_y, data, epsilon=0):
+        super().__init__(n_x, n_a, n_y, data, epsilon)
         self.model = RandomForestClassifier(n_jobs=1, random_state=1337)
         self.name = 'Random forest approximator'
         self.xs = data['x']
@@ -95,7 +95,7 @@ class FunctionApproximation(ProbabilityApproximator):
         probs = self.prepare_calculation(x, history, action)
         return probs[0]
 
-    def calculate_probability_greedy(self, state, best_outcome, use_expected_value=False):
+    def calculate_probability_greedy(self, state, best_outcome, use_expected_value=True):
         x, history = state
         probability_of_outcome_approximation = self.prepare_calculation(x, history)
         return super(FunctionApproximation, self).calculate_probability_greedy(
@@ -105,4 +105,4 @@ class FunctionApproximation(ProbabilityApproximator):
         probability_of_outcome_approximation = self.prepare_calculation(x, state)
         max_outcome = max(state)
         return super(FunctionApproximation, self).calculate_probability_greedy(
-            probability_of_outcome_approximation, max_outcome, use_expected_value=False)
+            probability_of_outcome_approximation, max_outcome, use_expected_value=True)

@@ -3,11 +3,12 @@ import numpy as np
 
 
 class ExactApproximator(ProbabilityApproximator):
-    def __init__(self, dist):
+    def __init__(self, dist, epsilon=0):
         super().__init__(0, 0, 0, None)
         self.dist = dist
         self.y_y_dict = dict()
         self.y_h_dict = dict()
+        self.epsilon = epsilon
 
     def calculate_probability(self, x, history, action, outcome):
         tried_history = np.argwhere(np.array(history) != -1).flatten()
@@ -23,11 +24,11 @@ class ExactApproximator(ProbabilityApproximator):
             outcomes[y] = self.calculate_probability(x, history, action, y)
         return outcomes
 
-    def calculate_probability_greedy(self, state, best_outcome):
+    def calculate_probability_greedy(self, state, best_outcome, use_expected_value=True):
         total_ev = np.zeros(self.dist.n_a)
         x, outcome_state = state
         for y in range(self.dist.n_y):
-            if y > best_outcome:
+            if y > best_outcome + self.epsilon:
                 for a in range(self.dist.n_a):
                     total_ev[a] += self.calculate_probability(x, outcome_state, a, y) * y
         return total_ev

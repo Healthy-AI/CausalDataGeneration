@@ -121,13 +121,13 @@ if __name__ == '__main__':
     test_data = datasets['test']['data']
     # print("Initializing function approximator")
     # start = time.time()
-    function_approximation = FunctionApproximation(n_x, n_a, n_y, split_training_data)
     # print("Initializing {} took {:.3f} seconds".format(function_approximation.name, time.time()-start))
     print("Initializing statistical approximator")
     start = time.time()
 
     statistical_approximation = StatisticalApproximator(n_x, n_a, n_y, split_training_data, smoothing_mode='gaussian')
     statistical_approximation_n = StatisticalApproximator(n_x, n_a, n_y, split_training_data, smoothing_mode='none')
+    function_approximation = FunctionApproximation(n_x, n_a, n_y, split_training_data)
     #print("Initializing {} took {:.3f} seconds".format(statistical_approximation.name, time.time() - start))
 
     true_approximation = ExactApproximator(dist)
@@ -147,12 +147,12 @@ if __name__ == '__main__':
     print("Initializing algorithms")
     algorithms = [
         #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintTrue, true_approximation, name="Constrained Greedy True", label="CGT"),
-        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
+        ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation),
         #ConstrainedGreedy(n_x, n_a, n_y, split_training_data, constraintFuncApprox, function_approximation, name="Constrained Greedy FuncApprox"),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintTT, true_approximation, name="Dynamic Programming Exact", label="CDP_E"),
 
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintCT, statistical_approximation, name="Dynamic Programming True Stat", label="CDP_TS"),
-        ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
+        #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintCT, statistical_approximation, name="Dynamic Programming True Stat", label="CDP_TS"),
+        #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, statistical_approximation),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStatL, statistical_approximation, name="CDP_L", label='CDP_L'),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintCT, statistical_approximation, name="CDP_E", label='CDP_E'),
         #ConstrainedDynamicProgramming(n_x, n_a, n_y, split_training_data, constraintStat, function_approximation, name="Dynamic Programming Func", label="CDPF"),

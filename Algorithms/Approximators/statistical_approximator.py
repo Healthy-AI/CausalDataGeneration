@@ -47,13 +47,13 @@ class StatisticalApproximator(ProbabilityApproximator):
 
     def calculate_probability_greedy(self, state, best_outcome, use_expected_value=True):
         x, history = state
-        probs = np.zeros(self.n_a)
+        ev_vec = np.zeros(self.n_a)
         for a in range(self.n_a):
             action_outcome_probs = self.full_history_prior(x, history, a, kernel=self.default_kernel)
             for y in range(self.n_y):
-                if y > best_outcome:
-                    probs[a] += y * action_outcome_probs[y]
-        return probs
+                if y > best_outcome + self.epsilon:
+                    ev_vec[a] += y * action_outcome_probs[y]
+        return ev_vec
 
     def generate_all_possible_histories(self, state):
         to_generate_for = [tuple(state)]
