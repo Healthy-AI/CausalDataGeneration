@@ -1,5 +1,5 @@
 # Minimizing search time for finding an effective treatment
-Code for generating data, algorithms for creating policies and visualizing the results for the paper *Learning to search efficiently for causally near-optimal treatments* [link](https://arxiv.org/abs/2007.00973)  by Samuel Håkansson, Viktor Lindblom, Omer Gottesman and Fredrik D Johansson accepted for publication at NeurIPS 2020. Read **Evaluating policies and Plotting** for instructions of how to
+Code for generating data, algorithms for creating policies and visualizing the results for the paper [*Learning to search efficiently for causally near-optimal treatments*](https://arxiv.org/abs/2007.00973)  by Samuel Håkansson, Viktor Lindblom, Omer Gottesman and Fredrik D Johansson accepted for publication at NeurIPS 2020. Read **Evaluating policies and Plotting** for instructions of how to
 run the project in the simplest way.
 
 # Data Generation
